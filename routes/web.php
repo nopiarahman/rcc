@@ -1,8 +1,11 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
+use App\Livewire\CartPage;
+use App\Livewire\MenuPage;
+use App\Livewire\HistoryPage;
 use App\Livewire\Minuman\Index;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
@@ -28,5 +31,13 @@ Route::middleware(['auth'])->group(function () {
     Volt::route('minuman/topping/create', 'topping.create')->name('minuman.topping.create');
     
 });
+
+
+// Front End
+
+Route::get('/menu', MenuPage::class)->name('menu');
+Route::get('/keranjang', CartPage::class)->name('cart');
+Route::get('/pesanan', HistoryPage::class)->name('history');
+
 
 require __DIR__.'/auth.php';
