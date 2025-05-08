@@ -45,4 +45,18 @@ class Minuman extends Model implements HasMedia
             return $bahan->pivot->jumlah * $bahan->harga_satuan;
         });
     }
+    public function defaultSize()
+    {
+        return $this->belongsTo(Size::class, 'default_size_id');
+    }
+
+    public function defaultSugar()
+    {
+        return $this->belongsTo(Sugar::class, 'default_sugar_id');
+    }
+
+    public function defaultTopping()
+    {
+        return $this->belongsTo(Topping::class, 'default_topping_id');
+    }
 }

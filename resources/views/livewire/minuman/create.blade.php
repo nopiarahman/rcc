@@ -42,7 +42,7 @@
                     <div class="flex items-center gap-3 bg-gray-50 p-3 rounded border">
                         <input type="checkbox" wire:model="selectedBahans.{{ $bahan['id'] }}" class="checkbox">
                         <span class="flex-1">{{ $bahan['nama'] }}</span>
-                        <input type="text" wire:model="selectedBahans.{{ $bahan['id'] }}" class="input w-32" placeholder="Jumlah (ml/gr)">
+                        <input type="text" wire:model="selectedBahans.{{ $bahan['id'] }}" class="input w-32" placeholder="{{$bahan['satuan']}}">
                     </div>
                 @endforeach
             </div>

@@ -19,6 +19,7 @@
             <flux:input type="text" wire:model.defer="nama" value="{{$minuman->nama}}" />
             <flux:error name="nama" />
         </flux:field>
+
         <flux:label>Kategori</flux:label>
         <flux:select wire:model.defer="kategori" placeholder="Pilih Kategori">
             <flux:select.option>Coffee</flux:select.option>
@@ -27,13 +28,27 @@
             <flux:select.option>Matcha</flux:select.option>
         </flux:select>
         <div class="mb-4">
+            <flux:label>Tag</flux:label>
+            <select wire:model.defer="tag" class="w-full border rounded p-2">
+                <option value="">Pilih default tag</option>
+                    <option value="Recommended">★Recommended</option>
+                    <option value="Terfavorit">❤︎Terfavorit</option>
+                    <option value="Must Try">Must Try</option>
+            </select>
+        </div>
+        <flux:field class="mb-2">
+            <flux:label>Short Description</flux:label>
+            <flux:input type="text" wire:model.defer="short_description" />
+            <flux:error name="short_description" />
+        </flux:field>
+        <div class="mb-4">
             <label for="deskripsi" class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
             <textarea
                 id="deskripsi"
                 wire:model.defer="minuman.deskripsi"
                 rows="4"
                 class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-            >{{ old('minuman.deskripsi', $minuman->deskripsi) }}</textarea>
+            ></textarea>
             @error('minuman.deskripsi')
                 <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
             @enderror
@@ -74,7 +89,7 @@
                 @endforeach
             </div>
         </div>
-
+    
         {{-- SIZE --}}
         <div class="mb-6">
             <label class="font-semibold block mb-2">Ukuran</label>
@@ -98,7 +113,15 @@
                 @endforeach
             </div>
         </div>
-
+        <div class="mb-4">
+            <label class="block mb-1 font-semibold">Ukuran Default</label>
+            <select wire:model="defaultSize" class="w-full border rounded p-2">
+                <option value="">Pilih default size</option>
+                @foreach ($allSizes as $size)
+                    <option value="{{ $size->id }}">{{ $size->name }}</option>
+                @endforeach
+            </select>
+        </div>
         {{-- GULA --}}
         <div class="mb-6">
             <label class="font-semibold block mb-2">Gula</label>
@@ -123,7 +146,15 @@
                 @endforeach
             </div>
         </div>
-
+        <div class="mb-4">
+            <label class="block mb-1 font-semibold">Default Sugar</label>
+            <select wire:model="defaultSugar" class="w-full border rounded p-2">
+                <option value="">Pilih default sugar</option>
+                @foreach ($allSugars as $sugar)
+                    <option value="{{ $sugar->id }}">{{ $sugar->level }}</option>
+                @endforeach
+            </select>
+        </div>
         {{-- TOPPING --}}
         <div class="mb-6">
             <label class="font-semibold block mb-2">Topping</label>
@@ -147,13 +178,21 @@
                 @endforeach
             </div>
         </div>
+        <div class="mb-4">
+            <label class="block mb-1 font-semibold">Default Topping</label>
+            <select wire:model="defaultTopping" class="w-full border rounded p-2">
+                <option value="">Pilih default topping</option>
+                @foreach ($allToppings as $topping)
+                    <option value="{{ $topping->id }}">{{ $topping->nama }}</option>
+                @endforeach
+            </select>
+        </div>
 
 
         {{-- BUTTONS --}}
         <div class="pt-4 flex gap-3">
-            <flux:button type="submit" variant="primary">
-                Update
-            </flux:button>
+            <flux:button type="submit" wire:loading.attr="disabled">Update</flux:button>
+
             <flux:button href="{{ route('minuman.index') }}">Batal</flux:button>
         </div>
 
@@ -178,12 +217,16 @@ new class extends Component
     public $foto;
     public $fotoPreview = null;
     public $kategori;
+    public $short_description;
+    public $tag;
 
     public $allSizes = [];
     public $allToppings = [];
     public $allSugars = [];
     public $bahans = [];
-
+    public $defaultSize;
+    public $defaultSugar;
+    public $defaultTopping;
     // Bahan
     public $selectedBahans = []; // [id => jumlah]
 
@@ -208,6 +251,11 @@ new class extends Component
         $this->allToppings = Topping::all();
         $this->allSugars = Sugar::all();
 
+        $this->defaultSize = $this->minuman->default_size_id;
+        $this->defaultSugar = $this->minuman->default_sugar_id;
+        $this->defaultTopping = $this->minuman->default_topping_id;
+        $this->tag = $this->minuman->tag;
+        $this->short_description = $this->short_description;
         // Relasi Bahan: [id => jumlah]
         $this->selectedBahans = $minuman->bahans->pluck('pivot.jumlah', 'id')->toArray();
 
@@ -241,7 +289,14 @@ new class extends Component
     public function update()
     {
         $this->validate();
-        $this->minuman->kategori = $this->kategori; // simpan kategori baru
+
+        // Simpan kategori & default selection
+        $this->minuman->kategori = $this->kategori;
+        $this->minuman->tag = $this->tag;
+        $this->minuman->short_description = $this->short_description;
+        $this->minuman->default_size_id = $this->defaultSize;
+        $this->minuman->default_sugar_id = $this->defaultSugar;
+        $this->minuman->default_topping_id = $this->defaultTopping;
         $this->minuman->save();
 
         // Upload foto jika ada
@@ -289,6 +344,7 @@ new class extends Component
         session()->flash('success', 'Data minuman berhasil diperbarui!');
         return redirect()->route('minuman.index');
     }
+
 
     public function updatedFoto($value)
     {

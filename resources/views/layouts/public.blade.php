@@ -1,19 +1,18 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" x-data>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $title ?? 'Raihaan Coffee Corner' }}</title>
     <link rel="icon" href="{{asset('favicon.png')}}" sizes="any">
     <link rel="icon" href="{{asset('favicon.png')}}" type="image/svg+xml">
+    @livewireStyles
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=home,receipt_long,shopping_bag"/>
     {{-- <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=shoopi" /> --}}
-    @livewireStyles
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @fluxAppearance
-
+    {{-- @vite(['resources/css/app.css', 'resources/js/app.js']) --}}
+    {{-- @fluxAppearance --}}
     <style>
         .mobile-nav {
             position: fixed;
@@ -38,13 +37,24 @@
             color: inherit;
             text-decoration: none;
         }
-    </style>
+        .fixed-img-height {
+            height: 180px;
+            object-fit: cover;
+        }
+        .gradient {
+            background: linear-gradient(to top, #011a0f, #006a3e);
+            min-height: 100vh;
+        }
+
+        </style>
 </head>
 <body>
-    <div class="container py-3">
-        @yield('content')
+    <x-web-nav />
+    <div class="gradient pb-n3">
+        {{ $slot }}
     </div>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"></script>
     @livewireScripts
+    
 </body>
 </html>
