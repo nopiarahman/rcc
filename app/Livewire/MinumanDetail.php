@@ -8,54 +8,61 @@ use App\Models\Minuman;
 class MinumanDetail extends Component
 {
     public $minuman;
+    public $selectedSizeId;
+    public $selectedSugarId;
+    public $selectedToppingId;
     public $cart = []; 
     public function mount($id)
     {
         $this->minuman = Minuman::findOrFail($id);
+        $this->selectedSizeId = $this->minuman->default_size_id;
+        $this->selectedSugarId = $this->minuman->default_sugar_id;
+        $this->selectedToppingId = $this->minuman->default_topping_id;
     }
     // Metode untuk menambahkan produk ke keranjang
-    public function addToCart($id, $basePrice, $sizeId, $sugarId, $toppingId)
+    public function calculateTotalPrice()
     {
-        // Harga tambahan dari ukuran, gula, dan topping
-        $sizePrice = 0;  // Gantilah dengan harga yang sesuai
-        $sugarPrice = 0; // Gantilah dengan harga yang sesuai
-        $toppingPrice = 0; // Gantilah dengan harga yang sesuai
+        $size = $this->minuman->sizes->firstWhere('id', $this->selectedSizeId);
+        $sugar = $this->minuman->sugars->firstWhere('id', $this->selectedSugarId);
+        $topping = $this->minuman->toppings->firstWhere('id', $this->selectedToppingId);
 
-        // Hitung total harga
-        $totalPrice = $basePrice + $sizePrice + $sugarPrice + $toppingPrice;
+        $total = $this->minuman->base_price
+            + ($size?->price ?? 0)
+            + ($sugar?->price ?? 0)
+            + ($topping?->default_price ?? 0);
 
-        // Buat key unik untuk setiap kombinasi produk
-        $key = $id . '-' . ($sizeId ?? '0') . '-' . ($sugarId ?? '0') . '-' . ($toppingId ?? '0');
+        return $total;
+    }
 
-        // Ambil cart yang sudah ada di session, jika tidak ada, buat array kosong
+    public function addToCart()
+    {
+        $key = $this->minuman->id . '-' . $this->selectedSizeId . '-' . $this->selectedSugarId . '-' . $this->selectedToppingId;
+
         $cart = session()->get('cart', []);
 
-        // Jika produk sudah ada dalam cart, tambahkan kuantitasnya
         if (isset($cart[$key])) {
             $cart[$key]['qty']++;
         } else {
-            // Jika produk belum ada, tambahkan produk baru ke dalam cart
             $cart[$key] = [
-                'id' => $id,
-                'size_id' => $sizeId,
-                'sugar_id' => $sugarId,
-                'topping_id' => $toppingId,
-                'price' => $totalPrice,
-                'qty' => 1, // Kuantitas dimulai dari 1
+                'id' => $this->minuman->id,
+                'size_id' => $this->selectedSizeId,
+                'sugar_id' => $this->selectedSugarId,
+                'topping_id' => $this->selectedToppingId,
+                'price' => $this->calculateTotalPrice(),
+                'qty' => 1,
             ];
         }
 
-        // Simpan kembali cart yang telah diubah ke session
         session()->put('cart', $cart);
-
+        
         // Menampilkan pesan sukses ke pengguna
         session()->flash('message', 'Produk berhasil ditambahkan ke keranjang!');
 
         // Mengembalikan response JSON dengan data cart terbaru
-        return response()->json([
-            'message' => 'Produk berhasil ditambahkan ke keranjang',
-            'cart' => $cart,
-        ]);
+        // return response()->json([
+        //     'message' => 'Produk berhasil ditambahkan ke keranjang',
+        //     'cart' => $cart,
+        // ]);
     }
 
     public function render()

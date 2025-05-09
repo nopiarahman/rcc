@@ -46,11 +46,11 @@ Route::get('/', function () {
 Route::get('/home', MenuPage::class)->name('home');
 Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
 Route::get('/minuman-detail-{id}',MinumanDetail::class)->name('minuman.detail');
-// Route::get('/keranjang', CartPage::class)->name('cart');
+Route::get('/keranjang', CartPage::class)->name('cart');
 
-Route::get('/debug/cart', function () {
-    return session('cart');
-})->name('cart');
+// Route::get('/debug/cart', function () {
+//     return session('cart');
+// })->name('debug-cart');
 Route::get('/pesanan', HistoryPage::class)->name('history');
 
 require __DIR__.'/auth.php';
