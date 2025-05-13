@@ -154,7 +154,7 @@
                 @endif
         </div>
         {{-- Gambar --}}
-        <img src="{{ $minuman->getFirstMediaUrl('foto') }}" alt="{{ $minuman->nama }}" class="sticky-image">
+        <img wire:ignore src="{{ $minuman->getFirstMediaUrl('foto') }}" alt="{{ $minuman->nama }}" class="sticky-image">
     
     
         {{-- Konten Scrollable --}}
@@ -187,7 +187,7 @@
                 <div class="d-flex justify-content-center align-items-center" >
                     <div class="text-center">
                         <div class="fw-bold text-success mb-2" style="font-size: 1.5rem;">
-                            Rp {{ number_format($this->calculateTotalPrice(), 0, ',', '.') }}
+                            Rp {{ number_format($this->totalPrice, 0, ',', '.') }}
                         </div>
                         <button type="button"
                             class="btn btn-success btn-sm rounded-pill px-3 py-2 fw-semibold d-flex align-items-center gap-2 mx-auto"
@@ -206,7 +206,7 @@
         <!-- Modal Pilihan -->
         <div wire:ignore.self class="modal fade" id="pilihanModal" tabindex="-1" aria-labelledby="pilihanModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-4">
+            <div class="modal-content rounded-4" >
                 <div class="modal-header">
                 <h5 class="modal-title fw-bold" id="pilihanModalLabel">Pilih Varian</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
@@ -214,49 +214,53 @@
                 <div class="modal-body">
         
                 {{-- Size --}}
-                @if ($minuman->sizes->isNotEmpty())
+                @if ($sizes->isNotEmpty())
                 <div class="mb-3">
                     <h6 class="fw-bold">Ukuran</h6>
-                    <div class="d-flex flex-wrap">
-                    @foreach ($minuman->sizes as $size)
-                        <button type="button"
-                        wire:click="$set('selectedSizeId', {{ $size->id }})"
-                        class="size-btn {{ $selectedSizeId == $size->id ? 'active' : 'inactive' }}">
-                        {{ $size->name }}
-                        </button>
-                    @endforeach
+                    <div class="btn-group flex-wrap" role="group">
+                        @foreach ($sizes as $size)
+                            <input type="radio" wire:click="$set('selectedSizeId', {{ $size->id }})" class="btn-check" name="size" value="{{ $size->id }}" id="size-{{ $size->id }}" autocomplete="off" {{ $selectedSizeId == $size->id ? 'checked' : '' }}>
+                            <label class="btn btn-outline-success m-1 px-3 py-2" for="size-{{ $size->id }}">
+                                {{ $size->name }}
+                            </label>
+                        @endforeach
                     </div>
                 </div>
+                
                 @endif
         
                 {{-- Sugar --}}
-                @if ($minuman->sugars->isNotEmpty())
+                @if ($sugars->isNotEmpty())
                 <div class="mb-3">
                     <h6 class="fw-bold">Pilihan Gula</h6>
-                    <div class="d-flex flex-wrap">
-                    @foreach ($minuman->sugars->sortBy('level') as $sugar)
-                        <button type="button"
-                        wire:click="$set('selectedSugarId', {{ $sugar->id }})"
-                        class="size-btn {{ $selectedSugarId == $sugar->id ? 'active' : 'inactive' }}">
-                        {{ $sugar->level }}
-                        </button>
-                    @endforeach
+                    <div class="btn-group flex-wrap" role="group">
+                        @foreach ($sugars->sortBy('level') as $sugar)
+                            <input type="radio" wire:click="$set('selectedSugarId', {{ $sugar->id }})" class="btn-check" name="sugar" value="{{ $sugar->id }}" id="sugar-{{ $sugar->id }}" {{ $selectedSugarId == $sugar->id ? 'checked' : '' }}>
+                            <label class="btn btn-outline-success m-1 px-3 py-2" for="sugar-{{ $sugar->id }}">
+                                {{ $sugar->level }}
+                            </label>
+                        @endforeach
                     </div>
                 </div>
                 @endif
         
                 {{-- Topping --}}
-                @if ($minuman->toppings->isNotEmpty())
+                @if ($toppings->isNotEmpty())
                 <div class="mb-3">
                     <h6 class="fw-bold">Topping</h6>
-                    <div class="d-flex flex-wrap">
-                    @foreach ($minuman->toppings->sortByDesc('nama') as $topping)
-                        <button type="button"
+                    <div class="btn-group flex-wrap" role="group">
+                        @foreach ($toppings->sortByDesc('nama') as $topping)
+                        <input type="radio"
                         wire:click="$set('selectedToppingId', {{ $topping->id }})"
-                        class="size-btn {{ $selectedToppingId == $topping->id ? 'active' : 'inactive' }}">
-                        {{ $topping->nama }}
-                        </button>
-                    @endforeach
+                        class="btn-check"
+                        name="topping"
+                        value="{{ $topping->id }}"
+                        id="topping-{{ $topping->id }}"
+                        {{ $selectedToppingId == $topping->id ? 'checked' : '' }}>
+                            <label class="btn btn-outline-success m-1 px-3 py-2" for="topping-{{ $topping['id'] }}">
+                                {{ $topping['nama'] }}
+                            </label>
+                        @endforeach
                     </div>
                 </div>
                 @endif
@@ -264,7 +268,7 @@
                 </div>
                 <div class="modal-footer d-flex justify-content-between align-items-center">
                 <div class="fw-bold text-success" style="font-size: 1.25rem;">
-                    Rp {{ number_format($this->calculateTotalPrice(), 0, ',', '.') }}
+                    Rp {{ number_format($this->totalPrice, 0, ',', '.') }}
                 </div>
                 <button type="button" class="btn btn-success rounded-pill fw-semibold px-4 py-2" wire:click="addToCart" data-bs-dismiss="modal">
                     Masuk Keranjang

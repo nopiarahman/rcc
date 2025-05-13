@@ -12,26 +12,39 @@ class MinumanDetail extends Component
     public $selectedSugarId;
     public $selectedToppingId;
     public $cart = []; 
+    public $sizes = [];
+    public $sugars = [];
+    public $toppings = [];
+
     public function mount($id)
     {
-        $this->minuman = Minuman::findOrFail($id);
+        $this->minuman = Minuman::with(['sizes', 'sugars', 'toppings'])->findOrFail($id);
+    
+        $this->sizes = $this->minuman->sizes;
+        $this->sugars = $this->minuman->sugars;
+        $this->toppings = $this->minuman->toppings;
+    
         $this->selectedSizeId = $this->minuman->default_size_id;
         $this->selectedSugarId = $this->minuman->default_sugar_id;
         $this->selectedToppingId = $this->minuman->default_topping_id;
     }
+    // public function updated($property)
+    // {
+    //     if (in_array($property, ['selectedSizeId', 'selectedSugarId', 'selectedToppingId'])) {
+    //         $this->dispatch('$refresh');
+    //     }
+    // }
     // Metode untuk menambahkan produk ke keranjang
-    public function calculateTotalPrice()
+    public function getTotalPriceProperty()
     {
-        $size = $this->minuman->sizes->firstWhere('id', $this->selectedSizeId);
-        $sugar = $this->minuman->sugars->firstWhere('id', $this->selectedSugarId);
-        $topping = $this->minuman->toppings->firstWhere('id', $this->selectedToppingId);
-
-        $total = $this->minuman->base_price
-            + ($size?->price ?? 0)
-            + ($sugar?->price ?? 0)
-            + ($topping?->default_price ?? 0);
-
-        return $total;
+        $size = collect($this->sizes)->firstWhere('id', $this->selectedSizeId);
+        $sugar = collect($this->sugars)->firstWhere('id', $this->selectedSugarId);
+        $topping = collect($this->toppings)->firstWhere('id', $this->selectedToppingId);
+    
+        return $this->minuman->base_price
+            + ($size['price'] ?? 0)
+            + ($sugar['price'] ?? 0)
+            + ($topping['default_price'] ?? 0);
     }
 
     public function addToCart()
@@ -48,7 +61,7 @@ class MinumanDetail extends Component
                 'size_id' => $this->selectedSizeId,
                 'sugar_id' => $this->selectedSugarId,
                 'topping_id' => $this->selectedToppingId,
-                'price' => $this->calculateTotalPrice(),
+                'price' => $this->totalPrice,
                 'qty' => 1,
             ];
         }
