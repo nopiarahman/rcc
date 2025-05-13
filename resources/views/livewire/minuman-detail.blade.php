@@ -22,7 +22,7 @@
                 background-color: #f4f4f4;
                 border-radius: 9999px;
                 padding: 4px 12px;
-                font-size: 0.75rem;
+                font-style: italic;
                 color: #333;
                 margin-right: 6px;
                 margin-bottom: 4px;
@@ -248,8 +248,8 @@
                 {{-- Add to Cart (Inside Scrollable) --}}
                 <div class="add-to-cart-inside d-flex justify-content-between align-items-center rounded-3">
                     <button wire:click="addToCart"
-                        class="btn btn-success btn-sm rounded-pill px-4 py-2 fw-semibold">
-                        Tambah Ke Keranjang
+                        class="btn btn-success btn-sm rounded-pill py-1 fw-semibold">
+                        Masuk Keranjang
                     </button>
                     <div class="fw-bold text-dark mb-0" style="font-size: 1.5rem;">
                         Rp {{ number_format($this->calculateTotalPrice(), 0, ',', '.') }}
