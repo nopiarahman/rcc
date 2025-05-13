@@ -59,14 +59,58 @@
             <div class="alert alert-info">Keranjang kosong.</div>
         @endforelse
     </div>
-{{-- Footer (tetap di bawah) --}}
-<div class="footer fixed-bottom bg-white p-3 shadow-lg" style="margin-bottom: 2.5rem">
-    <div class="text-center mb-2">
-        <h5 class="fw-bold mb-1">Total: {{ number_format($total, 0, ',', '.') }} IDR</h5>
-        <p class="text-muted small mb-2">Pastikan pesanan anda benar, siapkan uang pas jika memungkinkan, Jazakallahu khairan</p>
+    
+    {{-- Footer (tetap di bawah) --}}
+    <div class="footer fixed-bottom bg-white p-3 shadow-lg" style="margin-bottom: 2.5rem">
+        <div class="text-center mb-2">
+            <h5 class="fw-bold mb-1">Total: {{ number_format($total, 0, ',', '.') }} IDR</h5>
+            <p class="text-muted small mb-2">Pastikan pesanan anda benar, siapkan uang pas jika memungkinkan, Jazakallahu khairan</p>
+        </div>
+        <button class="btn btn-success w-100 mb-2" data-bs-toggle="modal" data-bs-target="#checkoutModal">
+            Checkout
+        </button>
+        
     </div>
-    <button class="btn btn-success w-100 mb-2">Checkout</button>
-</div>
-<x-mobile-nav/>
 
+    <!-- Modal Konfirmasi Pesanan -->
+    <div wire:ignore.self class="modal fade" id="checkoutModal" tabindex="-1" aria-labelledby="checkoutModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+            <h5 class="modal-title fw-bold" id="checkoutModalLabel">Konfirmasi Pesanan</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+            <div class="modal-body">
+            <div class="mb-2">
+                <label class="form-label">Nama Pemesan</label>
+                <input type="text" class="form-control" wire:model.defer="nama_pemesan">
+            </div>
+    
+            <div class="mb-2">
+                <label class="form-label">Alamat Pengantaran</label>
+                <textarea class="form-control" wire:model.defer="alamat_pengantaran"></textarea>
+            </div>
+    
+            <div class="mb-3">
+                <label class="form-label">Waktu Pengantaran</label>
+                <input type="text" class="form-control" wire:model.defer="waktu_pengantaran" placeholder="Misal: 16.00 WIB / Sekarang">
+            </div>
+            </div>
+            <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+            <button wire:click="konfirmasiCheckout" class="btn btn-success">
+                Kirim ke WhatsApp
+            </button>
+            </div>
+        </div>
+        </div>
+    </div>
+  
+<x-mobile-nav/>
+<script>
+    window.addEventListener('close-modal', () => {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('checkoutModal'));
+        if (modal) modal.hide();
+    });
+</script>
 </div>

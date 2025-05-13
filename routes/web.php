@@ -33,6 +33,7 @@ Route::middleware(['auth'])->group(function () {
     Volt::route('minuman/sugar/create', 'sugar.create')->name('minuman.sugar.create');
     Volt::route('minuman/topping/create', 'topping.create')->name('minuman.topping.create');
     
+    Volt::route('list-pesanan', 'pesanan.index')->name('pesanan.index');
 });
 
 
@@ -48,9 +49,9 @@ Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
 Route::get('/minuman-detail-{id}',MinumanDetail::class)->name('minuman.detail');
 Route::get('/keranjang', CartPage::class)->name('cart');
 
-// Route::get('/debug/cart', function () {
-//     return session('cart');
-// })->name('debug-cart');
+Route::get('/debug/cart', function () {
+    return session('cart');
+})->name('debug-cart');
 Route::get('/pesanan', HistoryPage::class)->name('history');
 
 require __DIR__.'/auth.php';
