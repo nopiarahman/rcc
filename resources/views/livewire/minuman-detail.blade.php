@@ -10,7 +10,7 @@
             .content-wrapper {
                 flex: 1;
                 overflow: hidden;
-                margin-top: -6rem;
+                margin-top: -4rem;
                 z-index: 2;
                 position: relative;
             }
@@ -171,7 +171,7 @@
     
     
         {{-- Konten Scrollable --}}
-        <div class="card rounded-top-xl content-wrapper shadow-lg" style="animation: fadeSlideUp 0.6s ease-out both; margin-bottom:50px">
+        <div class="card rounded-top-xl content-wrapper shadow-lg" style="animation: fadeSlideUp 0.6s ease-out both;padding-bottom:2rem">
             <div class="scrollable-content" style="padding-bottom: 1rem; margin-bottom:2rem">
 
                 <div class="d-flex justify-content-between align-items-center mb-2">
