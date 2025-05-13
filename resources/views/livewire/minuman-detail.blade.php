@@ -64,7 +64,7 @@
 
                 overflow-y: auto;
                 margin-top: 2rem;
-                padding:0 2rem 0 2rem;
+                padding:0 2rem 2rem 2rem;
             }
             .scroll-inner {
                 scrollbar-width: thin;
@@ -172,7 +172,7 @@
     
         {{-- Konten Scrollable --}}
         <div class="card rounded-top-xl content-wrapper shadow-lg" style="animation: fadeSlideUp 0.6s ease-out both; margin-bottom:50px">
-            <div class="scrollable-content" style="padding-bottom: 1rem">
+            <div class="scrollable-content" style="padding-bottom: 1rem; margin-bottom:2rem">
 
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <div>
