@@ -184,21 +184,23 @@
                         {{ $minuman->deskripsi }}
                     </p>
                 </div>
-                <div class="text-center" style="justify-items: center">
-                    <div class="fw-bold text-success" style="font-size: 1.5rem;">
-                        Rp {{ number_format($this->calculateTotalPrice(), 0, ',', '.') }}
+                <div class="d-flex justify-content-center align-items-center" >
+                    <div class="text-center">
+                        <div class="fw-bold text-success mb-2" style="font-size: 1.5rem;">
+                            Rp {{ number_format($this->calculateTotalPrice(), 0, ',', '.') }}
+                        </div>
+                        <button type="button"
+                            class="btn btn-success btn-sm rounded-pill px-3 py-2 fw-semibold d-flex align-items-center gap-2 mx-auto"
+                            data-bs-toggle="modal" data-bs-target="#pilihanModal">
+                
+                            <i class="material-symbols-outlined"
+                                style="font-size: 18px; font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;">
+                                shopping_bag
+                            </i>
+                            <span>Masukkan ke Keranjang</span>
+                        </button>
                     </div>
-                    <button type="button"
-                    class="btn btn-success btn-sm rounded-pill px-3 py-2 fw-semibold d-flex align-items-center gap-2 mt-1"
-                    data-bs-toggle="modal" data-bs-target="#pilihanModal">
-                    
-                    <i class="material-symbols-outlined" style="font-size: 18px; font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;">
-                        shopping_bag
-                    </i>
-                    <span>Masukkan ke Keranjang</span>
-                </button>
-            </div>
-            
+                </div>
             </div>
         </div>
         <!-- Modal Pilihan -->
@@ -261,7 +263,7 @@
         
                 </div>
                 <div class="modal-footer d-flex justify-content-between align-items-center">
-                <div class="fw-bold text-dark" style="font-size: 1.25rem;">
+                <div class="fw-bold text-success" style="font-size: 1.25rem;">
                     Rp {{ number_format($this->calculateTotalPrice(), 0, ',', '.') }}
                 </div>
                 <button type="button" class="btn btn-success rounded-pill fw-semibold px-4 py-2" wire:click="addToCart" data-bs-dismiss="modal">
