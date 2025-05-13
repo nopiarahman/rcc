@@ -1,4 +1,4 @@
-<div class="" style="min-height: 100vh; overflow: hidden; position: relative; margin-bottom:-2rem;">
+<div class="" style=" overflow: hidden; position: relative;">
         <style>
             .page-wrapper {
                 display: flex;
@@ -248,7 +248,7 @@
                 {{-- Add to Cart (Inside Scrollable) --}}
                 <div class="add-to-cart-inside d-flex justify-content-between align-items-center rounded-3">
                     <button wire:click="addToCart"
-                        class="btn btn-success btn-sm rounded-pill py-1 fw-semibold">
+                        class="btn btn-success btn-sm rounded-pill px-3 py-2 fw-semibold">
                         Masuk Keranjang
                     </button>
                     <div class="fw-bold text-dark mb-0" style="font-size: 1.5rem;">
