@@ -267,7 +267,7 @@
         
                 </div>
                 <div class="modal-footer d-flex justify-content-between align-items-center">
-                    <div wire:loading.class="opacity-50 text-yellow">
+                    <div wire:loading.delay.shorter.class="opacity-50 text-yellow">
                 <div class="fw-bold text-success" style="font-size: 1.25rem;">
                     Rp {{ number_format($this->totalPrice, 0, ',', '.') }}
                 </div>
