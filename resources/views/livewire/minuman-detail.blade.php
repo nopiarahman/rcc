@@ -184,7 +184,7 @@
                         {{ $minuman->deskripsi }}
                     </p>
                 </div>
-                <div class="text-center" style="justify-self: center">
+                <div class="text-center" style="justify-items: center">
                     <div class="fw-bold text-success" style="font-size: 1.5rem;">
                         Rp {{ number_format($this->calculateTotalPrice(), 0, ',', '.') }}
                     </div>

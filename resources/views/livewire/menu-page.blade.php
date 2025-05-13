@@ -1,7 +1,7 @@
 <div class="container col-md-6" style="padding: 2rem">
     <style>
         .carousel-image {
-            height: 200px; /* Ubah sesuai kebutuhan */
+            height: 150px; /* Ubah sesuai kebutuhan */
             object-fit: cover;
             width: 100%;
         }

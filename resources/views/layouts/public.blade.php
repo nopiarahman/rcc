@@ -38,7 +38,7 @@
             text-decoration: none;
         }
         .fixed-img-height {
-            height: 180px;
+            height: 170px;
             object-fit: cover;
         }
         .gradient {
