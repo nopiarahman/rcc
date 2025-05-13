@@ -10,7 +10,7 @@
             .content-wrapper {
                 flex: 1;
                 overflow: hidden;
-                margin-top: -4rem;
+                margin-top: -6rem;
                 z-index: 2;
                 position: relative;
             }
@@ -45,7 +45,7 @@
             }
             .sticky-image {
                 width: 100%;
-                height: 330px;
+                height: 250px;
                 object-fit: cover;
                 position: relative;
                 z-index: 1;
