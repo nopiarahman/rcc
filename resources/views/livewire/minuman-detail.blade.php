@@ -10,7 +10,7 @@
             .content-wrapper {
                 flex: 1;
                 overflow: hidden;
-                margin-top: -4rem;
+                margin-top: -2rem;
                 z-index: 2;
                 position: relative;
             }
@@ -126,27 +126,14 @@
                 font-size: 1.2rem;
             }
             /* Ukuran font dalam konten scrollable */
-            .scrollable-content small,
-            .scrollable-content p,
-            .scrollable-content h6,
+            /* .scrollable-content small, */
+            /* .scrollable-content p, */
+            /* .scrollable-content h6, */
             .scrollable-content .tag,
             .scrollable-content .size-btn {
                 font-size: 0.85rem !important;
             }
 
-            /* Ukuran tombol lebih kecil */
-            .scrollable-content .size-btn {
-                padding: 4px 14px;
-                font-weight: 500;
-            }
-
-            /* Heading size disesuaikan */
-            .scrollable-content h4 {
-                font-size: 1rem;
-            }
-            .scrollable-content h6 {
-                font-size: 0.9rem;
-            }
         </style>
     
     <div class="page-wrapper">
@@ -190,54 +177,6 @@
                     @endforeach
                 </div>
 
-                {{-- Size --}}
-                @if ($minuman->sizes->isNotEmpty())
-                    <div class="mb-3">
-                        <h6 class="fw-bold">Ukuran</h6>
-                        <div class="d-flex flex-wrap">
-                            @foreach ($minuman->sizes as $size)
-                                <button type="button"
-                                    wire:click="$set('selectedSizeId', {{ $size->id }})"
-                                    class="size-btn {{ $selectedSizeId == $size->id ? 'active' : 'inactive' }}">
-                                    {{ $size->name }}
-                                </button>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-
-                {{-- Sugar --}}
-                @if ($minuman->sugars->isNotEmpty())
-                    <div class="mb-3">
-                        <h6 class="fw-bold">Pilihan Gula</h6>
-                        <div class="d-flex flex-wrap">
-                            @foreach ($minuman->sugars->sortBy('level') as $sugar)
-                                <button type="button"
-                                    wire:click="$set('selectedSugarId', {{ $sugar->id }})"
-                                    class="size-btn {{ $selectedSugarId == $sugar->id ? 'active' : 'inactive' }}">
-                                    {{ $sugar->level }}
-                                </button>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-
-                {{-- Topping --}}
-                @if ($minuman->toppings->isNotEmpty())
-                    <div class="mb-3">
-                        <h6 class="fw-bold">Topping</h6>
-                        <div class="d-flex flex-wrap">
-                            @foreach ($minuman->toppings->sortByDesc('nama') as $topping)
-                                <button type="button"
-                                    wire:click="$set('selectedToppingId', {{ $topping->id }})"
-                                    class="size-btn {{ $selectedToppingId == $topping->id ? 'active' : 'inactive' }}">
-                                    {{ $topping->nama }}
-                                </button>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-
                 {{-- About --}}
                 <div class="mb-4">
                     <h6 class="fw-bold">Keterangan</h6>
@@ -245,29 +184,94 @@
                         {{ $minuman->deskripsi }}
                     </p>
                 </div>
-                {{-- Add to Cart (Inside Scrollable) --}}
-                <div class="add-to-cart-inside d-flex justify-content-between align-items-center rounded-3">
-                    <button wire:click="addToCart"
-                        class="btn btn-success btn-sm rounded-pill px-3 py-2 fw-semibold">
-                        Masuk Keranjang
-                    </button>
-                    <div class="fw-bold text-dark mb-0" style="font-size: 1.5rem;">
+                <div class="text-center" style="justify-self: center">
+                    <div class="fw-bold text-success" style="font-size: 1.5rem;">
                         Rp {{ number_format($this->calculateTotalPrice(), 0, ',', '.') }}
                     </div>
-                </div>
-            </div>
-
-            {{-- Add to Cart --}}
-            {{-- <div class="add-to-cart p-3 d-flex justify-content-between align-items-center bg-white">
-                <button wire:click="addToCart"
-                    class="btn btn-success rounded-pill px-4 py-2 fw-semibold">
-                    Tambah Ke Keranjang
+                    <button type="button"
+                    class="btn btn-success btn-sm rounded-pill px-3 py-2 fw-semibold d-flex align-items-center gap-2 mt-1"
+                    data-bs-toggle="modal" data-bs-target="#pilihanModal">
+                    
+                    <i class="material-symbols-outlined" style="font-size: 18px; font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;">
+                        shopping_bag
+                    </i>
+                    <span>Masukkan ke Keranjang</span>
                 </button>
-                <div class="fw-bold fs-5 text-dark mb-0">
+            </div>
+            
+            </div>
+        </div>
+        <!-- Modal Pilihan -->
+        <div wire:ignore.self class="modal fade" id="pilihanModal" tabindex="-1" aria-labelledby="pilihanModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4">
+                <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="pilihanModalLabel">Pilih Varian</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body">
+        
+                {{-- Size --}}
+                @if ($minuman->sizes->isNotEmpty())
+                <div class="mb-3">
+                    <h6 class="fw-bold">Ukuran</h6>
+                    <div class="d-flex flex-wrap">
+                    @foreach ($minuman->sizes as $size)
+                        <button type="button"
+                        wire:click="$set('selectedSizeId', {{ $size->id }})"
+                        class="size-btn {{ $selectedSizeId == $size->id ? 'active' : 'inactive' }}">
+                        {{ $size->name }}
+                        </button>
+                    @endforeach
+                    </div>
+                </div>
+                @endif
+        
+                {{-- Sugar --}}
+                @if ($minuman->sugars->isNotEmpty())
+                <div class="mb-3">
+                    <h6 class="fw-bold">Pilihan Gula</h6>
+                    <div class="d-flex flex-wrap">
+                    @foreach ($minuman->sugars->sortBy('level') as $sugar)
+                        <button type="button"
+                        wire:click="$set('selectedSugarId', {{ $sugar->id }})"
+                        class="size-btn {{ $selectedSugarId == $sugar->id ? 'active' : 'inactive' }}">
+                        {{ $sugar->level }}
+                        </button>
+                    @endforeach
+                    </div>
+                </div>
+                @endif
+        
+                {{-- Topping --}}
+                @if ($minuman->toppings->isNotEmpty())
+                <div class="mb-3">
+                    <h6 class="fw-bold">Topping</h6>
+                    <div class="d-flex flex-wrap">
+                    @foreach ($minuman->toppings->sortByDesc('nama') as $topping)
+                        <button type="button"
+                        wire:click="$set('selectedToppingId', {{ $topping->id }})"
+                        class="size-btn {{ $selectedToppingId == $topping->id ? 'active' : 'inactive' }}">
+                        {{ $topping->nama }}
+                        </button>
+                    @endforeach
+                    </div>
+                </div>
+                @endif
+        
+                </div>
+                <div class="modal-footer d-flex justify-content-between align-items-center">
+                <div class="fw-bold text-dark" style="font-size: 1.25rem;">
                     Rp {{ number_format($this->calculateTotalPrice(), 0, ',', '.') }}
                 </div>
-            </div> --}}
+                <button type="button" class="btn btn-success rounded-pill fw-semibold px-4 py-2" wire:click="addToCart" data-bs-dismiss="modal">
+                    Masuk Keranjang
+                </button>
+                </div>
+            </div>
+            </div>
         </div>
+  
     <x-mobile-nav/>
 
 </div>
