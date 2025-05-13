@@ -154,11 +154,11 @@
                 @endif
         </div>
         {{-- Gambar --}}
-        <img wire:ignore src="{{ $minuman->getFirstMediaUrl('foto') }}" alt="{{ $minuman->nama }}" class="sticky-image">
+        <img wire:ignore.self src="{{ $minuman->getFirstMediaUrl('foto') }}" alt="{{ $minuman->nama }}" class="sticky-image">
     
     
         {{-- Konten Scrollable --}}
-        <div class="card rounded-top-xl content-wrapper shadow-lg" style="animation: fadeSlideUp 0.6s ease-out both;padding-bottom:2rem">
+        <div wire:ignore.self class="card rounded-top-xl content-wrapper shadow-lg" style="animation: fadeSlideUp 0.6s ease-out both;padding-bottom:2rem">
             <div class="scrollable-content" style="padding-bottom: 1rem; margin-bottom:2rem">
 
                 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -267,10 +267,11 @@
         
                 </div>
                 <div class="modal-footer d-flex justify-content-between align-items-center">
-                    
+                    <div wire:loading.class="opacity-50 text-yellow">
                 <div class="fw-bold text-success" style="font-size: 1.25rem;">
                     Rp {{ number_format($this->totalPrice, 0, ',', '.') }}
                 </div>
+            </div>
                 <button type="button" class="btn btn-success rounded-pill fw-semibold px-4 py-2" wire:click="addToCart" data-bs-dismiss="modal">
                     Masuk Keranjang
                 </button>
