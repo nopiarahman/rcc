@@ -10,7 +10,7 @@
             .content-wrapper {
                 flex: 1;
                 overflow: hidden;
-                margin-top: -2rem;
+                margin-top: -4rem;
                 z-index: 2;
                 position: relative;
             }
@@ -61,10 +61,10 @@
                 flex-direction: column;
             }
             .scrollable-content {
-                height: calc(100vh - 330px - 80px); /* tinggi viewport - tinggi gambar - tinggi tombol cart */
+
                 overflow-y: auto;
                 margin-top: 2rem;
-                padding:0 2.5rem 0 2.5rem;
+                padding:0 2rem 0 2rem;
             }
             .scroll-inner {
                 scrollbar-width: thin;
@@ -125,6 +125,28 @@
             .header-title {
                 font-size: 1.2rem;
             }
+            /* Ukuran font dalam konten scrollable */
+            .scrollable-content small,
+            .scrollable-content p,
+            .scrollable-content h6,
+            .scrollable-content .tag,
+            .scrollable-content .size-btn {
+                font-size: 0.85rem !important;
+            }
+
+            /* Ukuran tombol lebih kecil */
+            .scrollable-content .size-btn {
+                padding: 4px 14px;
+                font-weight: 500;
+            }
+
+            /* Heading size disesuaikan */
+            .scrollable-content h4 {
+                font-size: 1rem;
+            }
+            .scrollable-content h6 {
+                font-size: 0.9rem;
+            }
         </style>
     
     <div class="page-wrapper">
@@ -149,8 +171,8 @@
     
     
         {{-- Konten Scrollable --}}
-        <div class="card rounded-top-xl content-wrapper shadow-lg" style="animation: fadeSlideUp 0.6s ease-out both;padding-bottom:50px; margin-bottom:50px">
-            <div class="scrollable-content">
+        <div class="card rounded-top-xl content-wrapper shadow-lg" style="animation: fadeSlideUp 0.6s ease-out both; margin-bottom:50px">
+            <div class="scrollable-content" style="padding-bottom: 1rem">
 
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <div>
@@ -223,11 +245,20 @@
                         {{ $minuman->deskripsi }}
                     </p>
                 </div>
-
+                {{-- Add to Cart (Inside Scrollable) --}}
+                <div class="add-to-cart-inside d-flex justify-content-between align-items-center rounded-3">
+                    <button wire:click="addToCart"
+                        class="btn btn-success btn-sm rounded-pill px-4 py-2 fw-semibold">
+                        Tambah Ke Keranjang
+                    </button>
+                    <div class="fw-bold text-dark mb-0" style="font-size: 1.5rem;">
+                        Rp {{ number_format($this->calculateTotalPrice(), 0, ',', '.') }}
+                    </div>
+                </div>
             </div>
 
             {{-- Add to Cart --}}
-            <div class="add-to-cart p-3 d-flex justify-content-between align-items-center bg-white">
+            {{-- <div class="add-to-cart p-3 d-flex justify-content-between align-items-center bg-white">
                 <button wire:click="addToCart"
                     class="btn btn-success rounded-pill px-4 py-2 fw-semibold">
                     Tambah Ke Keranjang
@@ -235,7 +266,7 @@
                 <div class="fw-bold fs-5 text-dark mb-0">
                     Rp {{ number_format($this->calculateTotalPrice(), 0, ',', '.') }}
                 </div>
-            </div>
+            </div> --}}
         </div>
     <x-mobile-nav/>
 
