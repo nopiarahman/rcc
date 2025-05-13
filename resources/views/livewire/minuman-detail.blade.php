@@ -267,9 +267,11 @@
         
                 </div>
                 <div class="modal-footer d-flex justify-content-between align-items-center">
+                    <div wire:loading.class="opacity-50">
                 <div class="fw-bold text-success" style="font-size: 1.25rem;">
                     Rp {{ number_format($this->totalPrice, 0, ',', '.') }}
                 </div>
+                    </div>
                 <button type="button" class="btn btn-success rounded-pill fw-semibold px-4 py-2" wire:click="addToCart" data-bs-dismiss="modal">
                     Masuk Keranjang
                 </button>
