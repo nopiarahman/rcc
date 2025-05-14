@@ -1,4 +1,4 @@
-<div class="max-w-4xl mx-auto p-6 " >
+<div class="max-w-5xl mx-auto p-6 " >
 <x-navbar-minuman/>
     @if (session()->has('success'))
         <div class="p-4 mb-4 text-green-700 bg-green-100 rounded">
