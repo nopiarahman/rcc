@@ -149,10 +149,10 @@ new class extends Component
     {
         $bahan = Bahan::findOrFail($id);
         $this->bahan_id = $bahan->id;
-        $this->nama = $bahan->nama;
-        $this->kategori = $bahan->kategori;
-        $this->satuan = $bahan->satuan;
-        $this->harga_satuan = $bahan->harga_satuan;
+        $this->nama = $bahan->nama ?? '';
+        $this->kategori = $bahan->kategori ?? '';
+        $this->satuan = $bahan->satuan ?? '';
+        $this->harga_satuan = $bahan->harga_satuan ?? '';
     }
 
     function hapus($id)
