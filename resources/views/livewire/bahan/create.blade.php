@@ -29,7 +29,16 @@
                 <flux:input type="number" wire:model.defer="harga_satuan" />
                 <flux:error name="harga_satuan" />
             </flux:field>
-
+            <flux:field class="mb-2">
+                <flux:label>Kategori</flux:label>
+                <flux:select wire:model.defer="kategori">
+                    <option value="">-- Pilih Kategori --</option>
+                    <option value="display">Display</option>
+                    <option value="non-display">Non-display</option>
+                </flux:select>
+                <flux:error name="kategori" />
+            </flux:field>
+            
             <div class="flex items-center space-x-2">
                 <flux:button type="submit" variant="primary">
                     {{ $bahan_id ? 'Update' : 'Simpan' }}
@@ -53,6 +62,7 @@
                     <th class="px-6 py-4 border-b border-gray-300">#</th>
                     <th class="px-6 py-4 border-b border-gray-300">Nama</th>
                     <th class="px-6 py-4 border-b border-gray-300">Satuan</th>
+                    <th class="px-6 py-4 border-b border-gray-300">Kategori</th>
                     <th class="px-6 py-4 border-b border-gray-300">Harga Satuan</th>
                     <th class="px-6 py-4 border-b border-gray-300">Aksi</th>
                 </tr>
@@ -63,6 +73,7 @@
                         <td class="px-6 py-2 border-b border-gray-200 ">{{ $i + 1 }}</td>
                         <td class="px-6 py-2 border-b border-gray-200">{{ $bahan->nama }}</td>
                         <td class="px-6 py-2 border-b border-gray-200">{{ $bahan->satuan }}</td>
+                        <td class="px-6 py-2 border-b border-gray-200">{{ $bahan->kategori }}</td>
                         <td class="px-6 py-2 border-b border-gray-200">
                             Rp{{ number_format($bahan->harga_satuan, 0, ',', '.') }}
                         </td>
@@ -95,6 +106,7 @@ new class extends Component
 {
     public string $nama = '';
     public string $satuan = '';
+    public string $kategori = '';
     public $harga_satuan;
     public ?int $bahan_id = null;
     public $bahans = [];
@@ -108,6 +120,7 @@ new class extends Component
     {
         return [
             'nama' => 'required|string|min:2',
+            'kategori' => 'required|string|min:2',
             'satuan' => 'required|string',
             'harga_satuan' => 'required|numeric|min:0',
         ];
@@ -122,6 +135,7 @@ new class extends Component
             [
                 'nama' => $this->nama,
                 'satuan' => $this->satuan,
+                'kategori' => $this->kategori,
                 'harga_satuan' => $this->harga_satuan,
             ]
         );
@@ -136,6 +150,7 @@ new class extends Component
         $bahan = Bahan::findOrFail($id);
         $this->bahan_id = $bahan->id;
         $this->nama = $bahan->nama;
+        $this->kategori = $bahan->kategori;
         $this->satuan = $bahan->satuan;
         $this->harga_satuan = $bahan->harga_satuan;
     }
@@ -151,6 +166,7 @@ new class extends Component
     {
         $this->bahan_id = null;
         $this->nama = '';
+        $this->kategori = '';
         $this->satuan = '';
         $this->harga_satuan = '';
     }
