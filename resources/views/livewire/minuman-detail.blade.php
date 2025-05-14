@@ -171,7 +171,7 @@
                 {{-- Tags --}}
                 <div class="mb-3 d-flex flex-wrap" style="text-indent: 1">
                     @foreach ($minuman->bahans as $item)
-                        @if ($item->nama != 'Gelas + Straw')
+                        @if ($item->kategori =='display')
                             <div class="tag">{{ $item->nama }}</div>
                         @endif
                     @endforeach
