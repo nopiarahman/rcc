@@ -1,4 +1,4 @@
-<div class="container p-4 bg-white mb-5" style="height: 100vh; display: flex; flex-direction: column;">
+<div class="container p-4 bg-white mb-5" style="height: 120vh; display: flex; flex-direction: column;">
     <style>
             @keyframes fadeSlideUp {
         0% {
@@ -28,7 +28,7 @@
     </div>
 
     {{-- Scrollable Cart --}}
-    <div class="flex-grow-1 overflow-auto pe-1" style="margin-bottom:35%;">
+    <div  style="margin-bottom:35%;">
         @forelse($cartItems as $item)
             <div class="card mb-2">
                 <div class="card-body d-flex justify-content-between align-items-center">
