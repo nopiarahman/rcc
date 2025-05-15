@@ -66,7 +66,7 @@
             <h5 class="fw-bold mb-1">Total: {{ number_format($total, 0, ',', '.') }} IDR</h5>
             <p class="text-muted small mb-2">Pastikan pesanan anda benar, siapkan uang pas jika memungkinkan, Jazakallahu khairan</p>
         </div>
-        <button class="btn btn-success w-100 mb-2" data-bs-toggle="modal" data-bs-target="#checkoutModal">
+        <button id="checkoutBtn" class="btn btn-success w-100 mb-2">
             Checkout
         </button>
         
@@ -108,9 +108,65 @@
   
 <x-mobile-nav/>
 <script>
+    document.getElementById('checkoutBtn').addEventListener('click', function (e) {
+        e.preventDefault(); // Cegah langsung buka modal
+
+        if (!navigator.geolocation) {
+            alert('Browser Anda tidak mendukung fitur lokasi.');
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            function (position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+
+                // Titik pusat perumahan (contoh: Masjid Ar-Raihaan)
+                const centerLat = -1.66651;
+                const centerLng = 103.65238;
+
+                // Radius maksimal dalam meter (misal: 300 meter)
+                const maxRadius = 600;
+
+                const distance = getDistanceFromLatLonInMeters(lat, lng, centerLat, centerLng);
+
+                if (distance <= maxRadius) {
+                    // Jika dalam radius, tampilkan modal checkout
+                    const modal = new bootstrap.Modal(document.getElementById('checkoutModal'));
+                    modal.show();
+                } else {
+                    alert('Layanan ini sementara hanya tersedia di dalam area perumahan. Jazakallahu khairan.');
+                }
+            },
+            function (error) {
+                alert('Tidak dapat mengakses lokasi. Mohon izinkan akses GPS di browser Anda.');
+            }
+        );
+    });
+
+    // Fungsi Haversine untuk hitung jarak antar koordinat
+    function getDistanceFromLatLonInMeters(lat1, lon1, lat2, lon2) {
+        const R = 6371e3; // Radius bumi dalam meter
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) *
+            Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const distance = R * c;
+        return distance;
+    }
+</script>
+
+<script>
     window.addEventListener('close-modal', () => {
         const modal = bootstrap.Modal.getInstance(document.getElementById('checkoutModal'));
         if (modal) modal.hide();
     });
 </script>
+
 </div>
