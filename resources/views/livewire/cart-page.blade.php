@@ -28,7 +28,7 @@
     </div>
 
     {{-- Scrollable Cart --}}
-    <div class="flex-grow-1 overflow-auto pe-1">
+    <div class="flex-grow-1 overflow-auto pe-1" style="margin-bottom:35%;">
         @forelse($cartItems as $item)
             <div class="card mb-2">
                 <div class="card-body d-flex justify-content-between align-items-center">
@@ -135,11 +135,15 @@
                     const modal = new bootstrap.Modal(document.getElementById('checkoutModal'));
                     modal.show();
                 } else {
-                    alert('Layanan ini sementara hanya tersedia di dalam area perumahan. Jazakallahu khairan.');
+                    alert('Layanan ini sementara hanya tersedia di area perumahan Ar-Raihaan dan sekitarnya.');
                 }
             },
             function (error) {
-                alert('Tidak dapat mengakses lokasi. Mohon izinkan akses GPS di browser Anda.');
+                if (error.code === error.PERMISSION_DENIED) {
+                    alert('Akses lokasi ditolak. Silakan izinkan lokasi di pengaturan browser.');
+                } else {
+                    alert('Tidak bisa mendeteksi lokasi. Pastikan GPS aktif dan coba lagi.');
+                }
             }
         );
     });
