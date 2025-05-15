@@ -28,7 +28,7 @@
     </div>
 
     {{-- Scrollable Cart --}}
-    <div  style="margin-bottom:200px;">
+    <div  style="padding-bottom:200px;">
         @forelse($cartItems as $item)
             <div class="card mb-2">
                 <div class="card-body d-flex justify-content-between align-items-center">
