@@ -14,9 +14,10 @@
         @if ($fotoPreview)
             <img src="{{ $fotoPreview }}" alt="Preview Foto" class="w-32 h-32 object-cover rounded mb-2">
         @endif
+        
         <flux:field class="mb-2">
             <flux:label>Nama</flux:label>
-            <flux:input type="text" wire:model.defer="nama" value="{{$minuman->nama}}" />
+            <flux:input type="text" wire:model.defer="nama"  />
             <flux:error name="nama" />
         </flux:field>
 
@@ -45,7 +46,7 @@
             <label for="deskripsi" class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
             <textarea
                 id="deskripsi"
-                wire:model.defer="minuman.deskripsi"
+                wire:model.defer="deskripsi"
                 rows="4"
                 class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
             ></textarea>
