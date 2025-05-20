@@ -37,13 +37,25 @@
 
     {{-- Logo dan Teks --}}
     <div class="logo-container mb-3">
-        <img src="{{ asset('images/logo-white.png') }}" alt="Logo" style="width: 30px; height:auto">
-        <div class="logo-text text-white">Raihaan Coffee Corner</div>
+        <img src="{{ asset('storage/' . $webSettings->logo_path) }}" alt="{{ $webSettings->site_name }}" style="width: 30px; height:auto">
+        <div class="logo-text text-white">{{ $webSettings->site_name }}</div>
     </div>
     {{-- Info Pengguna --}}
     <div class="d-flex align-items-center justify-content-between mb-3 ">
         <div>
-            <div class="fw-bold" style="color: rgb(226, 226, 226)">Selamat datang!</div>
+            @php
+                $jam = date('G');
+                if ($jam >= 0 && $jam < 10) {
+                    $ucapan = 'Selamat pagi!';
+                } elseif ($jam >= 10 && $jam < 15) {
+                    $ucapan = 'Selamat siang!';
+                } elseif ($jam >= 15 && $jam < 18) {
+                    $ucapan = 'Selamat sore!';
+                } else {
+                    $ucapan = 'Selamat malam!';
+                }
+            @endphp
+            <div class="fw-bold" style="color: rgb(226, 226, 226)">{{ $ucapan }}</div>
             <small style="color: rgb(175, 175, 175)">Kopi ala cafe sampai ke pintu rumahmu</small>
         </div>
         <div class="bg-success rounded-circle p-1 shadow-sm">
@@ -57,18 +69,18 @@
         <div id="heroCarousel" class="carousel slide rounded-4 overflow-hidden shadow-lg" data-bs-ride="carousel" data-bs-interval="2000">
             {{-- Indicators --}}
             <div class="carousel-indicators">
-                <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
-                <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                @foreach($banners as $banner)
+                    <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="{{ $loop->index }}" class="{{ $loop->first ? 'active' : '' }}" aria-current="{{ $loop->first ? 'true' : 'false' }}" aria-label="Slide {{ $loop->index + 1 }}"></button>
+                @endforeach
             </div>
 
             {{-- Slides --}}
             <div class="carousel-inner">
-                <div class="carousel-item active">
-                    <img src="{{ asset('images/banner1.jpg') }}" class="d-block w-100 carousel-image" alt="Banner 1">
-                </div>
-                <div class="carousel-item">
-                    <img src="{{ asset('images/banner2.jpg') }}" class="d-block w-100 carousel-image" alt="Banner 2">
-                </div>
+                @foreach($banners as $banner)
+                    <div class="carousel-item {{ $loop->first ? 'active' : '' }}">
+                        <img src="{{ $banner->getFirstMediaUrl('banners', 'thumb') }}" class="d-block w-100 carousel-image" alt="{{ $banner->title }}">
+                    </div>
+                @endforeach
             </div>
         </div>
     </div>

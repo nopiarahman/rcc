@@ -24,6 +24,7 @@ class DaftarMinuman extends Component
         $this->filterKategori = $kategori;
         $this->getMinumans();
     }
+
     public function openDetailModal($minumanId)
     {
         return redirect()->route('minuman.detail', ['minuman' => $minumanId]);
@@ -35,4 +36,13 @@ class DaftarMinuman extends Component
         })->get();
     }
 
+    public function render()
+    {
+        $settings = \App\Models\WebSetting::first();
+        $theme = $settings ? $settings->theme : 'green';
+
+        return view('livewire.daftar-minuman', [
+            'theme' => $theme
+        ]);
+    }
 }

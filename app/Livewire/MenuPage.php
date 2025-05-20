@@ -5,11 +5,14 @@ namespace App\Livewire;
 use App\Models\Minuman;
 use Livewire\Component;
 
+use App\Models\Banner;
+
 class MenuPage extends Component
 {
     public $filterKategori = '';
     public $allKategoris = [];
     public $minumans = [];
+    public $banners = [];
 
     public function mount()
     {
@@ -19,6 +22,9 @@ class MenuPage extends Component
             ->filter()
             ->values()
             ->toArray();
+        $this->banners = Banner::where('status', true)
+            ->orderBy('order')
+            ->get();
     }
 
     public function gantiKategori($kategori)

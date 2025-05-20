@@ -1,15 +1,42 @@
 <div>
     {{-- Kategori --}}
-    <h5 class="fw-bold mb-2">Minuman {{$filterKategori}}</h5>
-    <div class="d-flex gap-2 overflow-auto">
-        <button class=" btn rounded-4 btn-sm px-3 {{ $filterKategori == '' ? 'btn-success' : 'btn-outline-success' }}"
-                wire:click="gantiKategori('')">Semua</button>
+    <h5 class="fw-bold mb-2">Minuman {{$filterKategori ?: 'Semua'}}</h5>
+    <div class="d-flex gap-2 overflow-auto pb-2">
+        @php
+            $themeClasses = [
+                'green' => 'btn-success',
+                'brown' => 'btn-brown',
+                'yellow' => 'btn-warning',
+                'blue' => 'btn-primary',
+                'orange' => 'btn-orange',
+            ];
+            $activeClass = $themeClasses[$theme] ?? 'btn-success';
+        @endphp
+        
+        <button 
+            wire:click="gantiKategori('')" 
+            class="btn rounded-4 btn-sm px-3 {{ $filterKategori == '' ? $activeClass : 'btn-outline-secondary' }}">
+            Semua
+        </button>
         @foreach($allKategoris as $kategori)
-        <button wire:click="gantiKategori('{{ $kategori }}')" class=" btn rounded-4 btn-sm px-3 {{ $filterKategori == $kategori ? 'btn-success' : 'btn-outline-success' }}">
+        <button 
+            wire:click="gantiKategori('{{ $kategori }}')" 
+            class="btn rounded-4 btn-sm px-3 {{ $filterKategori == $kategori ? $activeClass : 'btn-outline-secondary' }}">
             {{ $kategori }}
         </button>
         @endforeach
     </div>
+
+    <style>
+        .btn-brown {
+            background-color: #3e2723;
+            border-color: #3e2723;
+        }
+        .btn-orange {
+            background-color: #e65100;
+            border-color: #e65100;
+        }
+    </style>
     
     {{-- Daftar Minuman --}}
     <div>

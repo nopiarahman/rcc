@@ -19,6 +19,13 @@ Route::view('dashboard', 'dashboard')
     ->name('dashboard');
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('/dashboard/banners', \App\Livewire\Admin\BannerManagement::class)
+        ->name('dashboard.banners');
+    Route::get('/dashboard/web-settings', \App\Livewire\Admin\WebSettings::class)
+        ->name('dashboard.web-settings');
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
     Route::redirect('settings', 'settings/profile');
     Route::get('minuman', Index::class)->name('minuman.index');
 
@@ -53,5 +60,24 @@ Route::get('/debug/cart', function () {
     return session('cart');
 })->name('debug-cart');
 Route::get('/pesanan', HistoryPage::class)->name('history');
+
+// Test route for timezone
+Route::get('/test-timezone', function () {
+    return [
+        'current_time' => now()->format('Y-m-d H:i:s'),
+        'timezone' => config('app.timezone'),
+        'php_timezone' => date_default_timezone_get(),
+    ];
+});
+
+// Test route for web settings
+Route::get('/test-web-settings', function () {
+    $settings = \App\Models\WebSetting::first();
+    return [
+        'site_name' => $settings->site_name ?? 'Not set',
+        'logo_path' => $settings->logo_path ?? 'Not set',
+        'favicon_path' => $settings->favicon_path ?? 'Not set',
+    ];
+});
 
 require __DIR__.'/auth.php';

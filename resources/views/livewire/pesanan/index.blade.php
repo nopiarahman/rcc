@@ -32,7 +32,7 @@ new class extends Component
             ];
         }
 
-        $pesanan->parsed_items = $items;
+        $pesanan->parsed_items = $items; 
         $this->detailPesanan = $pesanan;
     }
     public function getPesananBelumSelesaiProperty()
