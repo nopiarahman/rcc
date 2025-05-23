@@ -1,7 +1,23 @@
+@php
+    $webSettings = \App\Models\WebSetting::first();
+    $currentTheme = $webSettings ? $webSettings->theme : 'green';
+    
+    $themeGradients = [
+        'green' => 'linear-gradient(135deg, #011a0f, #006a3e)',
+        'brown' => 'linear-gradient(135deg, #3e2723, #8d6e63)',
+        'yellow' => 'linear-gradient(135deg, #ff6f00, #ffc107)',
+        'blue' => 'linear-gradient(135deg, #0d47a1, #2196f3)',
+        'orange' => 'linear-gradient(135deg, #e65100, #ff9800)'
+    ];
+    
+    $buttonGradient = $themeGradients[$currentTheme] ?? $themeGradients['green'];
+@endphp
+
 <!DOCTYPE html>
 <html lang="id" x-data="{
     show: localStorage.getItem('welcomeShown') !== 'yes',
     currentSlide: 0,
+    theme: @js($currentTheme),
     slides: @js(\App\Models\WelcomeImage::where('is_active', true)->orderBy('order')->get()->map(function($item) {
         return [
             'id' => $item->id,
@@ -18,6 +34,10 @@
     masuk() {
         localStorage.setItem('welcomeShown', 'yes');
         window.location.href = '{{ route('home') }}';
+    },
+    getThemeGradient() {
+        const gradients = @js($themeGradients);
+        return gradients[this.theme] || gradients['green'];
     }
 }" x-init="
     if (!show) {
@@ -94,7 +114,6 @@
         }
         
         .btn-enter {
-            background-color: var(--primary-color);
             color: white;
             border: none;
             padding: 0.8rem 0;
@@ -115,11 +134,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            background: {{ $buttonGradient }};
         }
         
         .btn-enter:hover {
-            background-color: #5a32a3;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            transform: translateX(-50%) translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
         }
         
         .slide-indicators {
@@ -199,7 +219,7 @@
                 <button 
                     class="btn-enter" 
                     @click="currentSlide < slides.length - 1 ? next() : masuk()"
-                    style="min-width: 200px;"
+                    :style="'background: ' + getThemeGradient(theme) + ';'"
                     x-text="currentSlide < slides.length - 1 ? 'Selanjutnya' : 'Masuk'">
                 </button>
             </div>
