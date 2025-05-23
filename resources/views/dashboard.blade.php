@@ -3,7 +3,7 @@
         <div class="grid auto-rows-min gap-4 md:grid-cols-3">
             <!-- Web Settings Card -->
             <a href="{{ route('dashboard.web-settings') }}" class="group block">
-                <div class="relative aspect-video overflow-hidden rounded-xl border border-neutral-200 bg-white p-6 shadow-sm transition-all duration-200 hover:border-blue-500 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800">
+                <div class="relative aspect-video overflow-hidden rounded-xl border border-neutral-200 bg-white p-6 shadow-sm transition-all duration-200 hover:border-blue-500 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800"> 
                     <div class="flex h-full flex-col justify-between">
                         <div>
                             <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400">
@@ -13,13 +13,6 @@
                                 </svg>
                             </div>
                             <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">Web Settings</h3>
-                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Kelola pengaturan website, logo, dan favicon</p>
-                        </div>
-                        <div class="mt-4 flex items-center text-sm font-medium text-blue-600 dark:text-blue-400">
-                            Kelola
-                            <svg xmlns="http://www.w3.org/2000/svg" class="ml-1 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                            </svg>
                         </div>
                     </div>
                 </div>
@@ -36,13 +29,6 @@
                                 </svg>
                             </div>
                             <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">Kelola Banner</h3>
-                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Kelola banner dan slider di halaman utama</p>
-                        </div>
-                        <div class="mt-4 flex items-center text-sm font-medium text-purple-600 dark:text-purple-400">
-                            Kelola
-                            <svg xmlns="http://www.w3.org/2000/svg" class="ml-1 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                            </svg>
                         </div>
                     </div>
                 </div>
@@ -59,13 +45,6 @@
                                 </svg>
                             </div>
                             <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">Gambar Welcome Screen</h3>
-                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Kelola gambar yang ditampilkan di halaman selamat datang</p>
-                        </div>
-                        <div class="mt-4 flex items-center text-sm font-medium text-green-600 dark:text-green-400">
-                            Kelola
-                            <svg xmlns="http://www.w3.org/2000/svg" class="ml-1 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                            </svg>
                         </div>
                     </div>
                 </div>
@@ -82,13 +61,6 @@
                                 </svg>
                             </div>
                             <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">Kelola Menu</h3>
-                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Kelola daftar menu minuman dan makanan</p>
-                        </div>
-                        <div class="mt-4 flex items-center text-sm font-medium text-green-600 dark:text-green-400">
-                            Kelola
-                            <svg xmlns="http://www.w3.org/2000/svg" class="ml-1 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                            </svg>
                         </div>
                     </div>
                 </div>
