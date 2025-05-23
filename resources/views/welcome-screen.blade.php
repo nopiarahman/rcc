@@ -13,9 +13,24 @@
     $buttonGradient = $themeGradients[$currentTheme] ?? $themeGradients['green'];
 @endphp
 
+<script>
+    // Function to check and reset welcomeShown daily
+    function checkWelcomeReset() {
+        const lastShownDate = localStorage.getItem('welcomeLastShown');
+        const today = new Date().toISOString().split('T')[0];
+        
+        if (!lastShownDate || lastShownDate !== today) {
+            localStorage.removeItem('welcomeShown');
+            localStorage.setItem('welcomeLastShown', today);
+            return false; // Show welcome screen
+        }
+        return true; // Don't show welcome screen
+    }
+</script>
+
 <!DOCTYPE html>
 <html lang="id" x-data="{
-    show: localStorage.getItem('welcomeShown') !== 'yes',
+    show: checkWelcomeReset() && localStorage.getItem('welcomeShown') !== 'yes',
     currentSlide: 0,
     theme: @js($currentTheme),
     slides: @js(\App\Models\WelcomeImage::where('is_active', true)->orderBy('order')->get()->map(function($item) {

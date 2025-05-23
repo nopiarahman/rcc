@@ -16,7 +16,8 @@
         </flux:field>
         <flux:label>Kategori</flux:label>
         <flux:select wire:model="kategori" placeholder="Pilih Kategori">
-            <flux:select.option>Coffee</flux:select.option>
+            <flux:select.option>Hot Coffee</flux:select.option>
+            <flux:select.option>Iced Coffee</flux:select.option>
             <flux:select.option>Non-Coffee</flux:select.option>
             <flux:select.option>Mojito</flux:select.option>
             <flux:select.option>Matcha</flux:select.option>
