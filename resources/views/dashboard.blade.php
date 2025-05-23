@@ -49,7 +49,7 @@
             </a>
 
             <!-- Welcome Images Management Card -->
-            <a href="{{ route('admin.welcome-images.index') }}" class="group block">
+            <a href="{{ route('admin.welcome-images') }}" class="group block">
                 <div class="relative aspect-video overflow-hidden rounded-xl border border-neutral-200 bg-white p-6 shadow-sm transition-all duration-200 hover:border-blue-500 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800">
                     <div class="flex h-full flex-col justify-between">
                         <div>
