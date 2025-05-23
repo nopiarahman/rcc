@@ -17,6 +17,7 @@
                     <flux:navlist.item icon="archive-box" :href="route('minuman.index')" :current="request()->routeIs('minuman.*')" wire:navigate>{{ __('Minuman') }}</flux:navlist.item>
                     <flux:navlist.item icon="rocket-launch" :href="route('pesanan.index')" :current="request()->routeIs('pesanan.*')" wire:navigate>{{ __('Pesanan') }}</flux:navlist.item>
                     <flux:navlist.item icon="photo" :href="route('dashboard.banners')" :current="request()->routeIs('dashboard.banners')" wire:navigate>{{ __('Banners') }}</flux:navlist.item>
+                    <flux:navlist.item icon="photo" :href="route('admin.welcome-images')" :current="request()->routeIs('admin.welcome-images')" wire:navigate>{{ __('Welcome Images') }}</flux:navlist.item>
                     <flux:navlist.item icon="cog-6-tooth" :href="route('dashboard.web-settings')" :current="request()->routeIs('dashboard.web-settings')" wire:navigate>{{ __('Web Settings') }}</flux:navlist.item>
                 </flux:navlist.group>
             </flux:navlist>

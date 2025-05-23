@@ -19,6 +19,13 @@ Route::view('dashboard', 'dashboard')
     ->name('dashboard');
 
 Route::middleware(['auth'])->group(function () {
+    // Admin routes
+    Route::prefix('admin')->name('admin.')->group(function () {
+        // Welcome Images Management using Livewire
+        Route::get('/welcome-images', \App\Livewire\Admin\WelcomeImageManagement::class)
+            ->name('welcome-images');
+    });
+
     Route::get('/dashboard/banners', \App\Livewire\Admin\BannerManagement::class)
         ->name('dashboard.banners');
     Route::get('/dashboard/web-settings', \App\Livewire\Admin\WebSettings::class)

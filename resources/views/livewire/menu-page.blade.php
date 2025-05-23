@@ -45,9 +45,9 @@
         <div>
             @php
                 $jam = date('G');
-                if ($jam >= 0 && $jam < 10) {
+                if ($jam >= 0 && $jam < 11) {
                     $ucapan = 'Selamat pagi!';
-                } elseif ($jam >= 10 && $jam < 15) {
+                } elseif ($jam >= 11 && $jam < 15) {
                     $ucapan = 'Selamat siang!';
                 } elseif ($jam >= 15 && $jam < 18) {
                     $ucapan = 'Selamat sore!';
