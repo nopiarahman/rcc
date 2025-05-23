@@ -107,6 +107,43 @@
     </div>
   
 <x-mobile-nav/>
+
+<!-- Sertakan file JavaScript untuk Local Storage -->
+@push('scripts')
+    <script>
+        // Pastikan Livewire sudah dimuat
+        document.addEventListener('livewire:init', function() {
+            // Muat script cart-storage.js
+            const script = document.createElement('script');
+            script.src = '{{ asset('js/cart-storage.js') }}';
+            script.onload = function() {
+                // Inisialisasi keranjang dari Local Storage saat halaman dimuat
+                document.addEventListener('livewire:initialized', function() {
+                    const localCart = CartStorage.getCartFromLocal();
+                    if (localCart.length > 0) {
+                        // Sinkronkan ke session jika ada data di Local Storage
+                        CartStorage.syncCartToSession()
+                            .then(() => {
+                                // Refresh komponen Livewire setelah sinkronisasi
+                                @this.call('$refresh');
+                            });
+                    }
+                });
+
+                // Dengarkan event untuk memperbarui Local Storage
+                Livewire.on('updateLocalCart', function(cart) {
+                    CartStorage.saveCartToLocal(cart);
+                });
+
+                Livewire.on('clearLocalCart', function() {
+                    CartStorage.clearLocalCart();
+                });
+            };
+            document.head.appendChild(script);
+        });
+    </script>
+@endpush
+
 <script>
     // Get or initialize location settings
     if (typeof window.locationSettings === 'undefined') {

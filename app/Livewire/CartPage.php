@@ -16,8 +16,15 @@ class CartPage extends Component
     public $total = 0;
     public function mount()
     {
-        $this->cart = session()->get('cart', []);
+        // Sinkronkan keranjang dari Local Storage ke Session saat komponen di-mount
+        $this->syncCartFromLocalStorage();
         $this->updateTotal();
+    }
+    
+    protected function syncCartFromLocalStorage()
+    {
+        // Sinkronkan dari Local Storage ke Session
+        $this->cart = session()->get('cart', []);
     }
     public function updateTotal()
     {
@@ -31,6 +38,9 @@ class CartPage extends Component
         session()->put('cart', $this->cart);
         $this->updateTotal();
         $this->dispatch('cartUpdated');
+        
+        // Update Local Storage
+        $this->dispatch('updateLocalCart', cart: $this->cart);
     }
 
     public function decreaseQty($key)
@@ -40,15 +50,22 @@ class CartPage extends Component
             session()->put('cart', $this->cart);
             $this->updateTotal();
             $this->dispatch('cartUpdated');
+            
+            // Update Local Storage
+            $this->dispatch('updateLocalCart', cart: $this->cart);
         }
     }
 
     public function removeItem($key)
     {
         unset($this->cart[$key]);
+        $this->cart = array_values($this->cart); // Reset array keys
         session()->put('cart', $this->cart);
         $this->updateTotal();
         $this->dispatch('cartUpdated');
+        
+        // Update Local Storage
+        $this->dispatch('updateLocalCart', cart: $this->cart);
     }
 
     public function clearCart()
@@ -57,6 +74,9 @@ class CartPage extends Component
         session()->forget('cart');
         $this->updateTotal();
         $this->dispatch('cartUpdated');
+        
+        // Clear Local Storage
+        $this->dispatch('clearLocalCart');
     }
     public function checkout()
     {

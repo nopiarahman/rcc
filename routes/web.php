@@ -18,6 +18,13 @@ Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
+// Route untuk sinkronisasi keranjang dari Local Storage ke Session
+Route::post('/cart/sync', function (\Illuminate\Http\Request $request) {
+    $cart = $request->input('cart', []);
+    session(['cart' => $cart]);
+    return response()->json(['success' => true, 'cart' => $cart]);
+})->name('cart.sync');
+
 Route::middleware(['auth'])->group(function () {
     // Admin routes
     Route::prefix('admin')->name('admin.')->group(function () {
