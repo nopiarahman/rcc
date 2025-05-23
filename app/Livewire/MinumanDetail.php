@@ -68,15 +68,9 @@ class MinumanDetail extends Component
         }
 
         session()->put('cart', $cart);
-        
+        $this->dispatch('cartUpdated');
         // Menampilkan pesan sukses ke pengguna
         session()->flash('message', 'Produk berhasil ditambahkan ke keranjang!');
-
-        // Mengembalikan response JSON dengan data cart terbaru
-        // return response()->json([
-        //     'message' => 'Produk berhasil ditambahkan ke keranjang',
-        //     'cart' => $cart,
-        // ]);
     }
 
     public function getThemeGradient($theme = null)

@@ -1,9 +1,4 @@
 <div>
-    @php
-        $cart = session('cart', []);
-        $totalItems = collect($cart)->sum('qty');
-    @endphp
-    
     <style>
         .mobile-nav {
             padding: 4px 0;
@@ -33,7 +28,7 @@
             margin: 0;
         }
         .mobile-nav .badge {
-            background-color: {{ $themeColors['badge'] }} !important;
+            background-color: red !important;
             color: white;
             font-weight: 600;
             font-size: 0.6rem;

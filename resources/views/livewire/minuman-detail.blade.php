@@ -293,7 +293,7 @@
                         </div>
                     </div>
                     <button type="button" class="btn rounded-pill fw-semibold text-white px-4 py-2" 
-                    style="background-color: {{ $this->getThemeColor($this->theme) }}; border-color: {{ $this->getThemeColor($this->theme) }};" wire:click="addToCart" data-bs-dismiss="modal">
+                    style="background-color: {{ $color }};" wire:click="addToCart" data-bs-dismiss="modal">
                         Masuk Keranjang
                     </button>
                 </div>

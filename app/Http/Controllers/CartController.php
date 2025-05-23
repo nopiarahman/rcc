@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Auth\Events\Login;
 
 class CartController extends Controller
 {
@@ -41,7 +42,10 @@ class CartController extends Controller
         }
     
         session()->put('cart', $cart);
-    
+        
+        // Dispatch event for Livewire components to update
+        event(new Login('', new \Illuminate\Foundation\Auth\User(), false));
+        
         return response()->json(['message' => 'Added to cart', 'cart' => $cart]);
     }
     

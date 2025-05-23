@@ -7,6 +7,19 @@ use App\Models\WebSetting;
 
 class MobileNavigation extends Component
 {
+    public $totalItems;
+    
+    protected $listeners = ['cartUpdated' => 'updateCartCount'];
+    
+    public function mount()
+    {
+        $this->updateCartCount();
+    }
+    
+    public function updateCartCount()
+    {
+        $this->totalItems = collect(session('cart', []))->sum('qty');
+    }
     public function render()
     {
         $settings = WebSetting::firstOrCreate([], [
@@ -15,13 +28,13 @@ class MobileNavigation extends Component
         ]);
 
         $themeColors = $this->getThemeColors($settings->theme);
-        
+        $this->updateCartCount();
         return view('livewire.mobile-navigation', [
             'themeColors' => $themeColors,
-            'settings' => $settings
+            'settings' => $settings,
+            'totalItems' => $this->totalItems
         ]);
     }
-
     protected function getThemeColors($theme)
     {
         $colors = [

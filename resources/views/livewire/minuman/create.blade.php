@@ -5,15 +5,18 @@
             {{ session('success') }}
         </div>
     @endif
-    <h2 class="text-xl font-bold mb-4 dark:text-white"">Tambah Minuman</h2>
+
+    <h2 class="text-xl font-bold mb-4 dark:text-white">Tambah Minuman</h2>
 
     <form wire:submit.prevent="simpan" class="space-y-6">
-        <flux:input type="file" wire:model="foto" label="Foto Minuman"/>
+        <flux:input type="file" wire:model="foto" label="Foto Minuman" />
+        
         <flux:field class="mb-2">
             <flux:label>Nama</flux:label>
             <flux:input type="text" wire:model.defer="nama" />
             <flux:error name="nama" />
         </flux:field>
+
         <flux:label>Kategori</flux:label>
         <flux:select wire:model="kategori" placeholder="Pilih Kategori">
             <flux:select.option>Hot Coffee</flux:select.option>
@@ -23,16 +26,70 @@
             <flux:select.option>Matcha</flux:select.option>
         </flux:select>
 
+        <div class="mb-4">
+            <flux:label>Tag</flux:label>
+            <select wire:model.defer="tag" class="w-full border rounded p-2">
+                <option value="">Pilih default tag</option>
+                <option value="Recommended">★Recommended</option>
+                <option value="Terfavorit">❤︎Terfavorit</option>
+                <option value="Must Try">Must Try</option>
+            </select>
+        </div>
+
         <flux:field class="mb-2">
-            <flux:textarea label="Deskripsi" wire:model.defer="deskripsi" />
-            <flux:error name="deskripsi" />
+            <flux:label>Short Description</flux:label>
+            <flux:input type="text" wire:model.defer="short_description" />
+            <flux:error name="short_description" />
         </flux:field>
+
+        <div class="mb-4">
+            <label for="deskripsi" class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+            <textarea
+                id="deskripsi"
+                wire:model.defer="deskripsi"
+                rows="4"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            ></textarea>
+            @error('deskripsi')
+                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+            @enderror
+        </div>
 
         <flux:field class="mb-2">
             <flux:label>Base Price</flux:label>
             <flux:input type="number" wire:model.defer="base_price" />
             <flux:error name="base_price" />
         </flux:field>
+
+        <div class="mb-4">
+            <label class="block mb-1 font-semibold">Ukuran Default</label>
+            <select wire:model="defaultSize" class="w-full border rounded p-2">
+                <option value="">Pilih default size</option>
+                @foreach($sizes as $size)
+                    <option value="{{ $size->id }}">{{ $size->name }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="mb-4">
+            <label class="block mb-1 font-semibold">Default Sugar</label>
+            <select wire:model="defaultSugar" class="w-full border rounded p-2">
+                <option value="">Pilih default sugar</option>
+                @foreach($sugars as $sugar)
+                    <option value="{{ $sugar->id }}">{{ $sugar->level }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="mb-4">
+            <label class="block mb-1 font-semibold">Default Topping</label>
+            <select wire:model="defaultTopping" class="w-full border rounded p-2">
+                <option value="">Pilih default topping</option>
+                @foreach($toppings as $topping)
+                    <option value="{{ $topping->id }}">{{ $topping->nama }}</option>
+                @endforeach
+            </select>
+        </div>
 
         <hr class="mt-4 mb-4">
         {{-- BAHAN --}}
@@ -118,28 +175,33 @@ new class extends Component
     use WithFileUploads;
 
     public $foto;
-
+    public $fotoPreview;
     public string $nama = '';
     public string $deskripsi = '';
+    public string $short_description = '';
+    public string $tag = '';
     public string $kategori = '';
     public int $base_price;
+    public $defaultSize;
+    public $defaultSugar;
+    public $defaultTopping;
 
-    public array $sizes = [];
-    public array $sugars = [];
-    public array $toppings = [];
-    public array $bahans = [];
+    public $sizes;
+    public $sugars;
+    public $toppings;
+    public $bahans;
 
-    public array $selectedSizes = [];
+    public $selectedSizes = [];
     public array $selectedSugars = [];
     public array $selectedToppings = [];
     public array $selectedBahans = [];
 
     public function mount()
     {
-        $this->sizes = Size::all()->toArray();
-        $this->sugars = Sugar::all()->toArray();
-        $this->toppings = Topping::all()->toArray();
-        $this->bahans = Bahan::all()->toArray();
+        $this->sizes = Size::all();
+        $this->sugars = Sugar::all();
+        $this->toppings = Topping::all();
+        $this->bahans = Bahan::all();
     }
 
     public function simpan()
@@ -148,6 +210,11 @@ new class extends Component
             'nama' => 'required|string',
             'deskripsi' => 'nullable|string',
             'base_price' => 'required|integer|min:0',
+            'defaultSize' => 'required',
+            'defaultSugar' => 'required',
+            'defaultTopping' => 'required',
+            'tag' => 'nullable|string',
+            'short_description' => 'nullable|string',
         ]);
 
         $minuman = Minuman::create([
@@ -155,6 +222,11 @@ new class extends Component
             'kategori' => $this->kategori,
             'deskripsi' => $this->deskripsi,
             'base_price' => $this->base_price,
+            'default_size_id' => $this->defaultSize,
+            'default_sugar_id' => $this->defaultSugar,
+            'default_topping_id' => $this->defaultTopping,
+            'tag' => $this->tag,
+            'short_description' => $this->short_description,
         ]);
         if ($this->foto) {
             $minuman->addMedia($this->foto->getRealPath())

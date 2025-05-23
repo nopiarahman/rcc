@@ -32,8 +32,8 @@
             <flux:label>Tag</flux:label>
             <select wire:model.defer="tag" class="w-full border rounded p-2">
                 <option value="">Pilih default tag</option>
-                    <option value="Recommended">★Recommended</option>
-                    <option value="Terfavorit">❤︎Terfavorit</option>
+                    <option value="Recommended">Recommended</option>
+                    <option value="Terfavorit">Terfavorit</option>
                     <option value="Must Try">Must Try</option>
             </select>
         </div>
@@ -57,7 +57,7 @@
 
         <flux:field class="mb-2">
             <flux:label>Base Price</flux:label>
-            <flux:input type="number" wire:model.defer="base_price" value="{{$minuman->base_price}}" />
+            <flux:input type="number" wire:model.defer="base_price" value="{{ number_format($minuman->base_price, 0) }}" />
             <flux:error name="base_price" />
         </flux:field>
 
@@ -215,10 +215,13 @@ new class extends Component
     use WithFileUploads;
 
     public $minuman;
+    public $nama;
+    public $deskripsi;
+    public $short_description;
+    public $base_price;
     public $foto;
     public $fotoPreview = null;
     public $kategori;
-    public $short_description;
     public $tag;
 
     public $allSizes = [];
@@ -246,17 +249,21 @@ new class extends Component
     public function mount(Minuman $minuman)
     {
         $this->minuman = $minuman;
+        $this->nama = $minuman->nama;
         $this->kategori = $minuman->kategori;
+        $this->deskripsi = $minuman->deskripsi;
+        $this->base_price = $minuman->base_price;
         $this->bahans = Bahan::all();
         $this->allSizes = Size::all();
         $this->allToppings = Topping::all();
         $this->allSugars = Sugar::all();
 
-        $this->defaultSize = $this->minuman->default_size_id;
-        $this->defaultSugar = $this->minuman->default_sugar_id;
-        $this->defaultTopping = $this->minuman->default_topping_id;
-        $this->tag = $this->minuman->tag;
-        $this->short_description = $this->short_description;
+        $this->defaultSize = $minuman->default_size_id;
+        $this->defaultSugar = $minuman->default_sugar_id;
+        $this->defaultTopping = $minuman->default_topping_id;
+        $this->tag = $minuman->tag;
+        $this->short_description = $minuman->short_description;
+        
         // Relasi Bahan: [id => jumlah]
         $this->selectedBahans = $minuman->bahans->pluck('pivot.jumlah', 'id')->toArray();
 
@@ -281,8 +288,14 @@ new class extends Component
     public function rules()
     {
         return [
-            'minuman.nama' => 'required|string|max:255',
-            'minuman.base_price' => 'required|numeric|min:0',
+            'nama' => 'required|string|max:255',
+            'deskripsi' => 'nullable|string',
+            'base_price' => 'required|numeric|min:0',
+            'defaultSize' => 'required',
+            'defaultSugar' => 'required',
+            'defaultTopping' => 'required',
+            'tag' => 'nullable|string',
+            'short_description' => 'nullable|string',
             'foto' => 'nullable|image|max:2048',
         ];
     }
@@ -291,14 +304,18 @@ new class extends Component
     {
         $this->validate();
 
-        // Simpan kategori & default selection
-        $this->minuman->kategori = $this->kategori;
-        $this->minuman->tag = $this->tag;
-        $this->minuman->short_description = $this->short_description;
-        $this->minuman->default_size_id = $this->defaultSize;
-        $this->minuman->default_sugar_id = $this->defaultSugar;
-        $this->minuman->default_topping_id = $this->defaultTopping;
-        $this->minuman->save();
+        // Update all fields
+        $this->minuman->update([
+            'nama' => $this->nama,
+            'deskripsi' => $this->deskripsi,
+            'base_price' => $this->base_price,
+            'kategori' => $this->kategori,
+            'tag' => $this->tag,
+            'short_description' => $this->short_description,
+            'default_size_id' => $this->defaultSize,
+            'default_sugar_id' => $this->defaultSugar,
+            'default_topping_id' => $this->defaultTopping,
+        ]);
 
         // Upload foto jika ada
         if ($this->foto) {

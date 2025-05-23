@@ -29,6 +29,7 @@ class CartPage extends Component
         $this->cart[$key]['qty']++;
         session()->put('cart', $this->cart);
         $this->updateTotal();
+        $this->dispatch('cartUpdated');
     }
 
     public function decreaseQty($key)
@@ -37,6 +38,7 @@ class CartPage extends Component
             $this->cart[$key]['qty']--;
             session()->put('cart', $this->cart);
             $this->updateTotal();
+            $this->dispatch('cartUpdated');
         }
     }
 
@@ -45,13 +47,15 @@ class CartPage extends Component
         unset($this->cart[$key]);
         session()->put('cart', $this->cart);
         $this->updateTotal();
+        $this->dispatch('cartUpdated');
     }
 
     public function clearCart()
     {
         $this->cart = [];
         session()->forget('cart');
-        
+        $this->updateTotal();
+        $this->dispatch('cartUpdated');
     }
     public function checkout()
     {
