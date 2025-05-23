@@ -19,8 +19,8 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a wire:navigate class="nav-link {{ request()->routeIs('history') ? 'active text-success fw-semibold' : '' }}" href="{{ route('history') }}">
-                       Pesanan
+                    <a wire:navigate class="nav-link {{ request()->routeIs('pesanan') ? 'active text-success fw-semibold' : '' }}" href="{{ route('pesanan') }}">
+                       <i class="fas fa-history me-1"></i> Riwayat Pesanan
                     </a>
                 </li>
             </ul>

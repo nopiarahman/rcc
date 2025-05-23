@@ -73,7 +73,7 @@ Route::get('/keranjang', CartPage::class)->name('cart');
 Route::get('/debug/cart', function () {
     return session('cart');
 })->name('debug-cart');
-Route::get('/pesanan', HistoryPage::class)->name('history');
+Route::get('/pesanan', HistoryPage::class)->name('pesanan');
 
 // Test route for timezone
 Route::get('/test-timezone', function () {

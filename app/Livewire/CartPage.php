@@ -8,12 +8,17 @@ use App\Models\Size;
 use App\Models\Sugar;
 use App\Models\Topping;
 use App\Models\WebSetting;
+
 class CartPage extends Component
 {
     public $cart = [];
     public $showForm = false;
-    public $nama_pemesan, $alamat_pengantaran, $waktu_pengantaran;
+    public $nama_pemesan = '';
+    public $alamat_pengantaran = '';
+    public $waktu_pengantaran = '';
+    public $catatan = '';
     public $total = 0;
+
     public function mount()
     {
         // Sinkronkan keranjang dari Local Storage ke Session saat komponen di-mount
@@ -126,38 +131,80 @@ class CartPage extends Component
     
             return [
                 'key' => $key,
+                'minuman_id' => $item['id'],
                 'qty' => $item['qty'],
-                'price' => $item['price'],
+                'harga' => $item['price'],
                 'subtotal' => $item['qty'] * $item['price'],
                 'minuman' => $minuman?->nama ?? 'Unknown Drink',
-                'size' => $size?->name ?? '-',
-                'sugar' => $sugar?->level ?? '-',
-                'topping' => $topping?->nama ?? '-',
+                'size' => $size?->name ?? null,
+                'gula' => $sugar?->level ?? null,
+                'topping' => $topping?->nama ?? null,
+                'catatan' => $item['catatan'] ?? null,
             ];
         });
     
+        // Generate or get session ID
+        $sessionId = session()->getId();
+        
+        // Store session ID in cookie for persistence
+        \Illuminate\Support\Facades\Cookie::queue('user_session', $sessionId, 60 * 24 * 30); // 30 days
+        
+        // Create the order
         $pesanan = \App\Models\Pesanan::create([
+            'user_id' => auth()->id(),
+            'session_id' => $sessionId,
             'nama_pemesan' => $this->nama_pemesan,
             'alamat_pengantaran' => $this->alamat_pengantaran,
             'waktu_pengantaran' => $this->waktu_pengantaran,
-            'items' => json_encode($this->cart),
-            'total' => $this->total,
+            'catatan' => $this->catatan ?? null,
+            'total' => (int) $this->total,
+            'total_harga' => $this->total,
+            'status' => 'menunggu_konfirmasi',
+            'nomor_pesanan' => 'ORD-' . now()->format('Ymd') . '-' . strtoupper(uniqid())
         ]);
+        
+        // Create order details
+        foreach ($cartItems as $item) {
+            $pesanan->details()->create([
+                'minuman_id' => $item['minuman_id'],
+                'nama_minuman' => $item['minuman'],
+                'harga' => $item['harga'],
+                'qty' => $item['qty'],
+                'size' => $item['size'],
+                'gula' => $item['gula'],
+                'topping' => $item['topping'],
+                'catatan' => $item['catatan'],
+                'subtotal' => $item['subtotal'],
+            ]);
+        }
     
+        // Prepare WhatsApp message
         $message = "Assalamualaikum, saya ingin pesan:\n\n";
         foreach ($cartItems as $item) {
-            $message .= "- {$item['minuman']} (Size: {$item['size']}, Gula: {$item['sugar']}, Topping: {$item['topping']}) x {$item['qty']} = Rp " . number_format($item['subtotal'], 0, ',', '.') . "\n";
+            $message .= "- {$item['minuman']}";
+            $message .= $item['size'] ? " (Size: {$item['size']}" : "";
+            $message .= $item['gula'] ? ", Gula: {$item['gula']}" : "";
+            $message .= $item['topping'] ? ", Topping: {$item['topping']}" : "";
+            $message .= $item['size'] ? ")" : "";
+            $message .= " x {$item['qty']} = Rp " . number_format($item['subtotal'], 0, ',', '.') . "\n";
+            if (!empty($item['catatan'])) {
+                $message .= "  Catatan: {$item['catatan']}\n";
+            }
         }
     
         $message .= "\nTotal: Rp " . number_format($this->total, 0, ',', '.');
         $message .= "\n\nNama: {$this->nama_pemesan}";
         $message .= "\nAlamat: {$this->alamat_pengantaran}";
         $message .= "\nWaktu Pengantaran: {$this->waktu_pengantaran}";
-        $message .= "\nKode Pesanan: #" . $pesanan->id;
+        $message .= "\nNomor Pesanan: " . $pesanan->nomor_pesanan;
     
-        $wa = '6282375207570'; // Ganti dengan nomor Anda
+        // Clear cart
         session()->forget('cart');
+        $this->dispatch('cartUpdated');
+        $this->dispatch('clearLocalCart');
+        
+        // Redirect to WhatsApp
+        $wa = '6282375207570'; // Replace with your WhatsApp number
         return redirect()->away("https://wa.me/{$wa}?text=" . urlencode($message));
-
     }
 }
