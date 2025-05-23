@@ -162,14 +162,14 @@
             function (position) {
                 const userLat = position.coords.latitude;
                 const userLng = position.coords.longitude;
-
+                console.log(userLat, userLng);
                 // Use settings from database
                 const centerLat = parseFloat(window.locationSettings.latitude);
                 const centerLng = parseFloat(window.locationSettings.longitude);
                 const maxRadius = parseInt(window.locationSettings.delivery_radius);
 
                 const distance = getDistanceFromLatLonInMeters(userLat, userLng, centerLat, centerLng);
-
+                console.log(distance);
                 if (distance <= maxRadius) {
                     // If within radius, show checkout modal
                     const modal = new bootstrap.Modal(document.getElementById('checkoutModal'));
