@@ -108,8 +108,13 @@
   
 <x-mobile-nav/>
 <script>
-    document.getElementById('checkoutBtn').addEventListener('click', function (e) {
-        e.preventDefault(); // Cegah langsung buka modal
+    // Get or initialize location settings
+    if (typeof window.locationSettings === 'undefined') {
+        window.locationSettings = @json(\App\Models\WebSetting::first(['latitude', 'longitude', 'delivery_radius']));
+    }
+
+    document.getElementById('checkoutBtn')?.addEventListener('click', function (e) {
+        e.preventDefault(); // Prevent default form submission
 
         if (!navigator.geolocation) {
             alert('Browser Anda tidak mendukung fitur lokasi.');
@@ -118,24 +123,22 @@
 
         navigator.geolocation.getCurrentPosition(
             function (position) {
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
+                const userLat = position.coords.latitude;
+                const userLng = position.coords.longitude;
 
-                // Titik pusat perumahan (contoh: Masjid Ar-Raihaan)
-                const centerLat = -1.66651;
-                const centerLng = 103.65238;
+                // Use settings from database
+                const centerLat = parseFloat(window.locationSettings.latitude);
+                const centerLng = parseFloat(window.locationSettings.longitude);
+                const maxRadius = parseInt(window.locationSettings.delivery_radius);
 
-                // Radius maksimal dalam meter (misal: 300 meter)
-                const maxRadius = 600;
-
-                const distance = getDistanceFromLatLonInMeters(lat, lng, centerLat, centerLng);
+                const distance = getDistanceFromLatLonInMeters(userLat, userLng, centerLat, centerLng);
 
                 if (distance <= maxRadius) {
-                    // Jika dalam radius, tampilkan modal checkout
+                    // If within radius, show checkout modal
                     const modal = new bootstrap.Modal(document.getElementById('checkoutModal'));
                     modal.show();
                 } else {
-                    alert('Layanan ini sementara hanya tersedia di area perumahan Ar-Raihaan dan sekitarnya.');
+                    alert(`Layanan ini hanya tersedia dalam radius ${maxRadius} meter dari lokasi toko.`);
                 }
             },
             function (error) {

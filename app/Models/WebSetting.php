@@ -11,6 +11,9 @@ class WebSetting extends Model
         'logo_path',
         'favicon_path',
         'theme',
+        'latitude',
+        'longitude',
+        'delivery_radius',
     ];
 
     protected $casts = [

@@ -10,7 +10,7 @@
 
         <form wire:submit.prevent="save">
             <!-- Site Name -->
-            <div class="mb-6">
+            <div class="mb-6 p-4 border rounded-lg bg-gray-50">
                 <label for="site_name" class="block text-gray-700 text-sm font-bold mb-2">
                     Nama Website
                 </label>
@@ -24,7 +24,7 @@
             </div>
 
             <!-- Logo -->
-            <div class="mb-6">
+            <div class="mb-6 p-4 border rounded-lg bg-gray-50">
                 <label class="block text-gray-700 text-sm font-bold mb-2">
                     Logo Website
                 </label>
@@ -50,7 +50,7 @@
             </div>
 
             <!-- Favicon -->
-            <div class="mb-6">
+            <div class="mb-6 p-4 border rounded-lg bg-gray-50">
                 <label class="block text-gray-700 text-sm font-bold mb-2">
                     Favicon
                 </label>
@@ -75,8 +75,69 @@
                 <p class="text-xs text-gray-500 mt-1">Ukuran: 32x32px - 192x192px. Format: ICO, PNG</p>
             </div>
 
+            <!-- Location Settings -->
+            <div class="mb-6 p-4 border rounded-lg bg-gray-50">
+                <h3 class="text-lg font-semibold mb-4">Pengaturan Lokasi Pengiriman</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="latitude" class="block text-gray-700 text-sm font-bold mb-2">
+                            Latitude
+                        </label>
+                        <input 
+                            type="number" 
+                            step="0.00000001"
+                            id="latitude"
+                            wire:model="latitude"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            placeholder="-1.66651"
+                            required>
+                        @error('latitude') <span class="text-red-500 text-xs italic">{{ $message }}</span> @enderror
+                        <p class="text-xs text-gray-500 mt-1">Contoh: -1.66651</p>
+                    </div>
+                    
+                    <div>
+                        <label for="longitude" class="block text-gray-700 text-sm font-bold mb-2">
+                            Longitude
+                        </label>
+                        <input 
+                            type="number" 
+                            step="0.00000001"
+                            id="longitude"
+                            wire:model="longitude"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            placeholder="103.65238"
+                            required>
+                        @error('longitude') <span class="text-red-500 text-xs italic">{{ $message }}</span> @enderror
+                        <p class="text-xs text-gray-500 mt-1">Contoh: 103.65238</p>
+                    </div>
+                </div>
+                
+                <div class="w-full md:w-1/2">
+                    <label for="delivery_radius" class="block text-gray-700 text-sm font-bold mb-2">
+                        Radius Pengiriman (meter)
+                    </label>
+                    <input 
+                        type="number" 
+                        id="delivery_radius"
+                        wire:model="delivery_radius"
+                        min="100"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        placeholder="600"
+                        required>
+                    @error('delivery_radius') <span class="text-red-500 text-xs italic">{{ $message }}</span> @enderror
+                    <p class="text-xs text-gray-500 mt-1">Jarak maksimal pengiriman dalam meter (minimal 100m)</p>
+                </div>
+                
+                <div class="mt-4 p-3 bg-blue-50 rounded border border-blue-100">
+                    <p class="text-sm text-blue-700">
+                        <span class="font-medium">Cara mendapatkan koordinat:</span> Buka <a href="https://www.google.com/maps" target="_blank" class="text-blue-600 underline">Google Maps</a>, klik kanan pada lokasi, dan salin koordinat yang muncul.
+                    </p>
+                </div>
+            </div>
+
             <!-- Theme Selection -->
-            <div class="mb-6">
+            <div class="mb-6 p-4 border rounded-lg bg-gray-50">
                 <label for="theme" class="block text-gray-700 text-sm font-bold mb-2">
                     Tema Warna
                 </label>

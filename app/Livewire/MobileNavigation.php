@@ -8,18 +8,30 @@ use App\Models\WebSetting;
 class MobileNavigation extends Component
 {
     public $totalItems;
+    public $currentRoute;
     
-    protected $listeners = ['cartUpdated' => 'updateCartCount'];
+    protected $listeners = [
+        'cartUpdated' => 'updateCartCount',
+        'urlChanged' => 'updateRoute'
+    ];
     
     public function mount()
     {
         $this->updateCartCount();
+        $this->currentRoute = request()->route()->getName();
+    }
+    
+    public function updateRoute($routeName)
+    {
+        $this->currentRoute = $routeName;
     }
     
     public function updateCartCount()
     {
         $this->totalItems = collect(session('cart', []))->sum('qty');
     }
+    
+
     public function render()
     {
         $settings = WebSetting::firstOrCreate([], [

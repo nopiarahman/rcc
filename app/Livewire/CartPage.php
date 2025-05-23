@@ -7,6 +7,7 @@ use App\Models\Minuman;
 use App\Models\Size;
 use App\Models\Sugar;
 use App\Models\Topping;
+use App\Models\WebSetting;
 class CartPage extends Component
 {
     public $cart = [];

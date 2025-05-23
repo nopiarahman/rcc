@@ -18,6 +18,9 @@ class WebSettings extends Component
     public $current_favicon;
     public $theme = 'green';
     public $selectedTheme = 'green';
+    public $latitude;
+    public $longitude;
+    public $delivery_radius;
     public $availableThemes = [
         'green' => 'Hijau (Default)',
         'brown' => 'Coklat Kopi',
@@ -32,6 +35,9 @@ class WebSettings extends Component
         $this->settings = WebSetting::firstOrCreate([], [
             'site_name' => 'Raihaan Coffee Corner',
             'theme' => 'green',
+            'latitude' => -1.66651,
+            'longitude' => 103.65238,
+            'delivery_radius' => 600,
         ]);
         
         $this->site_name = $this->settings->site_name;
@@ -39,6 +45,9 @@ class WebSettings extends Component
         $this->current_favicon = $this->settings->favicon_path;
         $this->theme = $this->settings->theme;
         $this->selectedTheme = $this->settings->theme;
+        $this->latitude = $this->settings->latitude;
+        $this->longitude = $this->settings->longitude;
+        $this->delivery_radius = $this->settings->delivery_radius;
     }
 
     protected $rules = [
@@ -46,6 +55,9 @@ class WebSettings extends Component
         'logo' => 'nullable|image|max:2048',
         'favicon' => 'nullable|image|dimensions:min_width=32,min_height=32,max_width=192,max_height=192',
         'theme' => 'required|in:green,brown,yellow,blue,orange',
+        'latitude' => 'required|numeric|between:-90,90',
+        'longitude' => 'required|numeric|between:-180,180',
+        'delivery_radius' => 'required|integer|min:100',
     ];
 
     public function updatedTheme($value)
@@ -57,9 +69,16 @@ class WebSettings extends Component
     {
         $this->validate();
 
+        $data = [
+            'site_name' => $this->site_name,
+            'theme' => $this->selectedTheme,
+            'latitude' => $this->latitude,
+            'longitude' => $this->longitude,
+            'delivery_radius' => $this->delivery_radius,
+        ];
+
         $settings = $this->settings;
-        $settings->site_name = $this->site_name;
-        $settings->theme = $this->selectedTheme;
+        $settings->update($data);
 
         // Handle logo upload
         if ($this->logo) {
