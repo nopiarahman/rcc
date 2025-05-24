@@ -157,8 +157,8 @@
     <img wire:ignore.self src="{{ $minuman->getFirstMediaUrl('foto') }}" alt="{{ $minuman->nama }}" class="sticky-image">
 
     {{-- Konten Scrollable --}}
-    <div wire:ignore.self class="card rounded-top-xl content-wrapper shadow-lg" style="animation: fadeSlideUp 0.6s ease-out both; padding-bottom: 2rem">
-        <div class="" style="padding-bottom: 1rem; margin-bottom: 2rem">
+    <div wire:ignore.self class="card rounded-top-xl shadow-lg" style="animation: fadeSlideUp 0.6s ease-out both; padding-bottom: 2rem">
+        <div class="scrollable-content" style="padding-bottom: 1rem; margin-bottom: 2rem">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <div>
                     <h4 class="fw-bold mb-0">{{ $minuman->nama }}</h4>
