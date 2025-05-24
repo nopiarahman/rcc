@@ -8,11 +8,13 @@
                 position: relative;
             }
             .content-wrapper {
-                flex: 1;
-                overflow: hidden;
                 margin-top: -2rem;
                 z-index: 2;
                 position: relative;
+                background: white;
+                border-radius: 1.5rem 1.5rem 0 0;
+                box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+                padding-bottom: 1rem;
             }
             .rounded-top-xl {
                 border-top-left-radius: 2rem;
@@ -156,9 +158,9 @@
     {{-- Gambar --}}
     <img wire:ignore.self src="{{ $minuman->getFirstMediaUrl('foto') }}" alt="{{ $minuman->nama }}" class="sticky-image">
 
-    {{-- Konten Scrollable --}}
-    <div wire:ignore.self class="card rounded-top-xl shadow-lg" style="animation: fadeSlideUp 0.6s ease-out both; padding-bottom: 2rem">
-        <div class="scrollable-content" style="padding-bottom: 1rem; margin-bottom: 2rem">
+    {{-- Konten --}}
+    <div wire:ignore.self class="card rounded-top-xl content-wrapper shadow-lg" style="animation: fadeSlideUp 0.6s ease-out both; padding-bottom: 5rem">
+        <div style="padding: 1.5rem 1.5rem 6rem;">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <div>
                     <h4 class="fw-bold mb-0">{{ $minuman->nama }}</h4>
