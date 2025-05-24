@@ -204,7 +204,7 @@ class CartPage extends Component
         $this->dispatch('clearLocalCart');
         
         // Redirect to WhatsApp
-        $wa = '6282375207570'; // Replace with your WhatsApp number
+        $wa = WebSetting::first()->whatsapp_number;
         return redirect()->away("https://wa.me/{$wa}?text=" . urlencode($message));
     }
 }

@@ -21,6 +21,7 @@ class WebSettings extends Component
     public $latitude;
     public $longitude;
     public $delivery_radius;
+    public $whatsapp_number;
     public $availableThemes = [
         'green' => 'Hijau (Default)',
         'brown' => 'Coklat Kopi',
@@ -38,6 +39,7 @@ class WebSettings extends Component
             'latitude' => -1.66651,
             'longitude' => 103.65238,
             'delivery_radius' => 600,
+            'whatsapp_number' => '0',
         ]);
         
         $this->site_name = $this->settings->site_name;
@@ -48,6 +50,7 @@ class WebSettings extends Component
         $this->latitude = $this->settings->latitude;
         $this->longitude = $this->settings->longitude;
         $this->delivery_radius = $this->settings->delivery_radius;
+        $this->whatsapp_number = $this->settings->whatsapp_number;
     }
 
     protected $rules = [
@@ -58,6 +61,7 @@ class WebSettings extends Component
         'latitude' => 'required|numeric|between:-90,90',
         'longitude' => 'required|numeric|between:-180,180',
         'delivery_radius' => 'required|integer|min:100',
+        'whatsapp_number' => 'required|string|max:20',
     ];
 
     public function updatedTheme($value)
@@ -75,6 +79,7 @@ class WebSettings extends Component
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
             'delivery_radius' => $this->delivery_radius,
+            'whatsapp_number' => $this->whatsapp_number,
         ];
 
         $settings = $this->settings;

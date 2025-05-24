@@ -129,6 +129,27 @@
                     <p class="text-xs text-gray-500 mt-1">Jarak maksimal pengiriman dalam meter (minimal 100m)</p>
                 </div>
                 
+                <!-- WhatsApp Number -->
+                <div class="mt-4 w-full">
+                    <label for="whatsapp_number" class="block text-gray-700 text-sm font-bold mb-2">
+                        Nomor WhatsApp
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <span class="text-gray-500">+</span>
+                        </div>
+                        <input 
+                            type="text" 
+                            id="whatsapp_number"
+                            wire:model="whatsapp_number"
+                            class="pl-6 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            placeholder="6281234567890"
+                            required>
+                    </div>
+                    @error('whatsapp_number') <span class="text-red-500 text-xs italic">{{ $message }}</span> @enderror
+                    <p class="text-xs text-gray-500 mt-1">Masukkan nomor WhatsApp tanpa tanda + di depan</p>
+                </div>
+                
                 <div class="mt-4 p-3 bg-blue-50 rounded border border-blue-100">
                     <p class="text-sm text-blue-700">
                         <span class="font-medium">Cara mendapatkan koordinat:</span> Buka <a href="https://www.google.com/maps" target="_blank" class="text-blue-600 underline">Google Maps</a>, klik kanan pada lokasi, dan salin koordinat yang muncul.
@@ -166,7 +187,7 @@
                                     
                                     <div class="h-16 rounded mb-2 overflow-hidden" style="height: 100px; background: {{ $gradient }}">
                                         @if($selectedTheme === $themeValue)
-                                            <div class="absolute inset-0 bg-black bg-opacity-10"></div>
+                                            <div class="absolute inset-0 bg-opacity-10"></div>
                                         @endif
                                     </div>
                                 </div>

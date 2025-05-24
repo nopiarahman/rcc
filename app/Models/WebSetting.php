@@ -14,6 +14,7 @@ class WebSetting extends Model
         'latitude',
         'longitude',
         'delivery_radius',
+        'whatsapp_number',
     ];
 
     protected $casts = [
