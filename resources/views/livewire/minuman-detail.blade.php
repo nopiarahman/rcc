@@ -160,7 +160,7 @@
 
     {{-- Konten --}}
     <div wire:ignore.self class="card rounded-top-xl content-wrapper shadow-lg" style="animation: fadeSlideUp 0.6s ease-out both; padding-bottom: 5rem">
-        <div style="padding: 1.5rem 1.5rem 6rem;">
+        <div style="padding: 1.5rem 1.5rem 8rem;">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <div>
                     <h4 class="fw-bold mb-0">{{ $minuman->nama }}</h4>
@@ -171,7 +171,7 @@
             {{-- Tags --}}
             <div class="mb-3 d-flex flex-wrap" style="text-indent: 1">
                 @foreach ($minuman->bahans->where('kategori', 'display') as $item)
-                    <div class="tag">{{ $item->nama }}</div>
+                    <div class="tag" style="font-size: 0.8rem">{{ $item->nama }}</div>
                 @endforeach
             </div>
 
