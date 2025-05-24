@@ -210,7 +210,7 @@
                     @if ($sizes->isNotEmpty())
                         <div class="mb-3">
                             <h6 class="fw-bold">Ukuran</h6>
-                            <div class="btn-group flex-wrap" role="group">
+                            <div class="btn-group" role="group">
                                 @foreach ($sizes as $size)
                                     <input type="radio" wire:click="$set('selectedSizeId', {{ $size->id }})" class="btn-check " name="size" value="{{ $size->id }}" id="size-{{ $size->id }}" autocomplete="off" {{ $selectedSizeId == $size->id ? 'checked' : '' }}>
                                     @php
@@ -237,7 +237,7 @@
                     @if ($sugars->isNotEmpty())
                         <div class="mb-3">
                             <h6 class="fw-bold">Pilihan Gula</h6>
-                            <div class="btn-group flex-wrap" role="group">
+                            <div class="btn-group" role="group">
                                 @foreach ($sugars->sortBy('level') as $sugar)
                                     <input type="radio" wire:click="$set('selectedSugarId', {{ $sugar->id }})" class="btn-check " name="sugar" value="{{ $sugar->id }}" id="sugar-{{ $sugar->id }}" {{ $selectedSugarId == $sugar->id ? 'checked' : '' }}>
                                     @php
@@ -264,7 +264,7 @@
                     @if ($toppings->isNotEmpty())
                         <div class="mb-3">
                             <h6 class="fw-bold">Topping</h6>
-                            <div class="btn-group flex-wrap" role="group">
+                            <div class="btn-group" role="group">
                                 @foreach ($toppings->sortByDesc('nama') as $topping)
                                     <input type="radio" wire:click="$set('selectedToppingId', {{ $topping->id }})" class="btn-check" name="topping" value="{{ $topping->id }}" id="topping-{{ $topping->id }}" {{ $selectedToppingId == $topping->id ? 'checked' : '' }}>
                                     @php
