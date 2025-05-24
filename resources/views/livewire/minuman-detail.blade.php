@@ -160,7 +160,7 @@
 
     {{-- Konten --}}
     <div wire:ignore.self class="card rounded-top-xl content-wrapper shadow-lg" style="animation: fadeSlideUp 0.6s ease-out both; padding-bottom: 5rem">
-        <div style="padding: 1.5rem 1.5rem 8rem;">
+        <div style="padding: 1.5rem 1.5rem 10rem;">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <div>
                     <h4 class="fw-bold mb-0">{{ $minuman->nama }}</h4>
