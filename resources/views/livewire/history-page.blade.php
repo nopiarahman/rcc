@@ -45,9 +45,6 @@
                 </div>
                 <h5 class="mb-2">Belum ada riwayat pesanan</h5>
                 <p class="text-gray-400 mb-4">Pesanan yang Anda buat akan muncul di sini</p>
-                <a href="{{ route('home') }}" class="inline-block bg-primary text-white px-6 py-2 rounded shadow hover:bg-blue-600 transition">
-                    <i class="fas fa-utensils mr-2"></i>Pesan Sekarang
-                </a>
             </div>
         @else
             <div>
