@@ -25,7 +25,6 @@ class HistoryPage extends Component
         if ($sessionId) {
             $this->orders = Pesanan::with('details')
                 ->where('session_id', $sessionId)
-                ->orWhere('user_id', auth()->id())
                 ->latest()
                 ->get();
         } else {
