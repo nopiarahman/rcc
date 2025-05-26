@@ -13,20 +13,7 @@
     $buttonGradient = $themeGradients[$currentTheme] ?? $themeGradients['green'];
 @endphp
 
-<script>
-    // Function to check and reset welcomeShown daily
-    function checkWelcomeReset() {
-        const lastShownDate = localStorage.getItem('welcomeLastShown');
-        const today = new Date().toISOString().split('T')[0];
-        
-        if (!lastShownDate || lastShownDate !== today) {
-            localStorage.removeItem('welcomeShown');
-            localStorage.setItem('welcomeLastShown', today);
-            return false; // Show welcome screen
-        }
-        return true; // Don't show welcome screen
-    }
-</script>
+
 
 <!DOCTYPE html>
 <html lang="id" x-data="{
@@ -281,6 +268,20 @@
             container.addEventListener('touchstart', handleTouchStart, false);
             container.addEventListener('touchend', handleTouchEnd, false);
         });
+    </script>
+    <script>
+        // Function to check and reset welcomeShown daily
+        function checkWelcomeReset() {
+            const lastShownDate = localStorage.getItem('welcomeLastShown');
+            const today = new Date().toISOString().split('T')[0];
+            
+            if (!lastShownDate || lastShownDate !== today) {
+                localStorage.removeItem('welcomeShown');
+                localStorage.setItem('welcomeLastShown', today);
+                return false; // Show welcome screen
+            }
+            return true; // Don't show welcome screen
+        }
     </script>
 </body>
 </html>
