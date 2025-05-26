@@ -20,7 +20,8 @@ class HistoryPage extends Component
     public function loadOrders()
     {
         // Get session ID from session or cookie
-        $sessionId = session()->getId();
+        $sessionId = session()->getId();    
+        dd($sessionId);
         if ($sessionId) {
             $this->orders = Pesanan::with('details')
                 ->where('session_id', $sessionId)
