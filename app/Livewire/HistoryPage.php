@@ -21,7 +21,7 @@ class HistoryPage extends Component
     {
         // Get session ID from session or cookie
         $sessionId = session()->getId() ?? request()->cookie('user_session');
-        
+        dd($sessionId);
         if ($sessionId) {
             $this->orders = Pesanan::with('details')
                 ->where('session_id', $sessionId)
