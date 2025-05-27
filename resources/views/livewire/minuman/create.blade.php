@@ -48,9 +48,10 @@
                 <textarea
                     id="deskripsi"
                     wire:model.defer="deskripsi"
+                    data-initial-value="{{ $deskripsi ?? '' }}"
                     rows="8"
                     class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                ></textarea>
+                >{{ $deskripsi ?? '' }}</textarea>
             </div>
             @error('deskripsi')
                 <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
@@ -95,8 +96,8 @@
                     .then(editor => {
                         window.editor = editor;
                         
-                        // Set initial content if available
-                        const initialContent = @this.get('deskripsi');
+                        // Get initial content from data attribute
+                        const initialContent = editorElement.dataset.initialValue;
                         if (initialContent) {
                             editor.setData(initialContent);
                         }
