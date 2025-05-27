@@ -163,7 +163,8 @@ class CartPage extends Component
         return view('livewire.cart-page', [
             'cartItems' => $detailedCart,
             'total' => $total,
-            'orderMode' => $webSettings->order_mode
+            'orderMode' => $webSettings->order_mode,
+            'web_settings' => $webSettings
         ])->layout('layouts.public');
     }
     public function konfirmasiCheckout()

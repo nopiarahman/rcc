@@ -1,6 +1,141 @@
 <div class="container p-4 bg-white mb-5" style="height: 100vh; display: flex; flex-direction: column;" wire:poll.60s>
+    <!-- Debug Info -->
+    @if(isset($web_settings))
+        <div class="alert alert-info mb-2">
+            Theme: {{ $web_settings->theme }}<br>
+            Theme Type: {{ gettype($web_settings->theme) }}<br>
+            Theme Length: {{ strlen($web_settings->theme) }}
+        </div>
+    @else
+        <div class="alert alert-danger mb-2">
+            Web settings not available
+        </div>
+    @endif
     <style>
-            @keyframes fadeSlideUp {
+        /* Theme-specific text color */
+        .text-theme {
+            @if(isset($web_settings))
+                @php
+                    $theme = trim(strtolower($web_settings->theme));
+                @endphp
+                @if($theme == 'brown')
+                    color: #5d4037 !important;
+                @elseif($theme == 'yellow')
+                    color: #ff8f00 !important;
+                @elseif($theme == 'blue')
+                    color: #1565c0 !important;
+                @elseif($theme == 'orange')
+                    color: #ef6c00 !important;
+                @elseif($theme == 'green')
+                    color: #006a3e !important;
+                @else
+                    color: #006a3e !important; /* Default to green */
+                @endif
+            @else
+                color: #006a3e !important; /* Default to green if no web settings */
+            @endif
+        }
+        
+        /* Theme-specific button outline */
+        .btn-outline-theme {
+            @if(isset($web_settings))
+                @php
+                    $theme = trim(strtolower($web_settings->theme));
+                @endphp
+                @if($theme == 'brown')
+                    color: #5d4037 !important;
+                    border-color: #5d4037 !important;
+                @elseif($theme == 'yellow')
+                    color: #ff8f00 !important;
+                    border-color: #ff8f00 !important;
+                @elseif($theme == 'blue')
+                    color: #1565c0 !important;
+                    border-color: #1565c0 !important;
+                @elseif($theme == 'orange')
+                    color: #ef6c00 !important;
+                    border-color: #ef6c00 !important;
+                @elseif($theme == 'green')
+                    color: #006a3e !important;
+                    border-color: #006a3e !important;
+                @else
+                    color: #006a3e !important;
+                    border-color: #006a3e !important;
+                @endif
+            @else
+                color: #006a3e !important;
+                border-color: #006a3e !important;
+            @endif
+        }
+        
+        .btn-outline-theme:hover {
+            @if(isset($web_settings))
+                @php
+                    $theme = trim(strtolower($web_settings->theme));
+                @endphp
+                @if($theme == 'brown')
+                    background-color: #5d4037 !important;
+                @elseif($theme == 'yellow')
+                    background-color: #ff8f00 !important;
+                @elseif($theme == 'blue')
+                    background-color: #1565c0 !important;
+                @elseif($theme == 'orange')
+                    background-color: #ef6c00 !important;
+                @else
+                    background-color: #006a3e !important;
+                @endif
+            @else
+                background-color: #006a3e !important;
+            @endif
+            color: white !important;
+        }
+        
+        /* Theme-specific button */
+        .btn-theme {
+            @if(isset($web_settings) && $web_settings->theme === 'brown')
+                background-color: #5d4037 !important;
+                border-color: #5d4037 !important;
+            @elseif(isset($web_settings) && $web_settings->theme === 'yellow')
+                background-color: #ff8f00 !important;
+                border-color: #ff8f00 !important;
+            @elseif(isset($web_settings) && $web_settings->theme === 'blue')
+                background-color: #1565c0 !important;
+                border-color: #1565c0 !important;
+            @elseif(isset($web_settings) && $web_settings->theme === 'orange')
+                background-color: #ef6c00 !important;
+                border-color: #ef6c00 !important;
+            @elseif(isset($web_settings) && $web_settings->theme === 'green')
+                background-color: #006a3e !important;
+                border-color: #006a3e !important;
+            @else
+                background-color: #006a3e !important;
+                border-color: #006a3e !important;
+            @endif
+            color: white !important;
+        }
+        
+        .btn-theme:hover {
+            @if(isset($web_settings) && $web_settings->theme === 'brown')
+                background-color: #3e2723 !important;
+                border-color: #3e2723 !important;
+            @elseif(isset($web_settings) && $web_settings->theme === 'yellow')
+                background-color: #ff6f00 !important;
+                border-color: #ff6f00 !important;
+            @elseif(isset($web_settings) && $web_settings->theme === 'blue')
+                background-color: #0d47a1 !important;
+                border-color: #0d47a1 !important;
+            @elseif(isset($web_settings) && $web_settings->theme === 'orange')
+                background-color: #e65100 !important;
+                border-color: #e65100 !important;
+            @elseif(isset($web_settings) && $web_settings->theme === 'green')
+                background-color: #004d29 !important;
+                border-color: #004d29 !important;
+            @else
+                background-color: #004d29 !important;
+                border-color: #004d29 !important;
+            @endif
+        }
+        
+        @keyframes fadeSlideUp {
         0% {
             opacity: 0;
             transform: translateY(60px);
@@ -26,7 +161,6 @@
         <h5 class="mb-0 small">Jumlah Keranjang: {{ count($cart) }}</h5>
         <button wire:click="clearCart" class="btn btn-link text-danger text-decoration-none btn-sm">Kosongkan Keranjang</button>
     </div>
-
     {{-- Scrollable Cart --}}
     <div  style="padding-bottom:200px;">
         @forelse($cartItems as $item)
@@ -39,16 +173,16 @@
                              width="60" height="60"
                              style="object-fit: cover; object-position: center;">
                         <div class="text-muted" style="font-size: 10pt">
-                            <h6 class="mb-1 fw-bold text-success">{{ $item['minuman'] }}</h6>
+                            <h6 class="mb-1 fw-bold text-theme">{{ $item['minuman'] }}</h6>
                             <small>Size: {{ $item['size'] }} | Gula: {{ $item['sugar'] }} | Topping: {{ $item['topping'] }}</small><br>
                             <small class="text-muted">{{ number_format($item['price'], 0, ',', '.') }} x {{ $item['qty'] }}</small>
                         </div>
                     </div>
                     <div class="text-end">
                         <div class="btn-group btn-group-sm mb-2">
-                            <button wire:click="decreaseQty('{{ $item['key'] }}')" class="btn btn-link text-decoration-none text-success">−</button>
+                            <button wire:click="decreaseQty('{{ $item['key'] }}')" class="btn btn-link text-decoration-none text-theme">−</button>
                             <button class="btn btn-light" disabled>{{ $item['qty'] }}</button>
-                            <button wire:click="increaseQty('{{ $item['key'] }}')" class="btn btn-link text-decoration-none text-success">+</button>
+                            <button wire:click="increaseQty('{{ $item['key'] }}')" class="btn btn-link text-decoration-none text-theme">+</button>
                         </div>
                         <br>
                         <button wire:click="removeItem('{{ $item['key'] }}')" class="btn btn-sm btn-outline-danger">Hapus</button>
@@ -66,7 +200,7 @@
             <h5 class="fw-bold mb-1">Total: {{ number_format($total, 0, ',', '.') }} IDR</h5>
             <p class="text-muted small mb-2">Pastikan pesanan anda benar, siapkan uang pas jika memungkinkan, Jazakallahu khairan</p>
         </div>
-        <button id="checkoutBtn" type="button" class="btn btn-success w-100 mb-2">
+        <button id="checkoutBtn" type="button" class="btn btn-theme w-100 mb-2">
             Checkout
         </button>
         
@@ -82,13 +216,13 @@
                 </div>
                 <div class="modal-body">
                     <div class="d-grid gap-3">
-                        <button id="delivery-btn" class="btn btn-lg btn-outline-primary d-flex flex-column align-items-center py-3">
+                        <button id="delivery-btn" class="btn btn-lg btn-outline-theme d-flex flex-column align-items-center py-3">
                             <i class="bi bi-truck fs-1 mb-2"></i>
                             <span class="fw-bold">Antar ke Alamat</span>
                             <small class="text-muted">Pesanan diantar ke lokasi Anda</small>
                         </button>
                         
-                        <button id="takeaway-btn" class="btn btn-lg btn-outline-primary d-flex flex-column align-items-center py-3">
+                        <button id="takeaway-btn" class="btn btn-lg btn-outline-theme d-flex flex-column align-items-center py-3">
                             <i class="bi bi-bag fs-1 mb-2"></i>
                             <span class="fw-bold">Ambil Sendiri</span>
                             <small class="text-muted">Anda mengambil pesanan di toko</small>
@@ -127,7 +261,7 @@
             </div>
             <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-            <button wire:click="konfirmasiCheckout" class="btn btn-success">
+            <button wire:click="konfirmasiCheckout" class="btn btn-theme">
                 Kirim ke WhatsApp
             </button>
             </div>
