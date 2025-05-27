@@ -21,6 +21,7 @@ class DiscountManager extends Component
     public $start_date;
     public $end_date;
     public $is_active = true;
+    public $apply_to_all = false;
     
     // Edit mode
     public $editMode = false;
@@ -34,16 +35,20 @@ class DiscountManager extends Component
     public $showForm = false;
     public $showDeleteConfirmation = false;
     
-    protected $rules = [
-        'minuman_id' => 'required|exists:minumans,id',
-        'name' => 'required|string|max:255',
-        'description' => 'nullable|string',
-        'discount_amount' => 'required|numeric|min:0',
-        'discount_type' => 'required|in:percentage,fixed',
-        'start_date' => 'required|date',
-        'end_date' => 'required|date|after_or_equal:start_date',
-        'is_active' => 'boolean',
-    ];
+    protected function rules()
+    {
+        return [
+            'minuman_id' => $this->apply_to_all ? 'nullable' : 'required|exists:minumans,id',
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'discount_amount' => 'required|numeric|min:0',
+            'discount_type' => 'required|in:percentage,fixed',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'is_active' => 'boolean',
+            'apply_to_all' => 'boolean',
+        ];
+    }
     
     public function mount()
     {
@@ -106,7 +111,7 @@ class DiscountManager extends Component
     {
         $this->reset([
             'minuman_id', 'name', 'description', 'discount_amount',
-            'editMode', 'discountId'
+            'editMode', 'discountId', 'apply_to_all'
         ]);
         
         $this->discount_type = 'percentage';
@@ -123,7 +128,6 @@ class DiscountManager extends Component
             DB::beginTransaction();
             
             $discountData = [
-                'minuman_id' => $this->minuman_id,
                 'name' => $this->name,
                 'description' => $this->description,
                 'discount_amount' => $this->discount_amount,
@@ -134,12 +138,30 @@ class DiscountManager extends Component
             ];
             
             if ($this->editMode) {
+                // Edit mode - update a single discount
                 $discount = Discount::findOrFail($this->discountId);
                 $discount->update($discountData);
                 $message = 'Discount updated successfully!';
             } else {
-                Discount::create($discountData);
-                $message = 'Discount created successfully!';
+                // Create mode
+                if ($this->apply_to_all) {
+                    // Apply to all products
+                    $minumans = Minuman::all();
+                    $count = 0;
+                    
+                    foreach ($minumans as $minuman) {
+                        $discountData['minuman_id'] = $minuman->id;
+                        Discount::create($discountData);
+                        $count++;
+                    }
+                    
+                    $message = "Discount applied to {$count} products successfully!";
+                } else {
+                    // Apply to a single product
+                    $discountData['minuman_id'] = $this->minuman_id;
+                    Discount::create($discountData);
+                    $message = 'Discount created successfully!';
+                }
             }
             
             DB::commit();

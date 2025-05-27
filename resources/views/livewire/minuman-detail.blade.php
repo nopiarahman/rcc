@@ -246,9 +246,9 @@
                                 <div class="badge bg-danger text-white mb-1" style="font-size: 0.7rem;">
                                     @php
                                         $discount = $minuman->activeDiscount();
-                                        $discountText = $discount->discount_type === 'percentage' 
-                                            ? 'Diskon ' . intval($discount->discount_amount) . '%' 
-                                            : 'Diskon Rp' . number_format($discount->discount_amount, 0, ',', '.');
+                                        $discountText = $discount->name . ' - ' . ($discount->discount_type === 'percentage' 
+                                            ? intval($discount->discount_amount) . '%' 
+                                            : 'Rp' . number_format($discount->discount_amount, 0, ',', '.'));
                                     @endphp
                                     {{ $discountText }}
                                 </div>

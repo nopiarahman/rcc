@@ -111,6 +111,17 @@
     <!-- Add/Edit Discount Modal -->
     <flux:modal title="{{ $editMode ? 'Edit Discount' : 'Add New Discount' }}" wire:model="showForm">
         <form wire:submit.prevent="save" class="space-y-4">
+            @if (!$editMode)
+            <div class="mb-4">
+                <label class="flex items-center">
+                    <input type="checkbox" wire:model.live="apply_to_all" class="form-checkbox h-5 w-5 text-indigo-600">
+                    <span class="ml-2 text-gray-700 dark:text-gray-300 font-medium">Apply to all products</span>
+                </label>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">This will create the same discount for all products in the system.</p>
+            </div>
+            @endif
+
+            @if (!$apply_to_all)
             <div>
                 <flux:label>Product</flux:label>
                 <flux:select wire:model="minuman_id">
@@ -121,6 +132,7 @@
                 </flux:select>
                 @error('minuman_id') <flux:error>{{ $message }}</flux:error> @enderror
             </div>
+            @endif
 
             <div>
                 <flux:label>Discount Name</flux:label>
