@@ -38,11 +38,11 @@ class DaftarMinuman extends Component
 
     public function render()
     {
-        $settings = \App\Models\WebSetting::first();
-        $theme = $settings ? $settings->theme : 'green';
-
+        $webSettings = \App\Models\WebSetting::first();
+        
         return view('livewire.daftar-minuman', [
-            'theme' => $theme
+            'theme' => $webSettings ? $webSettings->theme : 'green',
+            'web_settings' => $webSettings
         ]);
     }
 }

@@ -151,6 +151,10 @@ class MinumanDetail extends Component
     
     public function render()
     {
-        return view('livewire.minuman-detail')->layout('layouts.public');
+        $webSettings = \App\Models\WebSetting::first();
+        
+        return view('livewire.minuman-detail', [
+            'web_settings' => $webSettings
+        ])->layout('layouts.public');
     }
 }

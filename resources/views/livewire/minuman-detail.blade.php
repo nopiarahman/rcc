@@ -1,5 +1,56 @@
 <div class="" style=" overflow: hidden; position: relative;">
-        <style>
+    @php
+        // Define theme colors
+        $themeColors = [
+            'brown' => '#5d4037',
+            'yellow' => '#ff8f00',
+            'blue' => '#1565c0',
+            'orange' => '#ef6c00',
+            'green' => '#006a3e'
+        ];
+        
+        // Set default color
+        $themeColor = '#006a3e'; // Default to green
+        
+        // Get theme color if web settings are available
+        if (isset($web_settings)) {
+            $theme = trim(strtolower($web_settings->theme));
+            if (array_key_exists($theme, $themeColors)) {
+                $themeColor = $themeColors[$theme];
+            }
+        }
+    @endphp
+    
+    <style>
+        /* Theme-specific text color */
+        .text-theme {
+            color: {{ $themeColor }} !important;
+        }
+        
+        /* Theme-specific button outline */
+        .btn-outline-theme {
+            color: {{ $themeColor }} !important;
+            border-color: {{ $themeColor }} !important;
+        }
+        
+        .btn-outline-theme:hover {
+            background-color: {{ $themeColor }} !important;
+            color: white !important;
+        }
+        
+        /* Theme-specific filled button */
+        .btn-theme {
+            background-color: {{ $themeColor }} !important;
+            border-color: {{ $themeColor }} !important;
+            color: white !important;
+        }
+        
+        .btn-theme:hover {
+            opacity: 0.9;
+            background-color: {{ $themeColor }} !important;
+            border-color: {{ $themeColor }} !important;
+        }
+        
             .page-wrapper {
                 display: flex;
                 flex-direction: column;
@@ -162,7 +213,7 @@
         <div style="padding: 1.5rem 1.5rem 1rem;">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <div>
-                    <h4 class="fw-bold mb-0">{{ $minuman->nama }}</h4>
+                    <h4 class="fw-bold mb-0 text-theme">{{ $minuman->nama }}</h4>
                     <small class="text-muted">{{ $minuman->short_description }}</small>
                 </div>
             </div>
@@ -176,17 +227,17 @@
 
             {{-- About --}}
             <div class="mb-4">
-                <h6 class="fw-bold">Keterangan</h6>
+                <h6 class="fw-bold text-theme">Keterangan</h6>
                 <p class="text-muted" style="font-size: 0.9rem;">
                     {{ $minuman->deskripsi }}
                 </p>
             </div>
             <div class="d-flex justify-content-center align-items-center">
                 <div class="text-center">
-                    <div class="fw-bold text-{{ $this->getThemeTextColor($this->theme) }} mb-2" style="font-size: 1.5rem;">
+                    <div class="fw-bold text-theme mb-2" style="font-size: 1.5rem;">
                         Rp {{ number_format($this->totalPrice, 0, ',', '.') }}
                     </div>
-                    <button type="button" class="btn btn-{{ $this->getThemeColor($this->theme) }} btn-sm rounded-pill px-3 py-2 fw-semibold d-flex align-items-center gap-2 mx-auto" data-bs-toggle="modal" data-bs-target="#pilihanModal">
+                    <button type="button" class="btn btn-theme btn-sm rounded-pill px-3 py-2 fw-semibold d-flex align-items-center gap-2 mx-auto" data-bs-toggle="modal" data-bs-target="#pilihanModal">
                         <i class="material-symbols-outlined" style="font-size: 18px; font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;">
                             shopping_bag
                         </i>
@@ -202,29 +253,21 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content rounded-4">
                 <div class="modal-header">
-                    <h5 class="modal-title fw-bold" id="pilihanModalLabel">Pilih Varian</h5>
+                    <h5 class="modal-title fw-bold text-theme" id="pilihanModalLabel">Pilih Varian</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                 </div>
                 <div class="modal-body">
                     {{-- Size --}}
                     @if ($sizes->isNotEmpty())
                         <div class="mb-3">
-                            <h6 class="fw-bold">Ukuran</h6>
+                            <h6 class="fw-bold text-theme">Ukuran</h6>
                             <div class="btn-group" role="group">
                                 @foreach ($sizes as $size)
                                     <input type="radio" wire:click="$set('selectedSizeId', {{ $size->id }})" class="btn-check " name="size" value="{{ $size->id }}" id="size-{{ $size->id }}" autocomplete="off" {{ $selectedSizeId == $size->id ? 'checked' : '' }}>
                                     @php
-                                        $gradient = $this->getThemeGradient($this->theme);
-                                        $color = $this->getThemeColor($this->theme); // Default color
-                                        if (str_contains($gradient, '#')) {
-                                            $colorPart = trim(explode(' ', $gradient)[2]);
-                                            $color = rtrim($colorPart, ','); // Remove trailing comma if exists
-                                            $color = rtrim($color, ')'); // Remove trailing comma if exists
-                                        }
                                         $isSelected = $selectedSizeId == $size->id;
                                     @endphp
-                                    <label class="btn m-1 px-3 py-2 position-relative" 
-                                           style="border: 1px solid {{ $color }}; color: {{ $isSelected ? '#ffffff' : $color }}; background-color: {{ $isSelected ? $color : 'transparent' }}; transition: all 0.2s;" 
+                                    <label class="btn m-1 px-3 py-2 position-relative {{ $isSelected ? 'btn-theme' : 'btn-outline-theme' }}" 
                                            for="size-{{ $size->id }}">
                                            {{ $size->name }}
                                         </label>
@@ -236,22 +279,14 @@
                     {{-- Sugar --}}
                     @if ($sugars->isNotEmpty())
                         <div class="mb-3">
-                            <h6 class="fw-bold">Pilihan Gula</h6>
+                            <h6 class="fw-bold text-theme">Pilihan Gula</h6>
                             <div class="btn-group" role="group">
                                 @foreach ($sugars->sortBy('level') as $sugar)
                                     <input type="radio" wire:click="$set('selectedSugarId', {{ $sugar->id }})" class="btn-check " name="sugar" value="{{ $sugar->id }}" id="sugar-{{ $sugar->id }}" {{ $selectedSugarId == $sugar->id ? 'checked' : '' }}>
                                     @php
-                                        $gradient = $this->getThemeGradient($this->theme);
-                                        $color = $this->getThemeColor($this->theme); // Default color
-                                        if (str_contains($gradient, '#')) {
-                                            $colorPart = trim(explode(' ', $gradient)[2]);
-                                            $color = rtrim($colorPart, ','); // Remove trailing comma if exists
-                                            $color = rtrim($color, ')'); // Remove trailing comma if exists
-                                        }
                                         $isSelected = $selectedSugarId == $sugar->id;
                                     @endphp
-                                    <label class="btn m-1 px-3 py-2 position-relative" 
-                                           style="border: 1px solid {{ $color }}; color: {{ $isSelected ? '#ffffff' : $color }}; background-color: {{ $isSelected ? $color : 'transparent' }}; transition: all 0.2s;" 
+                                    <label class="btn m-1 px-3 py-2 position-relative {{ $isSelected ? 'btn-theme' : 'btn-outline-theme' }}" 
                                            for="sugar-{{ $sugar->id }}">
                                         {{ $sugar->level }}
                                     </label>
@@ -263,22 +298,14 @@
                     {{-- Topping --}}
                     @if ($toppings->isNotEmpty())
                         <div class="mb-3">
-                            <h6 class="fw-bold">Topping</h6>
+                            <h6 class="fw-bold text-theme">Topping</h6>
                             <div class="btn-group" role="group">
                                 @foreach ($toppings->sortByDesc('nama') as $topping)
                                     <input type="radio" wire:click="$set('selectedToppingId', {{ $topping->id }})" class="btn-check" name="topping" value="{{ $topping->id }}" id="topping-{{ $topping->id }}" {{ $selectedToppingId == $topping->id ? 'checked' : '' }}>
                                     @php
-                                        $gradient = $this->getThemeGradient($this->theme);
-                                        $color = $this->getThemeColor($this->theme); // Default color
-                                        if (str_contains($gradient, '#')) {
-                                            $colorPart = trim(explode(' ', $gradient)[2]);
-                                            $color = rtrim($colorPart, ','); // Remove trailing comma if exists
-                                            $color = rtrim($color, ')'); // Remove trailing comma if exists
-                                        }
                                         $isSelected = $selectedToppingId == $topping->id;
                                     @endphp
-                                    <label class="btn m-1 px-3 py-2 position-relative" 
-                                           style="border: 1px solid {{ $color }}; color: {{ $isSelected ? '#ffffff' : $color }}; background-color: {{ $isSelected ? $color : 'transparent' }}; transition: all 0.2s;" 
+                                    <label class="btn m-1 px-3 py-2 position-relative {{ $isSelected ? 'btn-theme' : 'btn-outline-theme' }}" 
                                            for="topping-{{ $topping->id }}">
                                         {{ $topping->nama }}
                                     </label>
@@ -289,12 +316,11 @@
                 </div>
                 <div class="modal-footer d-flex justify-content-between align-items-center">
                     <div wire:loading.delay.shorter.class="opacity-50 text-yellow">
-                        <div class="fw-bold text-{{ $this->getThemeTextColor($this->theme) }}" style="font-size: 1.25rem;">
+                        <div class="fw-bold text-theme" style="font-size: 1.25rem;">
                             Rp {{ number_format($this->totalPrice, 0, ',', '.') }}
                         </div>
                     </div>
-                    <button type="button" class="btn rounded-pill fw-semibold text-white px-4 py-2" 
-                    style="background-color: {{ $color }};" wire:click="addToCart" data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-theme rounded-pill fw-semibold text-white px-4 py-2" wire:click="addToCart" data-bs-dismiss="modal">
                         Masuk Keranjang
                     </button>
                 </div>

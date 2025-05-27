@@ -1,5 +1,55 @@
 <div class="container col-md-6" style="padding: 2rem">
+    @php
+        // Define theme colors
+        $themeColors = [
+            'brown' => '#5d4037',
+            'yellow' => '#ff8f00',
+            'blue' => '#1565c0',
+            'orange' => '#ef6c00',
+            'green' => '#006a3e'
+        ];
+        
+        // Set default color
+        $themeColor = '#006a3e'; // Default to green
+        
+        // Get theme color if web settings are available
+        if (isset($web_settings)) {
+            $theme = trim(strtolower($web_settings->theme));
+            if (array_key_exists($theme, $themeColors)) {
+                $themeColor = $themeColors[$theme];
+            }
+        }
+    @endphp
+    
     <style>
+        /* Theme-specific text color */
+        .text-theme {
+            color: {{ $themeColor }} !important;
+        }
+        
+        /* Theme-specific button outline */
+        .btn-outline-theme {
+            color: {{ $themeColor }} !important;
+            border-color: {{ $themeColor }} !important;
+        }
+        
+        .btn-outline-theme:hover {
+            background-color: {{ $themeColor }} !important;
+            color: white !important;
+        }
+        
+        /* Theme-specific filled button */
+        .btn-theme {
+            background-color: {{ $themeColor }} !important;
+            border-color: {{ $themeColor }} !important;
+            color: white !important;
+        }
+        
+        .btn-theme:hover {
+            opacity: 0.9;
+            background-color: {{ $themeColor }} !important;
+            border-color: {{ $themeColor }} !important;
+        }
         .carousel-image {
             height: 150px; /* Ubah sesuai kebutuhan */
             object-fit: cover;
@@ -58,7 +108,7 @@
             <div class="fw-bold" style="color: rgb(226, 226, 226)">{{ $ucapan }}</div>
             <small style="color: rgb(175, 175, 175)">Kopi ala cafe sampai ke pintu rumahmu</small>
         </div>
-        <div class="bg-success rounded-circle p-1 shadow-sm">
+        <div class="btn-theme rounded-circle p-1 shadow-sm">
             <img src="{{ asset('images/profile-placeholder.png') }}" class="rounded-circle" width="40" height="40" alt="Profile">
         </div>
     </div>

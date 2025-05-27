@@ -42,6 +42,11 @@ class MenuPage extends Component
 
     public function render()
     {
-        return view('livewire.menu-page',['minumans'=>$this->minumans])->layout('layouts.public');
+        $webSettings = \App\Models\WebSetting::first();
+        
+        return view('livewire.menu-page', [
+            'minumans' => $this->minumans,
+            'web_settings' => $webSettings
+        ])->layout('layouts.public');
     }
 }

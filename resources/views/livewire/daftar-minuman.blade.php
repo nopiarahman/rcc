@@ -1,42 +1,76 @@
 <div>
+    @php
+        // Define theme colors
+        $themeColors = [
+            'brown' => '#5d4037',
+            'yellow' => '#ff8f00',
+            'blue' => '#1565c0',
+            'orange' => '#ef6c00',
+            'green' => '#006a3e'
+        ];
+        
+        // Set default color
+        $themeColor = '#006a3e'; // Default to green
+        
+        // Get theme color if web settings are available
+        if (isset($web_settings)) {
+            $theme = trim(strtolower($web_settings->theme));
+            if (array_key_exists($theme, $themeColors)) {
+                $themeColor = $themeColors[$theme];
+            }
+        }
+    @endphp
+    
+    <style>
+        /* Theme-specific text color */
+        .text-theme {
+            color: {{ $themeColor }} !important;
+        }
+        
+        /* Theme-specific button outline */
+        .btn-outline-theme {
+            color: {{ $themeColor }} !important;
+            border-color: {{ $themeColor }} !important;
+        }
+        
+        .btn-outline-theme:hover {
+            background-color: {{ $themeColor }} !important;
+            color: white !important;
+        }
+        
+        /* Theme-specific filled button */
+        .btn-theme {
+            background-color: {{ $themeColor }} !important;
+            border-color: {{ $themeColor }} !important;
+            color: white !important;
+        }
+        
+        .btn-theme:hover {
+            opacity: 0.9;
+            background-color: {{ $themeColor }} !important;
+            border-color: {{ $themeColor }} !important;
+        }
+    </style>
+    
     {{-- Kategori --}}
-    <h5 class="fw-bold mb-2">Minuman {{$filterKategori ?: 'Semua'}}</h5>
+    <h5 class="fw-bold mb-2 text-theme">Minuman {{$filterKategori ?: 'Semua'}}</h5>
     <div class="d-flex gap-2 overflow-auto pb-2">
-        @php
-            $themeClasses = [
-                'green' => 'btn-success',
-                'brown' => 'btn-brown',
-                'yellow' => 'btn-warning',
-                'blue' => 'btn-primary',
-                'orange' => 'btn-orange',
-            ];
-            $activeClass = $themeClasses[$theme] ?? 'btn-success';
-        @endphp
         
         <button 
             wire:click="gantiKategori('')" 
-            class="btn rounded-4 btn-sm px-3 {{ $filterKategori == '' ? $activeClass : 'btn-outline-secondary' }}">
+            class="btn rounded-4 btn-sm px-3 {{ $filterKategori == '' ? 'btn-theme' : 'btn-outline-secondary' }}">
             Semua
         </button>
         @foreach($allKategoris as $kategori)
         <button 
             wire:click="gantiKategori('{{ $kategori }}')" 
-            class="btn rounded-4 btn-sm px-3 {{ $filterKategori == $kategori ? $activeClass : 'btn-outline-secondary' }}">
+            class="btn rounded-4 btn-sm px-3 {{ $filterKategori == $kategori ? 'btn-theme' : 'btn-outline-secondary' }}">
             {{ $kategori }}
         </button>
         @endforeach
     </div>
 
-    <style>
-        .btn-brown {
-            background-color: #3e2723;
-            border-color: #3e2723;
-        }
-        .btn-orange {
-            background-color: #e65100;
-            border-color: #e65100;
-        }
-    </style>
+
     
     {{-- Daftar Minuman --}}
     <div>
