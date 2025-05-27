@@ -303,7 +303,9 @@ new class extends Component
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
+                @dd($this->pesananBelumSelesai)
                 @foreach ($this->pesananBelumSelesai as $pesanan)
+                
                     <tr wire:key="pesanan-belumselesai-{{ $pesanan->id }}">
                         <td class="px-4 py-2 font-medium text-gray-700">#{{ $pesanan->id }}</td>
                         <td class="px-4 py-2">{{ $pesanan->nama_pemesan }}</td>
