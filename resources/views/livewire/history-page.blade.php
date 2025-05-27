@@ -1,6 +1,56 @@
 <div class="container p-4 bg-white mb-5" style="min-height: 100vh; display: flex; flex-direction: column;">
+    @php
+        // Define theme colors
+        $themeColors = [
+            'brown' => '#5d4037',
+            'yellow' => '#ff8f00',
+            'blue' => '#1565c0',
+            'orange' => '#ef6c00',
+            'green' => '#006a3e'
+        ];
+        
+        // Set default color
+        $themeColor = '#006a3e'; // Default to green
+        
+        // Get theme color if web settings are available
+        if (isset($web_settings)) {
+            $theme = trim(strtolower($web_settings->theme));
+            if (array_key_exists($theme, $themeColors)) {
+                $themeColor = $themeColors[$theme];
+            }
+        }
+    @endphp
     
     <style>
+        /* Theme-specific text color */
+        .text-theme {
+            color: {{ $themeColor }} !important;
+        }
+        
+        /* Theme-specific button outline */
+        .btn-outline-theme {
+            color: {{ $themeColor }} !important;
+            border-color: {{ $themeColor }} !important;
+        }
+        
+        .btn-outline-theme:hover {
+            background-color: {{ $themeColor }} !important;
+            color: white !important;
+        }
+        
+        /* Theme-specific filled button */
+        .btn-theme {
+            background-color: {{ $themeColor }} !important;
+            border-color: {{ $themeColor }} !important;
+            color: white !important;
+        }
+        
+        .btn-theme:hover {
+            opacity: 0.9;
+            background-color: {{ $themeColor }} !important;
+            border-color: {{ $themeColor }} !important;
+        }
+        
         @keyframes fadeSlideUp {
             0% {
                 opacity: 0;
@@ -34,7 +84,7 @@
             <a wire:navigate href="{{ route('home') }}" class="btn btn-light rounded-circle shadow-sm">
                 <i class="fas fa-chevron-left"></i>
             </a>
-            <h5 class="fw-bold pt-3 pe-2 mb-0" style="font-size: 1.1rem;">Riwayat Pesanan</h5>
+            <h5 class="fw-bold pt-3 pe-2 mb-0 text-theme" style="font-size: 1.1rem;">Riwayat Pesanan</h5>
         </div>
         <p class="small text-gray-400 mb-4" style="text-align: right;">Klik pesanan untuk melihat lebih detail</p>
 
@@ -52,7 +102,7 @@
                     <div class="card mb-2 rounded-3 btn btn-light" style="text-align: left;" wire:click="viewOrder({{ $order->id }})">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                <div class="fw-bold text-success">
+                                <div class="fw-bold text-theme">
                                     <span class="text-muted" style="font-size: 0.8rem;">{{ $order->created_at->format('d M Y H:i') }}</span>
                                 </div>
                                 @php
@@ -94,7 +144,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Detail Pesanan</h5>
+                    <h5 class="modal-title text-theme">Detail Pesanan</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -166,7 +216,7 @@
                             @endif
                         @endif
                     </div>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-outline-theme" data-bs-dismiss="modal">Tutup</button>
                 </div>
             </div>
         </div>

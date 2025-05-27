@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Pesanan;
+use App\Models\WebSetting;
 use Illuminate\Support\Facades\Auth;
 
 class HistoryPage extends Component
@@ -11,10 +12,12 @@ class HistoryPage extends Component
     public $openOrderId = null;
     public $orders;
     public $selectedOrder = null;
+    public $web_settings;
 
     public function mount()
     {
         $this->loadOrders();
+        $this->web_settings = WebSetting::first();
     }
 
     public function loadOrders()
@@ -84,9 +87,11 @@ class HistoryPage extends Component
 
     public function render()
     {
+        $webSettings = $this->web_settings ?: WebSetting::first();
         return view('livewire.history-page', [
             'orders' => $this->orders,
             'selectedOrder' => $this->selectedOrder,
+            'web_settings' => $webSettings,
         ])->layout('layouts.public');
     }
 }
