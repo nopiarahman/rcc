@@ -35,22 +35,25 @@ class MinumanDetail extends Component
         $webSetting = WebSetting::first();
         $this->theme = $webSetting ? $webSetting->theme : 'green';
     }
-    // Metode untuk menambahkan produk ke keranjang
+    // Metode untuk menghitung total harga berdasarkan pilihan
     public function getTotalPriceProperty()
     {
         $size = collect($this->sizes)->firstWhere('id', $this->selectedSizeId);
         $sugar = collect($this->sugars)->firstWhere('id', $this->selectedSugarId);
         $topping = collect($this->toppings)->firstWhere('id', $this->selectedToppingId);
         
-        // Use discounted price if available, otherwise use base price
-        $basePrice = $this->minuman->activeDiscount() 
-            ? $this->minuman->discounted_price 
-            : $this->minuman->base_price;
-    
-        return $basePrice
+        // Calculate total price with selected options
+        $totalPrice = $this->minuman->base_price
             + ($size['price'] ?? 0)
             + ($sugar['price'] ?? 0)
             + ($topping['default_price'] ?? 0);
+        
+        // Apply discount if available
+        if ($activeDiscount = $this->minuman->activeDiscount()) {
+            return $activeDiscount->calculateDiscountedPrice($totalPrice);
+        }
+        
+        return $totalPrice;
     }
 
     public function addToCart()

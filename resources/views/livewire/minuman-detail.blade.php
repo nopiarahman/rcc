@@ -333,7 +333,7 @@
                             <h6 class="fw-bold text-theme">Ukuran</h6>
                             <div class="btn-group" role="group">
                                 @foreach ($sizes as $size)
-                                    <input type="radio" wire:click="$set('selectedSizeId', {{ $size->id }})" class="btn-check " name="size" value="{{ $size->id }}" id="size-{{ $size->id }}" autocomplete="off" {{ $selectedSizeId == $size->id ? 'checked' : '' }}>
+                                    <input type="radio" wire:model.live="selectedSizeId" class="btn-check" name="size" value="{{ $size->id }}" id="size-{{ $size->id }}" autocomplete="off">
                                     @php
                                         $isSelected = $selectedSizeId == $size->id;
                                     @endphp
@@ -352,7 +352,7 @@
                             <h6 class="fw-bold text-theme">Pilihan Gula</h6>
                             <div class="btn-group" role="group">
                                 @foreach ($sugars->sortBy('level') as $sugar)
-                                    <input type="radio" wire:click="$set('selectedSugarId', {{ $sugar->id }})" class="btn-check " name="sugar" value="{{ $sugar->id }}" id="sugar-{{ $sugar->id }}" {{ $selectedSugarId == $sugar->id ? 'checked' : '' }}>
+                                    <input type="radio" wire:model.live="selectedSugarId" class="btn-check" name="sugar" value="{{ $sugar->id }}" id="sugar-{{ $sugar->id }}">
                                     @php
                                         $isSelected = $selectedSugarId == $sugar->id;
                                     @endphp
@@ -371,7 +371,7 @@
                             <h6 class="fw-bold text-theme">Topping</h6>
                             <div class="btn-group" role="group">
                                 @foreach ($toppings->sortByDesc('nama') as $topping)
-                                    <input type="radio" wire:click="$set('selectedToppingId', {{ $topping->id }})" class="btn-check" name="topping" value="{{ $topping->id }}" id="topping-{{ $topping->id }}" {{ $selectedToppingId == $topping->id ? 'checked' : '' }}>
+                                    <input type="radio" wire:model.live="selectedToppingId" class="btn-check" name="topping" value="{{ $topping->id }}" id="topping-{{ $topping->id }}">
                                     @php
                                         $isSelected = $selectedToppingId == $topping->id;
                                     @endphp
@@ -401,7 +401,7 @@
                                 
                                 $sizePrice = $selectedSize ? $selectedSize->price : 0;
                                 $sugarPrice = $selectedSugar ? $selectedSugar->price : 0;
-                                $toppingPrice = $selectedTopping ? $selectedTopping->price : 0;
+                                $toppingPrice = $selectedTopping ? $selectedTopping->defau : 0;
                             @endphp
                             <li>Selected Size: {{ $selectedSize ? $selectedSize->name . ' (+Rp ' . number_format($sizePrice, 0, ',', '.') . ')' : 'None' }}</li>
                             <li>Selected Sugar: {{ $selectedSugar ? $selectedSugar->level . ' (+Rp ' . number_format($sugarPrice, 0, ',', '.') . ')' : 'None' }}</li>
