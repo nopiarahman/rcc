@@ -228,9 +228,9 @@
             {{-- About --}}
             <div class="mb-4">
                 <h6 class="fw-bold text-theme">Keterangan</h6>
-                <p class="text-muted" style="font-size: 0.9rem;">
-                    {{ $minuman->deskripsi }}
-                </p>
+                <div class="text-muted" style="font-size: 0.9rem;">
+                    {!! $minuman->deskripsi !!}
+                </div>
             </div>
             <div class="d-flex justify-content-center align-items-center">
                 <div class="text-center">

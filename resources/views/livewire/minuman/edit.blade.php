@@ -44,16 +44,87 @@
         </flux:field>
         <div class="mb-4">
             <label for="deskripsi" class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
-            <textarea
-                id="deskripsi"
-                wire:model.defer="deskripsi"
-                rows="4"
-                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-            ></textarea>
+            <div wire:ignore>
+                <textarea
+                    id="deskripsi"
+                    wire:model.defer="deskripsi"
+                    rows="8"
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                ></textarea>
+            </div>
             @error('minuman.deskripsi')
                 <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
             @enderror
         </div>
+        
+        <!-- CKEditor Script -->
+        <script src="https://cdn.ckeditor.com/ckeditor5/40.0.0/classic/ckeditor.js"></script>
+        <script>
+            // Initialize CKEditor when the DOM is fully loaded
+            document.addEventListener('DOMContentLoaded', initCKEditor);
+            
+            // Also initialize when Livewire navigates or loads
+            document.addEventListener('livewire:navigated', initCKEditor);
+            document.addEventListener('livewire:load', initCKEditor);
+            
+            // Track initialization state
+            window.editorInitialized = false;
+            window.editor = null;
+            
+            function initCKEditor() {
+                // Skip if already initialized
+                if (window.editorInitialized) return;
+                
+                // Check if the editor element exists
+                const editorElement = document.getElementById('deskripsi');
+                if (!editorElement) return;
+                
+                // Set initialization flag
+                window.editorInitialized = true;
+                
+                // Initialize CKEditor
+                ClassicEditor
+                    .create(document.querySelector('#deskripsi'), {
+                        toolbar: [
+                            'heading', '|', 
+                            'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|', 
+                            'indent', 'outdent', '|',
+                            'blockQuote', 'insertTable', 'undo', 'redo'
+                        ]
+                    })
+                    .then(editor => {
+                        window.editor = editor;
+                        
+                        // Set initial content if available
+                        const initialContent = @this.get('deskripsi');
+                        if (initialContent) {
+                            editor.setData(initialContent);
+                        }
+                        
+                        // Update Livewire component when content changes
+                        editor.model.document.on('change:data', () => {
+                            @this.set('deskripsi', editor.getData());
+                        });
+                    })
+                    .catch(error => {
+                        console.error(error);
+                    });
+                
+                // Clean up when navigating away
+                document.addEventListener('livewire:navigating', function() {
+                    if (window.editor) {
+                        window.editor.destroy()
+                            .then(() => {
+                                window.editor = null;
+                                window.editorInitialized = false;
+                            })
+                            .catch(error => {
+                                console.error('Error during editor cleanup:', error);
+                            });
+                    }
+                });
+            }
+        </script>
 
         <flux:field class="mb-2">
             <flux:label>Base Price</flux:label>
