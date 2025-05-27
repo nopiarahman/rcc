@@ -37,6 +37,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('dashboard.banners');
     Route::get('/dashboard/web-settings', \App\Livewire\Admin\WebSettings::class)
         ->name('dashboard.web-settings');
+    Route::get('/dashboard/discounts', \App\Livewire\Admin\DiscountManager::class)
+        ->name('dashboard.discounts');
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');

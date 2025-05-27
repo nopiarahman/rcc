@@ -16,6 +16,7 @@
                     <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
                     <flux:navlist.item icon="archive-box" :href="route('minuman.index')" :current="request()->routeIs('minuman.*')" wire:navigate>{{ __('Minuman') }}</flux:navlist.item>
                     <flux:navlist.item icon="rocket-launch" :href="route('pesanan.index')" :current="request()->routeIs('pesanan.*')" wire:navigate>{{ __('Pesanan') }}</flux:navlist.item>
+                    <flux:navlist.item icon="currency-dollar" :href="route('dashboard.discounts')" :current="request()->routeIs('dashboard.discounts')" wire:navigate>{{ __('Discounts') }}</flux:navlist.item>
                 </flux:navlist.group>
             </flux:navlist>
             <flux:separator />

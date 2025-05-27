@@ -59,4 +59,40 @@ class Minuman extends Model implements HasMedia
     {
         return $this->belongsTo(Topping::class, 'default_topping_id');
     }
+    
+    /**
+     * Get the discounts for the minuman.
+     */
+    public function discounts()
+    {
+        return $this->hasMany(Discount::class);
+    }
+    
+    /**
+     * Get the active discount for the minuman.
+     */
+    public function activeDiscount()
+    {
+        $now = now();
+        return $this->discounts()
+            ->where('is_active', true)
+            ->where('start_date', '<=', $now)
+            ->where('end_date', '>=', $now)
+            ->orderBy('discount_amount', 'desc')
+            ->first();
+    }
+    
+    /**
+     * Get the discounted price for the minuman.
+     */
+    public function getDiscountedPriceAttribute()
+    {
+        $activeDiscount = $this->activeDiscount();
+        
+        if (!$activeDiscount) {
+            return $this->base_price;
+        }
+        
+        return $activeDiscount->calculateDiscountedPrice($this->base_price);
+    }
 }

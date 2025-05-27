@@ -86,7 +86,22 @@
                 @forelse ($items as $item)
                     <div class="col-6">
                         <a wire:navigate href="{{ route('minuman.detail', $item->id) }}" class="text-decoration-none text-dark">
-                            <div class="card border-1 rounded-4">
+                            <div class="card border-1 rounded-4 position-relative">
+                                <!-- Discount Badge -->
+                                @if($item->activeDiscount())
+                                    @php
+                                        $discount = $item->activeDiscount();
+                                        $discountText = $discount->discount_type === 'percentage' 
+                                            ? 'Diskon ' . intval($discount->discount_amount) . '%' 
+                                            : 'Diskon Rp' . number_format($discount->discount_amount, 0, ',', '.');
+                                    @endphp
+                                    <div class="position-absolute top-0 end-0 m-2 z-index-1">
+                                        <span class="badge bg-danger text-white">
+                                            {{ $discountText }}
+                                        </span>
+                                    </div>
+                                @endif
+                                
                                 <img src="{{ $item->getFirstMediaUrl('foto') ?: asset('images/no-image.png') }}"
                                      class="card-img-top object-fit-cover fixed-img-height rounded-4 p-2"
                                      alt="{{ $item->nama }}">
@@ -94,8 +109,21 @@
                                     <div class="fw-bold small" style="min-height: 2.5rem; overflow: hidden; text-overflow: ellipsis;">
                                         {{ $item->nama }}
                                     </div>
-                                    <div class="text-muted small">
-                                        Rp {{ number_format(\App\Helpers\DrinkPriceHelper::calculate($item), 0, ',', '.') }}
+                                    <div class="small">
+                                        @if($item->activeDiscount())
+                                            <div class="d-flex align-items-center gap-1">
+                                                <span class="text-decoration-line-through text-muted" style="font-size: 0.75rem;">
+                                                    Rp {{ number_format($item->base_price, 0, ',', '.') }}
+                                                </span>
+                                                <span class="text-danger fw-bold">
+                                                    Rp {{ number_format($item->discounted_price, 0, ',', '.') }}
+                                                </span>
+                                            </div>
+                                        @else
+                                            <div class="text-muted">
+                                                Rp {{ number_format(\App\Helpers\DrinkPriceHelper::calculate($item), 0, ',', '.') }}
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
                             </div>

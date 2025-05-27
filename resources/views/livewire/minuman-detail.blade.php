@@ -234,8 +234,30 @@
             </div>
             <div class="d-flex justify-content-center align-items-center">
                 <div class="text-center">
-                    <div class="fw-bold text-theme mb-2" style="font-size: 1.5rem;">
-                        Rp {{ number_format($this->totalPrice, 0, ',', '.') }}
+                    <div class="fw-bold mb-2">
+                        @if ($minuman->activeDiscount())
+                            <div class="d-flex flex-column align-items-center">
+                                <div class="text-decoration-line-through text-muted" style="font-size: 1rem;">
+                                    Rp {{ number_format($minuman->base_price, 0, ',', '.') }}
+                                </div>
+                                <div class="text-theme" style="font-size: 1.5rem;">
+                                    Rp {{ number_format($minuman->discounted_price, 0, ',', '.') }}
+                                </div>
+                                <div class="badge bg-danger text-white mb-1" style="font-size: 0.7rem;">
+                                    @php
+                                        $discount = $minuman->activeDiscount();
+                                        $discountText = $discount->discount_type === 'percentage' 
+                                            ? 'Diskon ' . intval($discount->discount_amount) . '%' 
+                                            : 'Diskon Rp' . number_format($discount->discount_amount, 0, ',', '.');
+                                    @endphp
+                                    {{ $discountText }}
+                                </div>
+                            </div>
+                        @else
+                            <div class="text-theme" style="font-size: 1.5rem;">
+                                Rp {{ number_format($this->totalPrice, 0, ',', '.') }}
+                            </div>
+                        @endif
                     </div>
                     <button type="button" class="btn btn-theme btn-sm rounded-pill px-3 py-2 fw-semibold d-flex align-items-center gap-2 mx-auto" data-bs-toggle="modal" data-bs-target="#pilihanModal">
                         <i class="material-symbols-outlined" style="font-size: 18px; font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;">

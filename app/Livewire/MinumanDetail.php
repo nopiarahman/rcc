@@ -41,8 +41,13 @@ class MinumanDetail extends Component
         $size = collect($this->sizes)->firstWhere('id', $this->selectedSizeId);
         $sugar = collect($this->sugars)->firstWhere('id', $this->selectedSugarId);
         $topping = collect($this->toppings)->firstWhere('id', $this->selectedToppingId);
+        
+        // Use discounted price if available, otherwise use base price
+        $basePrice = $this->minuman->activeDiscount() 
+            ? $this->minuman->discounted_price 
+            : $this->minuman->base_price;
     
-        return $this->minuman->base_price
+        return $basePrice
             + ($size['price'] ?? 0)
             + ($sugar['price'] ?? 0)
             + ($topping['default_price'] ?? 0);
