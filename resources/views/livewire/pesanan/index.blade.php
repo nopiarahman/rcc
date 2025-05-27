@@ -14,7 +14,8 @@ new class extends Component
     public $selesaiPage = 1;
     public $search = '';
     public $statusFilter = 'all';
-    public $dateFilter = '';
+    public $startDate = '';
+    public $endDate = '';
     public $perPage = 10;
     public $selectedStatuses = [
         'menunggu_konfirmasi' => true,
@@ -27,27 +28,24 @@ new class extends Component
     protected $queryString = [
         'search' => ['except' => ''],
         'statusFilter' => ['except' => 'all'],
-        'dateFilter' => ['except' => ''],
+        'startDate' => ['except' => ''],
+        'endDate' => ['except' => ''],
     ];
     public function mount()
     {
-        // Initialize with today's date
-        $this->dateFilter = now()->format('Y-m-d');
+        // Initialize with current month date range
+        $this->startDate = now()->startOfMonth()->format('Y-m-d');
+        $this->endDate = now()->endOfMonth()->format('Y-m-d');
     }
     
     public function lihatDetail($id)
     {
         try {
-            \Log::info('lihatDetail called with ID:', ['id' => $id]);
-            
             // Try to load with both possible relationship names
             $pesanan = Pesanan::find($id);
-            \Log::info('Pesanan loaded:', ['pesanan' => $pesanan ? $pesanan->toArray() : null]);
-            
             if (!$pesanan) {
                 throw new \Exception('Pesanan tidak ditemukan');
             }
-            
             $items = [];
             
             // Check for items in pesanan_details relationship
@@ -101,19 +99,12 @@ new class extends Component
             $pesanan->parsed_items = $items;
             $this->detailPesanan = $pesanan;
             
-            \Log::info('Dispatching show-order-detail event');
-            // Emit event to show the modal
             $this->dispatch('show-order-detail')->self();
-            \Log::info('After dispatching event');
             
         } catch (\Exception $e) {
             $this->dispatch('show-toast', [
                 'message' => 'Gagal memuat detail pesanan: ' . $e->getMessage(),
                 'type' => 'error'
-            ]);
-            \Log::error('Error loading order details: ' . $e->getMessage(), [
-                'order_id' => $id,
-                'exception' => $e
             ]);
         }
     }
@@ -145,9 +136,10 @@ new class extends Component
                       ->orWhere('alamat_pengantaran', 'like', '%' . $this->search . '%');
                 });
             })
-            ->when($this->dateFilter, function($query) {
-                $date = Carbon::parse($this->dateFilter);
-                $query->whereDate('created_at', $date);
+            ->when($this->startDate && $this->endDate, function($query) {
+                $startDate = Carbon::parse($this->startDate)->startOfDay();
+                $endDate = Carbon::parse($this->endDate)->endOfDay();
+                $query->whereBetween('created_at', [$startDate, $endDate]);
             });
     }
     public function updateStatus($pesananId, $status)
@@ -203,22 +195,47 @@ new class extends Component
     
     public function getTotalPendapatanProperty()
     {
-        return Pesanan::where('status', 'selesai')
-            ->whereDate('created_at', $this->dateFilter ?: now())
-            ->sum('total');
+        $query = Pesanan::where('status', 'selesai');
+        
+        if ($this->startDate && $this->endDate) {
+            $startDate = Carbon::parse($this->startDate)->startOfDay();
+            $endDate = Carbon::parse($this->endDate)->endOfDay();
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        } else {
+            $query->whereDate('created_at', now());
+        }
+        
+        return $query->sum('total');
     }
     
     public function getTotalPesananHariIniProperty()
     {
-        return Pesanan::whereDate('created_at', $this->dateFilter ?: now())
-            ->count();
+        $query = Pesanan::query();
+        
+        if ($this->startDate && $this->endDate) {
+            $startDate = Carbon::parse($this->startDate)->startOfDay();
+            $endDate = Carbon::parse($this->endDate)->endOfDay();
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        } else {
+            $query->whereDate('created_at', now());
+        }
+        
+        return $query->count();
     }
     
     public function getPesananDiterimaProperty()
     {
-        return Pesanan::where('status', 'selesai')
-            ->whereDate('created_at', $this->dateFilter ?: now())
-            ->count();
+        $query = Pesanan::where('status', 'selesai');
+        
+        if ($this->startDate && $this->endDate) {
+            $startDate = Carbon::parse($this->startDate)->startOfDay();
+            $endDate = Carbon::parse($this->endDate)->endOfDay();
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        } else {
+            $query->whereDate('created_at', now());
+        }
+        
+        return $query->count();
     }
     
     public function updatingSearch()
@@ -226,8 +243,49 @@ new class extends Component
         $this->resetPage();
     }
     
-    public function updatingDateFilter()
+    public function updatingStartDate()
     {
+        $this->resetPage();
+    }
+    
+    public function updatingEndDate()
+    {
+        $this->resetPage();
+    }
+    
+    public function setDateRange($range)
+    {
+        switch ($range) {
+            case 'today':
+                $this->startDate = now()->format('Y-m-d');
+                $this->endDate = now()->format('Y-m-d');
+                break;
+            case 'yesterday':
+                $this->startDate = now()->subDay()->format('Y-m-d');
+                $this->endDate = now()->subDay()->format('Y-m-d');
+                break;
+            case 'this_week':
+                $this->startDate = now()->startOfWeek()->format('Y-m-d');
+                $this->endDate = now()->endOfWeek()->format('Y-m-d');
+                break;
+            case 'last_week':
+                $this->startDate = now()->subWeek()->startOfWeek()->format('Y-m-d');
+                $this->endDate = now()->subWeek()->endOfWeek()->format('Y-m-d');
+                break;
+            case 'this_month':
+                $this->startDate = now()->startOfMonth()->format('Y-m-d');
+                $this->endDate = now()->endOfMonth()->format('Y-m-d');
+                break;
+            case 'last_month':
+                $this->startDate = now()->subMonth()->startOfMonth()->format('Y-m-d');
+                $this->endDate = now()->subMonth()->endOfMonth()->format('Y-m-d');
+                break;
+            case 'all_time':
+                $this->startDate = '';
+                $this->endDate = '';
+                break;
+        }
+        
         $this->resetPage();
     }
     
@@ -239,39 +297,68 @@ new class extends Component
 ?>
 
 <div class="max-w-7xl mx-auto p-6 space-y-6">
-    <div class="flex justify-between items-center mb-6">
+    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
         <h1 class="text-2xl font-bold text-gray-800">Daftar Pesanan</h1>
-        <div class="flex items-center space-x-4">
-            <div class="relative">
-                <input type="text" 
-                       wire:model.live="search" 
-                       placeholder="Cari pesanan..." 
-                       class="pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                <div class="absolute left-3 top-2.5 text-gray-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
+        <div class="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4 w-full md:w-auto">
+            <!-- Date Range Picker -->
+            <div class="flex flex-col w-full md:w-auto">
+                <div class="flex flex-wrap gap-2 mb-2">
+                    <button wire:click="setDateRange('today')" class="px-2 py-1 text-xs bg-gray-200 hover:bg-gray-300 rounded-md">Hari Ini</button>
+                    <button wire:click="setDateRange('this_week')" class="px-2 py-1 text-xs bg-gray-200 hover:bg-gray-300 rounded-md">Minggu Ini</button>
+                    <button wire:click="setDateRange('this_month')" class="px-2 py-1 text-xs bg-gray-200 hover:bg-gray-300 rounded-md">Bulan Ini</button>
+                    <button wire:click="setDateRange('last_month')" class="px-2 py-1 text-xs bg-gray-200 hover:bg-gray-300 rounded-md">Bulan Lalu</button>
+                    <button wire:click="setDateRange('all_time')" class="px-2 py-1 text-xs bg-gray-200 hover:bg-gray-300 rounded-md">Semua</button>
+                </div>
+                <div class="flex space-x-2">
+                    <div class="relative">
+                        <label class="text-xs text-gray-500">Dari</label>
+                        <input type="date" 
+                               wire:model.live="startDate" 
+                               class="w-full md:w-auto px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div class="relative">
+                        <label class="text-xs text-gray-500">Sampai</label>
+                        <input type="date" 
+                               wire:model.live="endDate" 
+                               class="w-full md:w-auto px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    
-    @if ($this->pendingCount > 0)
-    <div class="mb-4 px-4 py-3 rounded-lg bg-blue-100 text-blue-800 border border-blue-200 flex items-center justify-between">
-        <div>
-            <strong>Pesanan Baru!</strong> Anda memiliki {{ $this->pendingCount }} pesanan menunggu konfirmasi.
+    <div class="grid grid-cols-2 gap-4 mb-4">
+        @if ($this->pendingCount > 0)
+        <div class="bg-blue-100 text-blue-800 border border-blue-200 rounded-lg p-3 flex items-center justify-between">
+            <div>
+                <strong>Pesanan Baru!</strong> Anda memiliki {{ $this->pendingCount }} pesanan menunggu konfirmasi.
+            </div>
+            <button wire:click="$refresh" class="text-blue-600 hover:text-blue-800">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                </svg>
+            </button>
         </div>
-        <button wire:click="$refresh" class="text-blue-600 hover:text-blue-800">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
-            </svg>
-        </button>
+        @endif
+        <div class="relative">
+            <input type="text" 
+                   wire:model.live="search" 
+                   placeholder="Cari pesanan..." 
+                   class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <div class="absolute left-3 top-2.5 text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            </div>
+        </div>
+
     </div>
-    @endif
     
     <div class="bg-white rounded-xl shadow overflow-hidden mb-8">
         <div class="p-4 border-b border-gray-200">
             <h2 class="text-lg font-semibold text-gray-700">Ringkasan</h2>
+            <div class="text-sm text-gray-500 mb-2">
+                Periode: {{ $startDate && $endDate ? Carbon::parse($startDate)->format('d M Y') . ' - ' . Carbon::parse($endDate)->format('d M Y') : 'Semua Waktu' }}
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                 <div class="bg-blue-50 p-4 rounded-lg">
                     <div class="text-sm text-blue-600 font-medium">Total Pesanan Belum Selesai</div>
@@ -303,7 +390,6 @@ new class extends Component
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-                @dd($this->pesananBelumSelesai)
                 @foreach ($this->pesananBelumSelesai as $pesanan)
                 
                     <tr wire:key="pesanan-belumselesai-{{ $pesanan->id }}">
