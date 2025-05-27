@@ -1,4 +1,4 @@
-<div class="container p-4 bg-white mb-5" style="height: 100vh; display: flex; flex-direction: column;">
+<div class="container p-4 bg-white mb-5" style="height: 100vh; display: flex; flex-direction: column;" wire:poll.60s>
     <style>
             @keyframes fadeSlideUp {
         0% {
@@ -66,7 +66,7 @@
             <h5 class="fw-bold mb-1">Total: {{ number_format($total, 0, ',', '.') }} IDR</h5>
             <p class="text-muted small mb-2">Pastikan pesanan anda benar, siapkan uang pas jika memungkinkan, Jazakallahu khairan</p>
         </div>
-        <button wire:click="checkout" class="btn btn-success w-100 mb-2">
+        <button id="checkoutBtn" type="button" class="btn btn-success w-100 mb-2">
             Checkout
         </button>
         
@@ -82,13 +82,13 @@
                 </div>
                 <div class="modal-body">
                     <div class="d-grid gap-3">
-                        <button wire:click="setOrderType('delivery')" class="btn btn-lg btn-outline-primary d-flex flex-column align-items-center py-3">
+                        <button id="delivery-btn" class="btn btn-lg btn-outline-primary d-flex flex-column align-items-center py-3">
                             <i class="bi bi-truck fs-1 mb-2"></i>
                             <span class="fw-bold">Antar ke Alamat</span>
                             <small class="text-muted">Pesanan diantar ke lokasi Anda</small>
                         </button>
                         
-                        <button wire:click="setOrderType('takeaway')" class="btn btn-lg btn-outline-primary d-flex flex-column align-items-center py-3">
+                        <button id="takeaway-btn" class="btn btn-lg btn-outline-primary d-flex flex-column align-items-center py-3">
                             <i class="bi bi-bag fs-1 mb-2"></i>
                             <span class="fw-bold">Ambil Sendiri</span>
                             <small class="text-muted">Anda mengambil pesanan di toko</small>
@@ -174,14 +174,15 @@
 @endpush
 
 <script>
-    // Get or initialize location settings
-    if (typeof window.locationSettings === 'undefined') {
-        window.locationSettings = @json(\App\Models\WebSetting::first(['latitude', 'longitude', 'delivery_radius']));
-    }
+    // Global location settings
+    window.locationSettings = @json(\App\Models\WebSetting::first(['latitude', 'longitude', 'delivery_radius']));
+    
+    // Track initialization state to prevent duplicate handlers
+    window.checkoutInitialized = false;
 
-    // Fungsi Haversine untuk hitung jarak antar koordinat
+    // Haversine function to calculate distance
     function getDistanceFromLatLonInMeters(lat1, lon1, lat2, lon2) {
-        const R = 6371e3; // Radius bumi dalam meter
+        const R = 6371e3; // Radius of earth in meters
         const dLat = (lat2 - lat1) * Math.PI / 180;
         const dLon = (lon2 - lon1) * Math.PI / 180;
 
@@ -192,67 +193,161 @@
             Math.sin(dLon / 2) * Math.sin(dLon / 2);
 
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        const distance = R * c;
-        return distance;
+        return R * c;
     }
     
-    // Initialize modals on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        const checkoutModal = new bootstrap.Modal(document.getElementById('checkoutModal'));
-        const orderTypeModal = new bootstrap.Modal(document.getElementById('orderTypeModal'));
+    // Check delivery location function
+    function checkDeliveryLocation(successCallback) {
+        if (!navigator.geolocation) {
+            alert('Browser Anda tidak mendukung fitur lokasi.');
+            return;
+        }
         
-        // Location check for delivery orders
-        Livewire.on('check-location', function() {
-            if (!navigator.geolocation) {
-                alert('Browser Anda tidak mendukung fitur lokasi.');
-                return;
-            }
-
-            navigator.geolocation.getCurrentPosition(
-                function (position) {
-                    const userLat = position.coords.latitude;
-                    const userLng = position.coords.longitude;
-                    
-                    // Use settings from database
-                    const centerLat = parseFloat(window.locationSettings.latitude);
-                    const centerLng = parseFloat(window.locationSettings.longitude);
-                    const maxRadius = parseInt(window.locationSettings.delivery_radius);
-
-                    const distance = getDistanceFromLatLonInMeters(userLat, userLng, centerLat, centerLng);
-                    
-                    if (distance <= maxRadius) {
-                        // If within radius, proceed with checkout
-                        @this.call('locationCheckPassed');
-                    } else {
-                        alert(`Layanan ini hanya tersedia dalam radius ${maxRadius} meter dari lokasi toko.`);
-                    }
-                },
-                function (error) {
-                    if (error.code === error.PERMISSION_DENIED) {
-                        alert('Akses lokasi ditolak. Silakan izinkan lokasi di pengaturan browser.');
-                    } else {
-                        alert('Tidak bisa mendeteksi lokasi. Pastikan GPS aktif dan coba lagi.');
-                    }
+        // Show loading indicator
+        const checkoutBtn = document.getElementById('checkoutBtn');
+        if (checkoutBtn) {
+            checkoutBtn.innerHTML = 'Memeriksa lokasi... <span class="spinner-border spinner-border-sm"></span>';
+        }
+        
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                // Reset button text
+                if (checkoutBtn) checkoutBtn.textContent = 'Checkout';
+                
+                const userLat = position.coords.latitude;
+                const userLng = position.coords.longitude;
+                
+                const centerLat = parseFloat(window.locationSettings.latitude);
+                const centerLng = parseFloat(window.locationSettings.longitude);
+                const maxRadius = parseInt(window.locationSettings.delivery_radius);
+                
+                const distance = getDistanceFromLatLonInMeters(userLat, userLng, centerLat, centerLng);
+                
+                if (distance <= maxRadius) {
+                    // Within delivery radius
+                    successCallback();
+                } else {
+                    alert(`Layanan ini hanya tersedia dalam radius ${maxRadius} meter dari lokasi toko.`);
                 }
-            );
-        });
-        
-        // Modal event listeners
-        window.addEventListener('show-order-type-modal', event => {
-            orderTypeModal.show();
-        });
-        
-        window.addEventListener('show-checkout-modal', event => {
-            if (orderTypeModal._isShown) {
-                orderTypeModal.hide();
+            },
+            function(error) {
+                // Reset button text
+                if (checkoutBtn) checkoutBtn.textContent = 'Checkout';
+                
+                if (error.code === error.PERMISSION_DENIED) {
+                    alert('Akses lokasi ditolak. Silakan izinkan lokasi di pengaturan browser.');
+                } else {
+                    alert('Tidak bisa mendeteksi lokasi. Pastikan GPS aktif dan coba lagi.');
+                }
             }
-            checkoutModal.show();
-        });
+        );
+    }
+    
+    // The main function to attach all event handlers
+    function initCartPage() {
+        // Skip if already initialized to prevent duplicate handlers
+        if (window.checkoutInitialized) return;
         
-        window.addEventListener('close-modal', () => {
-            const modal = bootstrap.Modal.getInstance(document.getElementById('checkoutModal'));
-            if (modal) modal.hide();
-        });
+        try {
+            // Get required elements
+            const checkoutBtn = document.getElementById('checkoutBtn');
+            const deliveryBtn = document.getElementById('delivery-btn');
+            const takeawayBtn = document.getElementById('takeaway-btn');
+            const orderTypeModalEl = document.getElementById('orderTypeModal');
+            const checkoutModalEl = document.getElementById('checkoutModal');
+            
+            // Check if elements exist
+            if (!checkoutBtn || !orderTypeModalEl || !checkoutModalEl) return;
+            
+            // Initialize Bootstrap modals
+            const orderTypeModal = new bootstrap.Modal(orderTypeModalEl);
+            const checkoutModal = new bootstrap.Modal(checkoutModalEl);
+            
+            // Clean up modal artifacts when hidden
+            function cleanupModal() {
+                // Remove any lingering modal backdrops
+                const backdrops = document.querySelectorAll('.modal-backdrop');
+                backdrops.forEach(backdrop => backdrop.remove());
+                // Remove modal-open class from body
+                document.body.classList.remove('modal-open');
+                // Reset body padding if it was adjusted
+                document.body.style.paddingRight = '';
+            }
+            
+            // Add cleanup on hidden for modal
+            orderTypeModalEl.addEventListener('hidden.bs.modal', function () {
+                // Only clean up if no other modals are shown
+                if (document.querySelectorAll('.modal.show').length === 0) {
+                    setTimeout(() => {
+                        cleanupModal();
+                    }, 150);
+                }
+            });
+            
+            checkoutModalEl.addEventListener('hidden.bs.modal', function () {
+                setTimeout(() => {
+                    @this.set('order_type', null);
+                    cleanupModal();
+                }, 150);
+            });
+            
+            // Add checkout button click handler
+            checkoutBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const orderMode = '{{ $orderMode }}';
+                
+                if (orderMode === 'both') {
+                    orderTypeModal.show();
+                } else if (orderMode === 'delivery') {
+                    // Check location for delivery
+                    checkDeliveryLocation(function() {
+                        checkoutModal.show();
+                    });
+                } else {
+                    // For takeaway, show checkout modal directly
+                    checkoutModal.show();
+                }
+            });
+            
+            // Add click handlers to order type buttons
+            if (deliveryBtn) {
+                deliveryBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    orderTypeModal.hide();
+                    @this.set('order_type', 'delivery');
+                    
+                    // For delivery, check location first
+                    checkDeliveryLocation(function() {
+                        checkoutModal.show();
+                    });
+                });
+            }
+            
+            if (takeawayBtn) {
+                takeawayBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    orderTypeModal.hide();
+                    @this.set('order_type', 'takeaway');
+                    checkoutModal.show();
+                });
+            }
+            
+            // Mark as initialized
+            window.checkoutInitialized = true;
+        } catch (error) {
+            // Silent error handling
+        }
+    }
+    
+    // Initialize on different events to ensure it works both on page load and navigation
+    document.addEventListener('DOMContentLoaded', initCartPage);
+    document.addEventListener('livewire:load', initCartPage);
+    
+    // Initialize when Livewire navigates to this page
+    document.addEventListener('livewire:navigated', function() {
+        window.checkoutInitialized = false; // Reset to allow re-initialization
+        initCartPage();
     });
 </script>
 

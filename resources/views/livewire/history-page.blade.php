@@ -174,44 +174,104 @@
 
     @push('scripts')
     <script>
-        document.addEventListener('livewire:initialized', () => {
-            // Initialize modal variable
-            let orderModal = null;
+        // Track initialization state
+        window.historyPageInitialized = false;
+        
+        // Function to initialize all event handlers and functionality
+        function initHistoryPage() {
+            // Skip if already initialized
+            if (window.historyPageInitialized) return;
             
-            // Function to show modal
-            const showOrderModal = () => {
-                if (!orderModal) {
-                    const modalEl = document.getElementById('orderDetailModal');
-                    orderModal = new bootstrap.Modal(modalEl);
+            try {
+                // Initialize modal variable
+                let orderModal = null;
+                
+                // Function to show modal
+                const showOrderModal = () => {
+                    if (!orderModal) {
+                        const modalEl = document.getElementById('orderDetailModal');
+                        if (!modalEl) return;
+                        
+                        orderModal = new bootstrap.Modal(modalEl);
+                        
+                        // Clean up modal instance when hidden
+                        modalEl.addEventListener('hidden.bs.modal', function () {
+                            setTimeout(() => {
+                                @this.set('selectedOrder', null, false);
+                                // Remove any lingering modal backdrop
+                                const backdrops = document.querySelectorAll('.modal-backdrop');
+                                backdrops.forEach(backdrop => backdrop.remove());
+                                // Remove modal-open class from body
+                                document.body.classList.remove('modal-open');
+                                // Reset body padding if it was adjusted
+                                document.body.style.paddingRight = '';
+                            }, 150);
+                        });
+                    }
+                    orderModal.show();
+                };
+                
+                // Listen for the event to show modal
+                @this.on('show-order-modal', () => {
+                    // Small timeout to ensure DOM is updated
+                    setTimeout(showOrderModal, 100);
+                });
+                
+                // If there's already a selected order when component mounts, show modal
+                if (@js($selectedOrder)) {
+                    showOrderModal();
+                }
+                
+                // Add click handlers to all order cards
+                setupOrderCardClickHandlers();
+                
+                // Mark as initialized
+                window.historyPageInitialized = true;
+            } catch (error) {
+                // Silent error handling
+            }
+        }
+        
+        // Function to set up click handlers on all order cards
+        function setupOrderCardClickHandlers() {
+            // Get all order cards with wire:click attribute
+            const orderCards = document.querySelectorAll('.card[wire\\:click^="viewOrder"]');
+            
+            // Add click handlers to all cards
+            orderCards.forEach(card => {
+                // Extract order ID from the wire:click attribute
+                const wireClickAttr = card.getAttribute('wire:click');
+                const orderIdMatch = wireClickAttr.match(/viewOrder\(([0-9]+)\)/);
+                
+                if (orderIdMatch && orderIdMatch[1]) {
+                    const orderId = orderIdMatch[1];
                     
-                    // Clean up modal instance when hidden
-                    modalEl.addEventListener('hidden.bs.modal', function () {
-                        @this.set('selectedOrder', null, false);
+                    // Add a direct click handler (as a backup)
+                    card.addEventListener('click', function(e) {
+                        // Call the Livewire method directly
+                        @this.call('viewOrder', orderId);
                     });
                 }
-                orderModal.show();
-            };
-            
-            // Listen for the event to show modal
-            @this.on('show-order-modal', () => {
-                // Small timeout to ensure DOM is updated
-                setTimeout(showOrderModal, 100);
             });
-            
-            // If there's already a selected order when component mounts, show modal
-            if (@js($selectedOrder)) {
-                showOrderModal();
-            }
+        }
+        
+        // Initialize on different events to ensure it works in all scenarios
+        document.addEventListener('DOMContentLoaded', initHistoryPage);
+        document.addEventListener('livewire:initialized', initHistoryPage);
+        
+        // Initialize when Livewire navigates to this page
+        document.addEventListener('livewire:navigated', () => {
+            window.historyPageInitialized = false; // Reset to allow re-initialization
+            initHistoryPage();
         });
         
-        // Handle page navigation with Livewire
-        document.addEventListener('livewire:navigated', () => {
-            if (@js($selectedOrder)) {
-                const modalEl = document.getElementById('orderDetailModal');
-                if (modalEl) {
-                    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-                    modal.show();
-                }
+        // Additional safety for Livewire updates
+        document.addEventListener('livewire:update', function() {
+            if (!window.historyPageInitialized) {
+                initHistoryPage();
+            } else {
+                // Re-setup click handlers in case new order cards were added
+                setupOrderCardClickHandlers();
             }
         });
     </script>
