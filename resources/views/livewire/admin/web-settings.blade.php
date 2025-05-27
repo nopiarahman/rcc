@@ -157,6 +157,54 @@
                 </div>
             </div>
 
+            <!-- Order Mode Selection -->
+            <div class="mb-6 p-4 border rounded-lg bg-gray-50">
+                <label class="block text-gray-700 text-sm font-bold mb-3">
+                    Mode Pemesanan
+                </label>
+                <div class="space-y-3">
+                    <div class="flex items-center">
+                        <input 
+                            type="radio" 
+                            id="order-mode-both" 
+                            wire:model.live="order_mode" 
+                            value="both" 
+                            class="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                        >
+                        <label for="order-mode-both" class="ml-2 block text-sm font-medium text-gray-700">
+                            Keduanya (Delivery & Takeaway)
+                        </label>
+                    </div>
+                    <div class="flex items-center">
+                        <input 
+                            type="radio" 
+                            id="order-mode-delivery" 
+                            wire:model.live="order_mode" 
+                            value="delivery" 
+                            class="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                        >
+                        <label for="order-mode-delivery" class="ml-2 block text-sm font-medium text-gray-700">
+                            Hanya Delivery
+                        </label>
+                    </div>
+                    <div class="flex items-center">
+                        <input 
+                            type="radio" 
+                            id="order-mode-takeaway" 
+                            wire:model.live="order_mode" 
+                            value="takeaway" 
+                            class="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                        >
+                        <label for="order-mode-takeaway" class="ml-2 block text-sm font-medium text-gray-700">
+                            Hanya Takeaway
+                        </label>
+                    </div>
+                </div>
+                <div class="mt-3 text-sm text-gray-600">
+                    Pilih mode pemesanan yang tersedia untuk pelanggan.
+                </div>
+            </div>
+
             <!-- Theme Selection -->
             <div class="mb-6 p-4 border rounded-lg bg-gray-50">
                 <label for="theme" class="block text-gray-700 text-sm font-bold mb-2">

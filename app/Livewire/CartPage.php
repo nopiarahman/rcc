@@ -18,12 +18,22 @@ class CartPage extends Component
     public $waktu_pengantaran = '';
     public $catatan = '';
     public $total = 0;
+    public $order_type = 'delivery';
+    public $web_settings;
 
     public function mount()
     {
         // Sinkronkan keranjang dari Local Storage ke Session saat komponen di-mount
         $this->syncCartFromLocalStorage();
         $this->updateTotal();
+        
+        // Load web settings
+        $this->web_settings = WebSetting::first();
+        
+        // Set default order type based on web settings
+        if ($this->web_settings->order_mode != 'both') {
+            $this->order_type = $this->web_settings->order_mode;
+        }
     }
     
     protected function syncCartFromLocalStorage()
@@ -85,7 +95,44 @@ class CartPage extends Component
     }
     public function checkout()
     {
+        // If order mode is 'both', show order type selection modal first
+        if ($this->web_settings->order_mode === 'both') {
+            $this->dispatch('show-order-type-modal');
+        } else {
+            // If order mode is specific (delivery or takeaway), proceed directly to checkout form
+            $this->order_type = $this->web_settings->order_mode;
+            $this->proceedToCheckout();
+        }
+    }
+    
+    protected function proceedToCheckout()
+    {
+        // For delivery orders, we need to check location first
+        if ($this->order_type === 'delivery') {
+            $this->dispatch('check-location');
+            // The actual checkout will be triggered by a location-check-passed event
+        } else {
+            // For takeaway, no location check needed
+            $this->showCheckoutForm();
+        }
+    }
+    
+    public function locationCheckPassed()
+    {
+        // This will be called by the JavaScript when location check passes
+        $this->showCheckoutForm();
+    }
+    
+    public function setOrderType($type)
+    {
+        $this->order_type = $type;
+        $this->proceedToCheckout();
+    }
+    
+    public function showCheckoutForm()
+    {
         $this->showForm = true;
+        $this->dispatch('show-checkout-modal');
     }
     public function render()
     {
@@ -109,19 +156,29 @@ class CartPage extends Component
         });
     
         $total = $detailedCart->sum('subtotal');
+        
+        // Get web settings for order mode
+        $webSettings = $this->web_settings ?: WebSetting::first();
     
         return view('livewire.cart-page', [
             'cartItems' => $detailedCart,
-            'total' => $total
+            'total' => $total,
+            'orderMode' => $webSettings->order_mode
         ])->layout('layouts.public');
     }
     public function konfirmasiCheckout()
     {
-        $this->validate([
+        $validationRules = [
             'nama_pemesan' => 'required',
-            'alamat_pengantaran' => 'required',
             'waktu_pengantaran' => 'required',
-        ]);
+        ];
+        
+        // Only require address for delivery orders
+        if ($this->order_type === 'delivery') {
+            $validationRules['alamat_pengantaran'] = 'required';
+        }
+        
+        $this->validate($validationRules);
     
         $cartItems = collect($this->cart)->map(function ($item, $key) {
             $minuman = Minuman::find($item['id']);
@@ -154,12 +211,13 @@ class CartPage extends Component
             'user_id' => auth()->id(),
             'session_id' => $sessionId,
             'nama_pemesan' => $this->nama_pemesan,
-            'alamat_pengantaran' => $this->alamat_pengantaran,
+            'alamat_pengantaran' => $this->order_type === 'delivery' ? $this->alamat_pengantaran : 'Takeaway',
             'waktu_pengantaran' => $this->waktu_pengantaran,
             'catatan' => $this->catatan ?? null,
             'total' => (int) $this->total,
             'total_harga' => $this->total,
             'status' => 'menunggu_konfirmasi',
+            'order_type' => $this->order_type,
             'nomor_pesanan' => 'ORD-' . now()->format('Ymd') . '-' . strtoupper(uniqid())
         ]);
         
@@ -194,8 +252,11 @@ class CartPage extends Component
     
         $message .= "\nTotal: Rp " . number_format($this->total, 0, ',', '.');
         $message .= "\n\nNama: {$this->nama_pemesan}";
-        $message .= "\nAlamat: {$this->alamat_pengantaran}";
-        $message .= "\nWaktu Pengantaran: {$this->waktu_pengantaran}";
+        $message .= "\nJenis Pesanan: " . ($this->order_type === 'delivery' ? 'Antar ke Alamat' : 'Ambil Sendiri');
+        if ($this->order_type === 'delivery') {
+            $message .= "\nAlamat: {$this->alamat_pengantaran}";
+        }
+        $message .= "\nWaktu " . ($this->order_type === 'delivery' ? 'Pengantaran' : 'Pengambilan') . ": {$this->waktu_pengantaran}";
         $message .= "\nNomor Pesanan: " . $pesanan->nomor_pesanan;
     
         // Clear cart

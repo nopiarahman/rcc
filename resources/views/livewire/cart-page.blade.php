@@ -66,10 +66,37 @@
             <h5 class="fw-bold mb-1">Total: {{ number_format($total, 0, ',', '.') }} IDR</h5>
             <p class="text-muted small mb-2">Pastikan pesanan anda benar, siapkan uang pas jika memungkinkan, Jazakallahu khairan</p>
         </div>
-        <button id="checkoutBtn" class="btn btn-success w-100 mb-2">
+        <button wire:click="checkout" class="btn btn-success w-100 mb-2">
             Checkout
         </button>
         
+    </div>
+
+    <!-- Modal Pilih Jenis Pesanan -->
+    <div wire:ignore.self class="modal fade" id="orderTypeModal" tabindex="-1" aria-labelledby="orderTypeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="orderTypeModalLabel">Pilih Jenis Pesanan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-grid gap-3">
+                        <button wire:click="setOrderType('delivery')" class="btn btn-lg btn-outline-primary d-flex flex-column align-items-center py-3">
+                            <i class="bi bi-truck fs-1 mb-2"></i>
+                            <span class="fw-bold">Antar ke Alamat</span>
+                            <small class="text-muted">Pesanan diantar ke lokasi Anda</small>
+                        </button>
+                        
+                        <button wire:click="setOrderType('takeaway')" class="btn btn-lg btn-outline-primary d-flex flex-column align-items-center py-3">
+                            <i class="bi bi-bag fs-1 mb-2"></i>
+                            <span class="fw-bold">Ambil Sendiri</span>
+                            <small class="text-muted">Anda mengambil pesanan di toko</small>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Modal Konfirmasi Pesanan -->
@@ -86,13 +113,15 @@
                 <input type="text" class="form-control" wire:model.defer="nama_pemesan">
             </div>
     
+            @if($order_type === 'delivery')
             <div class="mb-2">
                 <label class="form-label">Alamat Pengantaran</label>
                 <textarea class="form-control" wire:model.defer="alamat_pengantaran"></textarea>
             </div>
+            @endif
     
             <div class="mb-3">
-                <label class="form-label">Waktu Pengantaran</label>
+                <label class="form-label">Waktu {{ $order_type === 'delivery' ? 'Pengantaran' : 'Pengambilan' }}</label>
                 <input type="text" class="form-control" wire:model.defer="waktu_pengantaran" placeholder="Misal: 16.00 WIB / Sekarang">
             </div>
             </div>
@@ -150,44 +179,6 @@
         window.locationSettings = @json(\App\Models\WebSetting::first(['latitude', 'longitude', 'delivery_radius']));
     }
 
-    document.getElementById('checkoutBtn')?.addEventListener('click', function (e) {
-        e.preventDefault(); // Prevent default form submission
-
-        if (!navigator.geolocation) {
-            alert('Browser Anda tidak mendukung fitur lokasi.');
-            return;
-        }
-
-        navigator.geolocation.getCurrentPosition(
-            function (position) {
-                const userLat = position.coords.latitude;
-                const userLng = position.coords.longitude;
-                console.log(userLat, userLng);
-                // Use settings from database
-                const centerLat = parseFloat(window.locationSettings.latitude);
-                const centerLng = parseFloat(window.locationSettings.longitude);
-                const maxRadius = parseInt(window.locationSettings.delivery_radius);
-
-                const distance = getDistanceFromLatLonInMeters(userLat, userLng, centerLat, centerLng);
-                console.log(distance);
-                if (distance <= maxRadius) {
-                    // If within radius, show checkout modal
-                    const modal = new bootstrap.Modal(document.getElementById('checkoutModal'));
-                    modal.show();
-                } else {
-                    alert(`Layanan ini hanya tersedia dalam radius ${maxRadius} meter dari lokasi toko.`);
-                }
-            },
-            function (error) {
-                if (error.code === error.PERMISSION_DENIED) {
-                    alert('Akses lokasi ditolak. Silakan izinkan lokasi di pengaturan browser.');
-                } else {
-                    alert('Tidak bisa mendeteksi lokasi. Pastikan GPS aktif dan coba lagi.');
-                }
-            }
-        );
-    });
-
     // Fungsi Haversine untuk hitung jarak antar koordinat
     function getDistanceFromLatLonInMeters(lat1, lon1, lat2, lon2) {
         const R = 6371e3; // Radius bumi dalam meter
@@ -204,12 +195,64 @@
         const distance = R * c;
         return distance;
     }
-</script>
+    
+    // Initialize modals on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkoutModal = new bootstrap.Modal(document.getElementById('checkoutModal'));
+        const orderTypeModal = new bootstrap.Modal(document.getElementById('orderTypeModal'));
+        
+        // Location check for delivery orders
+        Livewire.on('check-location', function() {
+            if (!navigator.geolocation) {
+                alert('Browser Anda tidak mendukung fitur lokasi.');
+                return;
+            }
 
-<script>
-    window.addEventListener('close-modal', () => {
-        const modal = bootstrap.Modal.getInstance(document.getElementById('checkoutModal'));
-        if (modal) modal.hide();
+            navigator.geolocation.getCurrentPosition(
+                function (position) {
+                    const userLat = position.coords.latitude;
+                    const userLng = position.coords.longitude;
+                    
+                    // Use settings from database
+                    const centerLat = parseFloat(window.locationSettings.latitude);
+                    const centerLng = parseFloat(window.locationSettings.longitude);
+                    const maxRadius = parseInt(window.locationSettings.delivery_radius);
+
+                    const distance = getDistanceFromLatLonInMeters(userLat, userLng, centerLat, centerLng);
+                    
+                    if (distance <= maxRadius) {
+                        // If within radius, proceed with checkout
+                        @this.call('locationCheckPassed');
+                    } else {
+                        alert(`Layanan ini hanya tersedia dalam radius ${maxRadius} meter dari lokasi toko.`);
+                    }
+                },
+                function (error) {
+                    if (error.code === error.PERMISSION_DENIED) {
+                        alert('Akses lokasi ditolak. Silakan izinkan lokasi di pengaturan browser.');
+                    } else {
+                        alert('Tidak bisa mendeteksi lokasi. Pastikan GPS aktif dan coba lagi.');
+                    }
+                }
+            );
+        });
+        
+        // Modal event listeners
+        window.addEventListener('show-order-type-modal', event => {
+            orderTypeModal.show();
+        });
+        
+        window.addEventListener('show-checkout-modal', event => {
+            if (orderTypeModal._isShown) {
+                orderTypeModal.hide();
+            }
+            checkoutModal.show();
+        });
+        
+        window.addEventListener('close-modal', () => {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('checkoutModal'));
+            if (modal) modal.hide();
+        });
     });
 </script>
 
