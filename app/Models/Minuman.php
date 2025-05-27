@@ -83,16 +83,25 @@ class Minuman extends Model implements HasMedia
     }
     
     /**
-     * Get the discounted price for the minuman.
+     * Get the default price with default options (size, sugar, topping).
+     */
+    public function getDefaultPriceAttribute()
+    {
+        return \App\Helpers\DrinkPriceHelper::calculate($this);
+    }
+    
+    /**
+     * Get the discounted price for the minuman with default options.
      */
     public function getDiscountedPriceAttribute()
     {
         $activeDiscount = $this->activeDiscount();
+        $defaultPrice = $this->default_price;
         
         if (!$activeDiscount) {
-            return $this->base_price;
+            return $defaultPrice;
         }
         
-        return $activeDiscount->calculateDiscountedPrice($this->base_price);
+        return $activeDiscount->calculateDiscountedPrice($defaultPrice);
     }
 }

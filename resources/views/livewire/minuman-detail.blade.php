@@ -234,11 +234,11 @@
             </div>
             <div class="d-flex justify-content-center align-items-center">
                 <div class="text-center">
-                    <div class="fw-bold mb-2">
+                    <div class="d-flex justify-content-center align-items-center mb-3">
                         @if ($minuman->activeDiscount())
                             <div class="d-flex flex-column align-items-center">
                                 <div class="text-decoration-line-through text-muted" style="font-size: 1rem;">
-                                    Rp {{ number_format($minuman->base_price, 0, ',', '.') }}
+                                    Rp {{ number_format($minuman->default_price, 0, ',', '.') }}
                                 </div>
                                 <div class="text-theme" style="font-size: 1.5rem;">
                                     Rp {{ number_format($minuman->discounted_price, 0, ',', '.') }}
@@ -255,10 +255,58 @@
                             </div>
                         @else
                             <div class="text-theme" style="font-size: 1.5rem;">
-                                Rp {{ number_format($this->totalPrice, 0, ',', '.') }}
+                                Rp {{ number_format($minuman->default_price, 0, ',', '.') }}
                             </div>
                         @endif
                     </div>
+                    
+                    <!-- DEBUG: Price Calculation -->
+                    {{-- <div class="card mt-3 mb-3 border border-danger">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0">DEBUG: Price Calculation</h5>
+                        </div>
+                        <div class="card-body">
+                            <h6>Base Information:</h6>
+                            <ul>
+                                <li>Base Price: Rp {{ number_format($minuman->base_price, 0, ',', '.') }}</li>
+                                <li>Default Size: {{ $minuman->defaultSize ? $minuman->defaultSize->name . ' (+Rp ' . number_format($minuman->defaultSize->price, 0, ',', '.') . ')' : 'None' }}</li>
+                                <li>Default Sugar: {{ $minuman->defaultSugar ? $minuman->defaultSugar->level . ' (+Rp ' . number_format($minuman->defaultSugar->price, 0, ',', '.') . ')' : 'None' }}</li>
+                                <li>Default Topping: {{ $minuman->defaultTopping ? $minuman->defaultTopping->nama . ' (+Rp ' . number_format($minuman->defaultTopping->price, 0, ',', '.') . ')' : 'None' }}</li>
+                            </ul>
+                            
+                            <h6>Price Calculation:</h6>
+                            <ul>
+                                <li>Base Price: Rp {{ number_format($minuman->base_price, 0, ',', '.') }}</li>
+                                @php
+                                    $sizePrice = $minuman->defaultSize ? $minuman->defaultSize->price : 0;
+                                    $sugarPrice = $minuman->defaultSugar ? $minuman->defaultSugar->price : 0;
+                                    $toppingPrice = $minuman->defaultTopping ? $minuman->defaultTopping->price : 0;
+                                    $subtotal = $minuman->base_price + $sizePrice + $sugarPrice + $toppingPrice;
+                                @endphp
+                                <li>+ Size Price: Rp {{ number_format($sizePrice, 0, ',', '.') }}</li>
+                                <li>+ Sugar Price: Rp {{ number_format($sugarPrice, 0, ',', '.') }}</li>
+                                <li>+ Topping Price: Rp {{ number_format($toppingPrice, 0, ',', '.') }}</li>
+                                <li><strong>Default Total: Rp {{ number_format($subtotal, 0, ',', '.') }}</strong> (Should match: Rp {{ number_format($minuman->default_price, 0, ',', '.') }})</li>
+                            </ul>
+                            
+                            @if ($minuman->activeDiscount())
+                                <h6>Discount Calculation:</h6>
+                                @php
+                                    $discount = $minuman->activeDiscount();
+                                    $discountAmount = $discount->discount_type === 'percentage' 
+                                        ? ($minuman->default_price * $discount->discount_amount / 100) 
+                                        : $discount->discount_amount;
+                                    $finalPrice = $minuman->default_price - $discountAmount;
+                                @endphp
+                                <ul>
+                                    <li>Discount Type: {{ $discount->discount_type === 'percentage' ? 'Percentage' : 'Fixed Amount' }}</li>
+                                    <li>Discount Value: {{ $discount->discount_type === 'percentage' ? $discount->discount_amount . '%' : 'Rp ' . number_format($discount->discount_amount, 0, ',', '.') }}</li>
+                                    <li>Discount Amount: Rp {{ number_format($discountAmount, 0, ',', '.') }}</li>
+                                    <li><strong>Final Price: Rp {{ number_format($finalPrice, 0, ',', '.') }}</strong> (Should match: Rp {{ number_format($minuman->discounted_price, 0, ',', '.') }})</li>
+                                </ul>
+                            @endif
+                        </div>
+                    </div> --}}
                     <button type="button" class="btn btn-theme btn-sm rounded-pill px-3 py-2 fw-semibold d-flex align-items-center gap-2 mx-auto" data-bs-toggle="modal" data-bs-target="#pilihanModal">
                         <i class="material-symbols-outlined" style="font-size: 18px; font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;">
                             shopping_bag
@@ -336,6 +384,61 @@
                         </div>
                     @endif
                 </div>
+                
+                <!-- DEBUG: Modal Price Calculation -->
+                {{-- <div class="card mt-3 mb-3 border border-danger mx-3">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">DEBUG: Modal Price Calculation</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6>Selected Options:</h6>
+                        <ul>
+                            <li>Base Price: Rp {{ number_format($minuman->base_price, 0, ',', '.') }}</li>
+                            @php
+                                $selectedSize = $selectedSizeId ? $minuman->sizes()->find($selectedSizeId) : $minuman->defaultSize;
+                                $selectedSugar = $selectedSugarId ? $minuman->sugars()->find($selectedSugarId) : $minuman->defaultSugar;
+                                $selectedTopping = $selectedToppingId ? $minuman->toppings()->find($selectedToppingId) : $minuman->defaultTopping;
+                                
+                                $sizePrice = $selectedSize ? $selectedSize->price : 0;
+                                $sugarPrice = $selectedSugar ? $selectedSugar->price : 0;
+                                $toppingPrice = $selectedTopping ? $selectedTopping->price : 0;
+                            @endphp
+                            <li>Selected Size: {{ $selectedSize ? $selectedSize->name . ' (+Rp ' . number_format($sizePrice, 0, ',', '.') . ')' : 'None' }}</li>
+                            <li>Selected Sugar: {{ $selectedSugar ? $selectedSugar->level . ' (+Rp ' . number_format($sugarPrice, 0, ',', '.') . ')' : 'None' }}</li>
+                            <li>Selected Topping: {{ $selectedTopping ? $selectedTopping->nama . ' (+Rp ' . number_format($toppingPrice, 0, ',', '.') . ')' : 'None' }}</li>
+                        </ul>
+                        
+                        <h6>Current Total Price Calculation:</h6>
+                        <ul>
+                            <li>Base Price: Rp {{ number_format($minuman->base_price, 0, ',', '.') }}</li>
+                            <li>+ Size Price: Rp {{ number_format($sizePrice, 0, ',', '.') }}</li>
+                            <li>+ Sugar Price: Rp {{ number_format($sugarPrice, 0, ',', '.') }}</li>
+                            <li>+ Topping Price: Rp {{ number_format($toppingPrice, 0, ',', '.') }}</li>
+                            @php
+                                $modalSubtotal = $minuman->base_price + $sizePrice + $sugarPrice + $toppingPrice;
+                            @endphp
+                            <li><strong>Current Total: Rp {{ number_format($modalSubtotal, 0, ',', '.') }}</strong> (Should match: Rp {{ number_format($this->totalPrice, 0, ',', '.') }})</li>
+                        </ul>
+                        
+                        @if ($minuman->activeDiscount())
+                            <h6>Discount Applied to Current Selection:</h6>
+                            @php
+                                $discount = $minuman->activeDiscount();
+                                $discountAmount = $discount->discount_type === 'percentage' 
+                                    ? ($modalSubtotal * $discount->discount_amount / 100) 
+                                    : $discount->discount_amount;
+                                $finalModalPrice = $modalSubtotal - $discountAmount;
+                            @endphp
+                            <ul>
+                                <li>Discount Type: {{ $discount->discount_type === 'percentage' ? 'Percentage' : 'Fixed Amount' }}</li>
+                                <li>Discount Value: {{ $discount->discount_type === 'percentage' ? $discount->discount_amount . '%' : 'Rp ' . number_format($discount->discount_amount, 0, ',', '.') }}</li>
+                                <li>Discount Amount: Rp {{ number_format($discountAmount, 0, ',', '.') }}</li>
+                                <li><strong>Final Price with Discount: Rp {{ number_format($finalModalPrice, 0, ',', '.') }}</strong></li>
+                            </ul>
+                        @endif
+                    </div>
+                </div> --}}
+                
                 <div class="modal-footer d-flex justify-content-between align-items-center">
                     <div wire:loading.delay.shorter.class="opacity-50 text-yellow">
                         <div class="fw-bold text-theme" style="font-size: 1.25rem;">
@@ -349,6 +452,5 @@
             </div>
         </div>
     </div>
-
     <x-mobile-nav/>
 </div>

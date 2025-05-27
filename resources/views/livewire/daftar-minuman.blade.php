@@ -113,7 +113,7 @@
                                         @if($item->activeDiscount())
                                             <div class="d-flex align-items-center gap-1">
                                                 <span class="text-decoration-line-through text-muted" style="font-size: 0.75rem;">
-                                                    Rp {{ number_format($item->base_price, 0, ',', '.') }}
+                                                    Rp {{ number_format($item->default_price, 0, ',', '.') }}
                                                 </span>
                                                 <span class="text-danger fw-bold">
                                                     Rp {{ number_format($item->discounted_price, 0, ',', '.') }}
@@ -121,7 +121,7 @@
                                             </div>
                                         @else
                                             <div class="text-muted">
-                                                Rp {{ number_format(\App\Helpers\DrinkPriceHelper::calculate($item), 0, ',', '.') }}
+                                                Rp {{ number_format($item->default_price, 0, ',', '.') }}
                                             </div>
                                         @endif
                                     </div>
