@@ -59,14 +59,50 @@
         </div>
         
         <!-- CKEditor Script -->
-        <script src="https://cdn.ckeditor.com/ckeditor5/40.0.0/classic/ckeditor.js"></script>
         <script>
-            // Initialize CKEditor when the DOM is fully loaded
-            document.addEventListener('DOMContentLoaded', initCKEditor);
+            // Load CKEditor script dynamically
+            function loadCKEditorScript() {
+                // Skip if already loaded
+                if (document.querySelector('script[src*="ckeditor5"]')) {
+                    initCKEditorWithRetry();
+                    return;
+                }
+                
+                // Create script element
+                const script = document.createElement('script');
+                script.src = 'https://cdn.ckeditor.com/ckeditor5/40.0.0/classic/ckeditor.js';
+                script.onload = function() {
+                    // Initialize editor once script is loaded
+                    initCKEditorWithRetry();
+                };
+                script.onerror = function() {
+                    console.error('Failed to load CKEditor script');
+                };
+                
+                // Add script to document
+                document.head.appendChild(script);
+            }
             
-            // Also initialize when Livewire navigates or loads
-            document.addEventListener('livewire:navigated', initCKEditor);
-            document.addEventListener('livewire:load', initCKEditor);
+            // Initialize with retry mechanism
+            function initCKEditorWithRetry(attempts = 0) {
+                // Maximum retry attempts
+                const maxAttempts = 5;
+                
+                // If ClassicEditor is not defined yet, retry after a delay
+                if (typeof ClassicEditor === 'undefined') {
+                    if (attempts < maxAttempts) {
+                        setTimeout(() => {
+                            initCKEditorWithRetry(attempts + 1);
+                        }, 200 * Math.pow(2, attempts)); // Exponential backoff
+                    } else {
+                        console.error('CKEditor failed to initialize after multiple attempts');
+                    }
+                    return;
+                }
+                
+                // Now initialize the editor
+                initCKEditor();
+            }
             
             // Track initialization state
             window.editorInitialized = false;
@@ -109,11 +145,14 @@
                     })
                     .catch(error => {
                         console.error(error);
+                        window.editorInitialized = false; // Reset flag on error
                     });
-                
-                // Clean up when navigating away
-                document.addEventListener('livewire:navigating', function() {
-                    if (window.editor) {
+            }
+            
+            // Clean up when navigating away
+            document.addEventListener('livewire:navigating', function() {
+                if (window.editor) {
+                    try {
                         window.editor.destroy()
                             .then(() => {
                                 window.editor = null;
@@ -122,9 +161,18 @@
                             .catch(error => {
                                 console.error('Error during editor cleanup:', error);
                             });
+                    } catch (e) {
+                        console.error('Error during editor cleanup:', e);
+                        window.editor = null;
+                        window.editorInitialized = false;
                     }
-                });
-            }
+                }
+            });
+            
+            // Initialize on various events
+            document.addEventListener('DOMContentLoaded', loadCKEditorScript);
+            document.addEventListener('livewire:navigated', loadCKEditorScript);
+            document.addEventListener('livewire:load', loadCKEditorScript);
         </script>
 
         <flux:field class="mb-2">
