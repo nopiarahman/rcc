@@ -1,138 +1,54 @@
 <div class="container p-4 bg-white mb-5" style="height: 100vh; display: flex; flex-direction: column;" wire:poll.60s>
-    <!-- Debug Info -->
-    @if(isset($web_settings))
-        <div class="alert alert-info mb-2">
-            Theme: {{ $web_settings->theme }}<br>
-            Theme Type: {{ gettype($web_settings->theme) }}<br>
-            Theme Length: {{ strlen($web_settings->theme) }}
-        </div>
-    @else
-        <div class="alert alert-danger mb-2">
-            Web settings not available
-        </div>
-    @endif
+    @php
+        // Define theme colors
+        $themeColors = [
+            'brown' => '#5d4037',
+            'yellow' => '#ff8f00',
+            'blue' => '#1565c0',
+            'orange' => '#ef6c00',
+            'green' => '#006a3e'
+        ];
+        
+        // Set default color
+        $themeColor = '#006a3e'; // Default to green
+        
+        // Get theme color if web settings are available
+        if (isset($web_settings)) {
+            $theme = trim(strtolower($web_settings->theme));
+            if (array_key_exists($theme, $themeColors)) {
+                $themeColor = $themeColors[$theme];
+            }
+        }
+    @endphp
+    
     <style>
         /* Theme-specific text color */
         .text-theme {
-            @if(isset($web_settings))
-                @php
-                    $theme = trim(strtolower($web_settings->theme));
-                @endphp
-                @if($theme == 'brown')
-                    color: #5d4037 !important;
-                @elseif($theme == 'yellow')
-                    color: #ff8f00 !important;
-                @elseif($theme == 'blue')
-                    color: #1565c0 !important;
-                @elseif($theme == 'orange')
-                    color: #ef6c00 !important;
-                @elseif($theme == 'green')
-                    color: #006a3e !important;
-                @else
-                    color: #006a3e !important; /* Default to green */
-                @endif
-            @else
-                color: #006a3e !important; /* Default to green if no web settings */
-            @endif
+            color: {{ $themeColor }} !important;
         }
         
         /* Theme-specific button outline */
         .btn-outline-theme {
-            @if(isset($web_settings))
-                @php
-                    $theme = trim(strtolower($web_settings->theme));
-                @endphp
-                @if($theme == 'brown')
-                    color: #5d4037 !important;
-                    border-color: #5d4037 !important;
-                @elseif($theme == 'yellow')
-                    color: #ff8f00 !important;
-                    border-color: #ff8f00 !important;
-                @elseif($theme == 'blue')
-                    color: #1565c0 !important;
-                    border-color: #1565c0 !important;
-                @elseif($theme == 'orange')
-                    color: #ef6c00 !important;
-                    border-color: #ef6c00 !important;
-                @elseif($theme == 'green')
-                    color: #006a3e !important;
-                    border-color: #006a3e !important;
-                @else
-                    color: #006a3e !important;
-                    border-color: #006a3e !important;
-                @endif
-            @else
-                color: #006a3e !important;
-                border-color: #006a3e !important;
-            @endif
+            color: {{ $themeColor }} !important;
+            border-color: {{ $themeColor }} !important;
         }
         
         .btn-outline-theme:hover {
-            @if(isset($web_settings))
-                @php
-                    $theme = trim(strtolower($web_settings->theme));
-                @endphp
-                @if($theme == 'brown')
-                    background-color: #5d4037 !important;
-                @elseif($theme == 'yellow')
-                    background-color: #ff8f00 !important;
-                @elseif($theme == 'blue')
-                    background-color: #1565c0 !important;
-                @elseif($theme == 'orange')
-                    background-color: #ef6c00 !important;
-                @else
-                    background-color: #006a3e !important;
-                @endif
-            @else
-                background-color: #006a3e !important;
-            @endif
+            background-color: {{ $themeColor }} !important;
             color: white !important;
         }
         
-        /* Theme-specific button */
+        /* Theme-specific filled button */
         .btn-theme {
-            @if(isset($web_settings) && $web_settings->theme === 'brown')
-                background-color: #5d4037 !important;
-                border-color: #5d4037 !important;
-            @elseif(isset($web_settings) && $web_settings->theme === 'yellow')
-                background-color: #ff8f00 !important;
-                border-color: #ff8f00 !important;
-            @elseif(isset($web_settings) && $web_settings->theme === 'blue')
-                background-color: #1565c0 !important;
-                border-color: #1565c0 !important;
-            @elseif(isset($web_settings) && $web_settings->theme === 'orange')
-                background-color: #ef6c00 !important;
-                border-color: #ef6c00 !important;
-            @elseif(isset($web_settings) && $web_settings->theme === 'green')
-                background-color: #006a3e !important;
-                border-color: #006a3e !important;
-            @else
-                background-color: #006a3e !important;
-                border-color: #006a3e !important;
-            @endif
+            background-color: {{ $themeColor }} !important;
+            border-color: {{ $themeColor }} !important;
             color: white !important;
         }
         
         .btn-theme:hover {
-            @if(isset($web_settings) && $web_settings->theme === 'brown')
-                background-color: #3e2723 !important;
-                border-color: #3e2723 !important;
-            @elseif(isset($web_settings) && $web_settings->theme === 'yellow')
-                background-color: #ff6f00 !important;
-                border-color: #ff6f00 !important;
-            @elseif(isset($web_settings) && $web_settings->theme === 'blue')
-                background-color: #0d47a1 !important;
-                border-color: #0d47a1 !important;
-            @elseif(isset($web_settings) && $web_settings->theme === 'orange')
-                background-color: #e65100 !important;
-                border-color: #e65100 !important;
-            @elseif(isset($web_settings) && $web_settings->theme === 'green')
-                background-color: #004d29 !important;
-                border-color: #004d29 !important;
-            @else
-                background-color: #004d29 !important;
-                border-color: #004d29 !important;
-            @endif
+            opacity: 0.9;
+            background-color: {{ $themeColor }} !important;
+            border-color: {{ $themeColor }} !important;
         }
         
         @keyframes fadeSlideUp {
