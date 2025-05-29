@@ -251,10 +251,10 @@
                                 <div class="text-decoration-line-through text-muted" style="font-size: 1rem;">
                                     Rp {{ number_format($minuman->default_price, 0, ',', '.') }}
                                 </div>
-                                <div class="text-theme" style="font-size: 1.5rem;">
+                                <div class="text-theme fw-bold" style="font-size: 1.5rem;">
                                     Rp {{ number_format($minuman->discounted_price, 0, ',', '.') }}
                                 </div>
-                                <div class="badge bg-danger text-white mb-1" style="font-size: 0.7rem;">
+                                <div class="badge bg-danger text-white mb-1 " style="font-size: 0.7rem;">
                                     @php
                                         $discount = $minuman->activeDiscount();
                                         $discountText = $discount->name . ' - ' . ($discount->discount_type === 'percentage' 
@@ -265,7 +265,7 @@
                                 </div>
                             </div>
                         @else
-                            <div class="text-theme" style="font-size: 1.5rem;">
+                            <div class="fw-bold text-theme" style="font-size: 1.5rem;">
                                 Rp {{ number_format($minuman->default_price, 0, ',', '.') }}
                             </div>
                         @endif
@@ -458,7 +458,7 @@
                 
                 <div class="modal-footer d-flex justify-content-between align-items-center">
                     <div wire:loading.delay.shorter.class="opacity-50 text-yellow">
-                        <div class="fw-bold text-theme" style="font-size: 1.25rem;">
+                        <div class="fw-bold text-theme" style="font-size: 1.25rem;font-weight:bolder">
                             Rp {{ number_format($this->totalPrice, 0, ',', '.') }}
                         </div>
                     </div>

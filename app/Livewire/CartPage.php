@@ -141,6 +141,33 @@ class CartPage extends Component
             $size = $item['size_id'] ? Size::find($item['size_id']) : null;
             $sugar = $item['sugar_id'] ? Sugar::find($item['sugar_id']) : null;
             $topping = $item['topping_id'] ? Topping::find($item['topping_id']) : null;
+            
+            // Calculate regular price (without discount)
+            $regularPrice = null;
+            $discountInfo = null;
+            
+            if ($minuman && $minuman->activeDiscount()) {
+                $discount = $minuman->activeDiscount();
+                
+                // Get the base price for this specific configuration
+                $basePrice = $minuman->base_price;
+                if ($size) $basePrice += $size->price;
+                if ($sugar) $basePrice += $sugar->price;
+                if ($topping) $basePrice += $topping->default_price;
+                
+                // Calculate regular price
+                $regularPrice = $basePrice;
+                
+                // Get discount information
+                $discountInfo = [
+                    'name' => $discount->name,
+                    'type' => $discount->discount_type,
+                    'amount' => $discount->discount_amount,
+                    'discount_text' => $discount->discount_type === 'percentage' 
+                        ? $discount->discount_amount . '%' 
+                        : 'Rp' . number_format($discount->discount_amount, 0, ',', '.'),
+                ];
+            }
     
             return [
                 'key' => $key,
@@ -152,6 +179,9 @@ class CartPage extends Component
                 'size' => $size?->name ?? '-',
                 'sugar' => $sugar?->level ?? '-',
                 'topping' => $topping?->nama ?? '-',
+                'regular_price' => $regularPrice,
+                'discount_info' => $discountInfo,
+                'has_discount' => $discountInfo !== null,
             ];
         });
     

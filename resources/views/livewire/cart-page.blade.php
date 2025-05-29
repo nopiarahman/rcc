@@ -91,7 +91,16 @@
                         <div class="text-muted" style="font-size: 10pt">
                             <h6 class="mb-1 fw-bold text-theme">{{ $item['minuman'] }}</h6>
                             <small>Size: {{ $item['size'] }} | Gula: {{ $item['sugar'] }} | Topping: {{ $item['topping'] }}</small><br>
-                            <small class="text-muted">{{ number_format($item['price'], 0, ',', '.') }} x {{ $item['qty'] }}</small>
+                            @if($item['has_discount'])
+                                <div class="d-flex align-items-center gap-1">
+                                    <small class="text-decoration-line-through text-muted">Rp{{ number_format($item['regular_price'], 0, ',', '.') }}</small>
+                                    <small class="text-danger fw-bold">Rp{{ number_format($item['price'], 0, ',', '.') }}</small>
+                                    <small class="badge bg-danger text-white" style="font-size: 0.65rem;">{{ $item['discount_info']['discount_text'] }}</small>
+                                </div>
+                                <small class="text-muted">{{ $item['qty'] }}x = Rp{{ number_format($item['subtotal'], 0, ',', '.') }}</small>
+                            @else
+                                <small class="text-muted">Rp{{ number_format($item['price'], 0, ',', '.') }} x {{ $item['qty'] }}</small>
+                            @endif
                         </div>
                     </div>
                     <div class="text-end">
@@ -113,7 +122,7 @@
     {{-- Footer (tetap di bawah) --}}
     <div class="footer fixed-bottom bg-white p-3 shadow-lg" style="margin-bottom: 2.5rem">
         <div class="text-center mb-2">
-            <h5 class="fw-bold mb-1">Total: {{ number_format($total, 0, ',', '.') }} IDR</h5>
+            <h5 class="fw-bold mb-1">Total: Rp{{ number_format($total, 0, ',', '.') }}</h5>
             <p class="text-muted small mb-2">Pastikan pesanan anda benar, siapkan uang pas jika memungkinkan, Jazakallahu khairan</p>
         </div>
         <button id="checkoutBtn" type="button" class="btn btn-theme w-100 mb-2">
