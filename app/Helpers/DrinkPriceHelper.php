@@ -27,7 +27,7 @@ class DrinkPriceHelper
         }
 
         if ($topping) {
-            $total += optional($topping)->price;
+            $total += optional($topping)->default_price;
         }
 
         return $total;

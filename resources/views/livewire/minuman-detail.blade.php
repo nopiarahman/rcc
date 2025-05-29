@@ -280,7 +280,7 @@
                                 @php
                                     $sizePrice = $minuman->defaultSize ? $minuman->defaultSize->price : 0;
                                     $sugarPrice = $minuman->defaultSugar ? $minuman->defaultSugar->price : 0;
-                                    $toppingPrice = $minuman->defaultTopping ? $minuman->defaultTopping->price : 0;
+                                    $toppingPrice = $minuman->defaultTopping ? $minuman->defaultTopping->default_price : 0;
                                     $subtotal = $minuman->base_price + $sizePrice + $sugarPrice + $toppingPrice;
                                 @endphp
                                 <li>+ Size Price: Rp {{ number_format($sizePrice, 0, ',', '.') }}</li>
