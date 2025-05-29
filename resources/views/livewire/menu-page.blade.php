@@ -106,7 +106,7 @@
                 }
             @endphp
             <div class="fw-bold" style="color: rgb(226, 226, 226)">{{ $ucapan }}</div>
-            <small style="color: rgb(175, 175, 175)">Kopi ala cafe sampai ke pintu rumahmu</small>
+            <small style="color: rgb(175, 175, 175)">{{ $webSettings->tagline ?? 'Kopi ala cafe sampai ke pintu rumahmu' }}</small>
         </div>
         <div class="btn-theme rounded-circle p-1 shadow-sm">
             <img src="{{ asset('images/profile-placeholder.png') }}" class="rounded-circle" width="40" height="40" alt="Profile">

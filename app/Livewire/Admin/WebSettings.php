@@ -12,6 +12,7 @@ class WebSettings extends Component
     use WithFileUploads;
 
     public $site_name;
+    public $tagline;
     public $logo;
     public $favicon;
     public $current_logo;
@@ -45,6 +46,7 @@ class WebSettings extends Component
         ]);
         
         $this->site_name = $this->settings->site_name;
+        $this->tagline = $this->settings->tagline;
         $this->current_logo = $this->settings->logo_path;
         $this->current_favicon = $this->settings->favicon_path;
         $this->theme = $this->settings->theme;
@@ -58,6 +60,7 @@ class WebSettings extends Component
 
     protected $rules = [
         'site_name' => 'required|string|max:255',
+        'tagline' => 'nullable|string|max:255',
         'logo' => 'nullable|image|max:2048',
         'favicon' => 'nullable|image|dimensions:min_width=32,min_height=32,max_width=192,max_height=192',
         'theme' => 'required|in:green,brown,yellow,blue,orange',
@@ -79,6 +82,7 @@ class WebSettings extends Component
 
         $data = [
             'site_name' => $this->site_name,
+            'tagline' => $this->tagline,
             'theme' => $this->selectedTheme,
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,

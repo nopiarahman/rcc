@@ -23,6 +23,21 @@
                 @error('site_name') <span class="text-red-500 text-xs italic">{{ $message }}</span> @enderror
             </div>
 
+            <!-- Tagline -->
+            <div class="mb-6 p-4 border rounded-lg bg-gray-50">
+                <label for="tagline" class="block text-gray-700 text-sm font-bold mb-2">
+                    Tagline Website
+                </label>
+                <input 
+                    type="text" 
+                    id="tagline"
+                    wire:model="tagline"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    placeholder="Masukkan Tagline Website">
+                @error('tagline') <span class="text-red-500 text-xs italic">{{ $message }}</span> @enderror
+                <p class="text-xs text-gray-500 mt-1">Tagline akan ditampilkan di halaman menu</p>
+            </div>
+
             <!-- Logo -->
             <div class="mb-6 p-4 border rounded-lg bg-gray-50">
                 <label class="block text-gray-700 text-sm font-bold mb-2">
