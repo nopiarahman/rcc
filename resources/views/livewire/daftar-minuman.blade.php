@@ -102,6 +102,15 @@
                                     </div>
                                 @endif
                                 
+                                <!-- Out of Stock Overlay -->
+                                @if($item->is_habis)
+                                    <div class="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style="background-color: rgba(0,0,0,0.6); z-index: 2; border-radius: 0.8rem;">
+                                        <div class="badge bg-secondary p-2" style="transform:font-size: 1rem;">
+                                            <i class="bi bi-x-circle me-1"></i> Habis
+                                        </div>
+                                    </div>
+                                @endif
+                                
                                 <img src="{{ $item->getFirstMediaUrl('foto') ?: asset('images/no-image.png') }}"
                                      class="card-img-top object-fit-cover fixed-img-height rounded-4 p-2"
                                      alt="{{ $item->nama }}">

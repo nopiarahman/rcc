@@ -58,6 +58,12 @@ class MinumanDetail extends Component
 
     public function addToCart()
     {
+        // Check if the drink is out of stock
+        if ($this->minuman->is_habis) {
+            session()->flash('message', 'Maaf, minuman ini sedang habis!'); 
+            return;
+        }
+        
         $key = $this->minuman->id . '-' . $this->selectedSizeId . '-' . $this->selectedSugarId . '-' . $this->selectedToppingId;
 
         $cart = session()->get('cart', []);

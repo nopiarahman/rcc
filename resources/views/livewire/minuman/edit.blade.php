@@ -181,6 +181,13 @@
             <flux:error name="base_price" />
         </flux:field>
 
+        <div class="mb-4">
+            <label class="flex items-center space-x-2">
+                <input type="checkbox" wire:model.defer="is_habis" class="rounded text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                <span class="text-gray-700 dark:text-gray-300">Tandai sebagai habis (out of stock)</span>
+            </label>
+        </div>
+
         <hr class="mt-4 mb-4">
 
         {{-- BAHAN --}}
@@ -339,6 +346,7 @@ new class extends Component
     public $deskripsi;
     public $short_description;
     public $base_price;
+    public $is_habis;
     public $foto;
     public $fotoPreview = null;
     public $kategori;
@@ -370,9 +378,10 @@ new class extends Component
     {
         $this->minuman = $minuman;
         $this->nama = $minuman->nama;
-        $this->kategori = $minuman->kategori;
         $this->deskripsi = $minuman->deskripsi;
         $this->base_price = $minuman->base_price;
+        $this->is_habis = $minuman->is_habis;
+        $this->kategori = $minuman->kategori;
         $this->bahans = Bahan::all();
         $this->allSizes = Size::all();
         $this->allToppings = Topping::all();
@@ -429,6 +438,7 @@ new class extends Component
             'nama' => $this->nama,
             'deskripsi' => $this->deskripsi,
             'base_price' => $this->base_price,
+            'is_habis' => $this->is_habis,
             'kategori' => $this->kategori,
             'tag' => $this->tag,
             'short_description' => $this->short_description,

@@ -30,6 +30,30 @@ class Index extends Component
         })->latest()->get();
     }
     
+    public function setStatus($id, $isHabis)
+    {
+        $minuman = Minuman::findOrFail($id);
+        $minuman->update([
+            'is_habis' => $isHabis
+        ]);
+        
+        $status = $isHabis ? 'habis' : 'tersedia';
+        session()->flash('success', "Status minuman {$minuman->nama} berhasil diubah menjadi {$status}.");
+        
+        // Reload data to reflect changes
+        $this->muatData();
+    }
+
+    public function hapus($id)
+    {
+        $minuman = Minuman::findOrFail($id);
+        $nama = $minuman->nama;
+        $minuman->delete();
+        
+        $this->muatData();
+        session()->flash('success', "Minuman {$nama} berhasil dihapus.");
+    }
+    
     public function render()
     {
         return view('livewire.minuman.index');

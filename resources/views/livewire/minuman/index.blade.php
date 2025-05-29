@@ -25,15 +25,26 @@
                         <th class="px-4 py-3">Nama</th>
                         <th class="px-4 py-3">HPP</th>
                         <th class="px-4 py-3">Harga Dasar</th>
+                        <th class="px-4 py-3">Status</th>
                         <th class="px-4 py-3">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 text-sm text-gray-800">
                     @forelse ($minumans as $minuman)
-                        <tr wire:key="minuman-{{ $minuman->id }}">
-                            <td class="px-4 py-2 font-semibold">{{ $minuman->nama }}</td>
+                        <tr wire:key="minuman-{{ $minuman->id }}" class="{{ $minuman->is_habis ? 'bg-red-50' : '' }}">
+                            <td class="px-4 py-2 font-semibold">
+                                {{ $minuman->nama }}
+                                @if($minuman->is_habis)
+                                    <span class="text-xs text-red-600 font-normal ml-1">(Habis)</span>
+                                @endif
+                            </td>
                             <td class="px-4 py-2">Rp{{ number_format($minuman->hpp, 0, ',', '.') }}</td>
                             <td class="px-4 py-2">Rp{{ number_format($minuman->base_price, 0, ',', '.') }}</td>
+                            <td class="px-4 py-2">
+                                <span class="px-3 py-1 rounded-full text-xs font-medium {{ $minuman->is_habis ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800' }}">
+                                    {{ $minuman->is_habis ? 'Habis' : 'Tersedia' }}
+                                </span>
+                            </td>
                             <td class="px-4 py-2">
                                 <flux:dropdown>
                                         <flux:button size="sm" icon:trailing="chevron-down">Aksi</flux:button>
@@ -58,12 +69,28 @@
                                             Edit
                                         </flux:menu.item>
                             
+                                        @if($minuman->is_habis)
+                                            <flux:menu.item 
+                                                wire:click="setStatus({{ $minuman->id }}, false)"
+                                                class="text-green-600"
+                                            >
+                                                <i class="fa-solid fa-check mr-1"></i>Set Tersedia
+                                            </flux:menu.item>
+                                        @else
+                                            <flux:menu.item 
+                                                wire:click="setStatus({{ $minuman->id }}, true)"
+                                                class="text-red-600"
+                                            >
+                                                <i class="fa-solid fa-ban mr-1"></i>Set Habis
+                                            </flux:menu.item>
+                                        @endif
+
                                         <flux:menu.item 
                                             x-data 
                                             @click="if (confirm('Yakin ingin menghapus minuman ini?')) { $wire.hapus({{ $minuman->id }}) }"
                                             class="text-red-600"
                                         >
-                                            Hapus
+                                            <i class="fa-solid fa-trash mr-1"></i> Hapus
                                         </flux:menu.item>
                                     </flux:menu>
                                 </flux:dropdown>
@@ -71,7 +98,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="px-4 py-4 text-center text-gray-500">Belum ada minuman</td>
+                            <td colspan="5" class="px-4 py-4 text-center text-gray-500">Belum ada minuman</td>
                         </tr>
                     @endforelse
                 </tbody>

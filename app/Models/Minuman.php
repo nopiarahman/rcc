@@ -11,6 +11,7 @@ class Minuman extends Model implements HasMedia
     use InteractsWithMedia;
     protected $table = 'minumans';
     protected $guarded = ['id','created_at','updated_at'];
+    protected $casts = ['is_habis' => 'boolean'];
 
     public function sizes()
     {

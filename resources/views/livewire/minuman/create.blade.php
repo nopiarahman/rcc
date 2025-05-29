@@ -182,6 +182,13 @@
         </flux:field>
 
         <div class="mb-4">
+            <label class="flex items-center space-x-2">
+                <input type="checkbox" wire:model.defer="is_habis" class="rounded text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                <span class="text-gray-700 dark:text-gray-300">Tandai sebagai habis (out of stock)</span>
+            </label>
+        </div>
+
+        <div class="mb-4">
             <label class="block mb-1 font-semibold">Ukuran Default</label>
             <select wire:model="defaultSize" class="w-full border rounded p-2">
                 <option value="">Pilih default size</option>
@@ -302,6 +309,7 @@ new class extends Component
     public string $tag = '';
     public string $kategori = '';
     public int $base_price;
+    public bool $is_habis = false;
     public $defaultSize;
     public $defaultSugar;
     public $defaultTopping;
@@ -342,6 +350,7 @@ new class extends Component
             'kategori' => $this->kategori,
             'deskripsi' => $this->deskripsi,
             'base_price' => $this->base_price,
+            'is_habis' => $this->is_habis,
             'default_size_id' => $this->defaultSize,
             'default_sugar_id' => $this->defaultSugar,
             'default_topping_id' => $this->defaultTopping,

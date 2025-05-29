@@ -214,6 +214,9 @@
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <div>
                     <h4 class="fw-bold mb-0 text-theme">{{ $minuman->nama }}</h4>
+                    @if($minuman->is_habis)
+                        <div class="badge bg-danger mt-1">Habis / Out of Stock</div>
+                    @endif
                     <small class="text-muted">{{ $minuman->short_description }}</small>
                 </div>
             </div>
@@ -307,12 +310,18 @@
                             @endif
                         </div>
                     </div> --}}
-                    <button type="button" class="btn btn-theme btn-sm rounded-pill px-3 py-2 fw-semibold d-flex align-items-center gap-2 mx-auto" data-bs-toggle="modal" data-bs-target="#pilihanModal">
-                        <i class="material-symbols-outlined" style="font-size: 18px; font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;">
-                            shopping_bag
-                        </i>
-                        <span>Masukkan ke Keranjang</span>
+                    @if($minuman->is_habis)
+                        <button type="button" class="btn btn-secondary rounded-pill fw-semibold text-white px-4 py-2" disabled>
+                            Habis / Out of Stock
+                        </button>
+                    @else
+                        <button type="button" class="btn btn-theme btn-sm rounded-pill px-3 py-2 fw-semibold d-flex align-items-center gap-2 mx-auto" data-bs-toggle="modal" data-bs-target="#pilihanModal">
+                            <i class="material-symbols-outlined" style="font-size: 18px; font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;">
+                                shopping_bag
+                            </i>
+                            <span>Masukkan ke Keranjang</span>
                     </button>
+                    @endif
                 </div>
             </div>
         </div>
@@ -445,9 +454,15 @@
                             Rp {{ number_format($this->totalPrice, 0, ',', '.') }}
                         </div>
                     </div>
-                    <button type="button" class="btn btn-theme rounded-pill fw-semibold text-white px-4 py-2" wire:click="addToCart" data-bs-dismiss="modal">
-                        Masuk Keranjang
-                    </button>
+                    @if($minuman->is_habis)
+                        <button type="button" class="btn btn-secondary rounded-pill fw-semibold text-white px-4 py-2" disabled>
+                            Habis / Out of Stock
+                        </button>
+                    @else
+                        <button type="button" class="btn btn-theme rounded-pill fw-semibold text-white px-4 py-2" wire:click="addToCart" data-bs-dismiss="modal">
+                            Masuk Keranjang
+                        </button>
+                    @endif
                 </div>
             </div>
         </div>
