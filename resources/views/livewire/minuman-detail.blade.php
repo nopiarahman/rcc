@@ -206,7 +206,15 @@
         @endif
     </div>
     {{-- Gambar --}}
-    <img wire:ignore.self src="{{ $minuman->getFirstMediaUrl('foto') }}" alt="{{ $minuman->nama }}" class="sticky-image">
+    <img 
+        wire:ignore.self 
+        src="{{ $minuman->getFirstMediaUrl('foto') }}" 
+        alt="{{ $minuman->nama }}" 
+        class="sticky-image" 
+        style="cursor: pointer;" 
+        data-bs-toggle="modal" 
+        data-bs-target="#imageModal"
+    >
 
     {{-- Konten --}}
     <div wire:ignore.self class="card rounded-top-xl content-wrapper shadow-lg" style="animation: fadeSlideUp 0.6s ease-out both; padding-bottom: 5rem">
@@ -468,4 +476,24 @@
         </div>
     </div>
     <x-mobile-nav/>
+    
+    <!-- Full Size Image Modal -->
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content bg-transparent border-0">
+                <div class="modal-body p-0 d-flex justify-content-center position-relative">
+                    <!-- Close button as overlay -->
+                    <button type="button" class="btn-close position-absolute top-0 end-0 bg-white rounded-circle p-2 m-3 shadow-sm" style="z-index: 1050;" data-bs-dismiss="modal" aria-label="Close"></button>
+                    
+                    <img 
+                        src="{{ $minuman->getFirstMediaUrl('foto') }}" 
+                        alt="{{ $minuman->nama }}" 
+                        class="img-fluid rounded"
+                    >
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
 </div>
