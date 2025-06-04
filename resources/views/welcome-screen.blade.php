@@ -228,8 +228,8 @@
             
             <template x-if="slides.length === 0">
                 <div class="slide active" style="background: linear-gradient(135deg, #6f42c1, #4a1d96);">
-                    <h1 style="color: white; text-align: center; margin-top: 2rem; font-size: 2rem;">Raihaan Coffee Corner</h1>
-                    <p style="color: white; text-align: center; margin-top: 1rem;">Minuman hangat langsung ke rumahmu 🍵</p>
+                    <h1 style="color: white; text-align: center; margin-top: 2rem; font-size: 2rem;">{{ $webSettings->site_name }}</h1>
+                    <p style="color: white; text-align: center; margin-top: 1rem;">{{ $webSettings->tagline ?? 'Minuman hangat langsung ke rumahmu 🍵' }}</p>
                     <button class="btn-enter" @click="masuk">Masuk</button>
                 </div>
             </template>
