@@ -15,8 +15,16 @@ class WebSetting extends Model
         'latitude',
         'longitude',
         'delivery_radius',
+        'order_mode',
         'whatsapp_number',
     ];
+
+    protected $with = ['themeColor'];
+
+    public function themeColor()
+    {
+        return $this->belongsTo(ThemeColor::class, 'theme', 'name');
+    }
 
     protected $casts = [
         'created_at' => 'datetime',

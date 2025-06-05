@@ -52,19 +52,73 @@
             object-fit: cover;
         }
         .gradient {
-            background: @if(isset($webSettings) && $webSettings->theme === 'brown')
-                        linear-gradient(to top, #3e2723, #8d6e63)
-                    @elseif(isset($webSettings) && $webSettings->theme === 'yellow')
-                        linear-gradient(to top, #ff6f00, #ffc107)
-                    @elseif(isset($webSettings) && $webSettings->theme === 'blue')
-                        linear-gradient(to top, #0d47a1, #2196f3)
-                    @elseif(isset($webSettings) && $webSettings->theme === 'orange')
-                        linear-gradient(to top, #e65100, #ff9800)
-                    @else
-                        linear-gradient(to top, #011a0f, #006a3e)
-                    @endif;
+            @if(isset($webSettings) && $webSettings->themeColor)
+                background: linear-gradient(to top, {{ $webSettings->themeColor->primary_color }}, {{ $webSettings->themeColor->secondary_color }});
+            @else
+                background: linear-gradient(to top, #011a0f, #006a3e);
+            @endif
             min-height: 100vh;
-            transition: background 0.5s ease;
+            transition: background-color 0.3s, background-image 0.3s;
+        }
+        
+        /* Theme color variables */
+        :root {
+            @if(isset($webSettings) && $webSettings->themeColor)
+                --primary-color: {{ $webSettings->themeColor->primary_color }};
+                --secondary-color: {{ $webSettings->themeColor->secondary_color }};
+                --button-bg-color: {{ $webSettings->themeColor->button_bg_color }};
+                --button-text-color: {{ $webSettings->themeColor->button_text_color }};
+                --card-bg-color: {{ $webSettings->themeColor->card_bg_color }};
+                --text-color: {{ $webSettings->themeColor->text_color }};
+                --muted-text-color: {{ $webSettings->themeColor->muted_text_color }};
+            @else
+                --primary-color: #011a0f;
+                --secondary-color: #006a3e;
+                --button-bg-color: #006a3e;
+                --button-text-color: #ffffff;
+                --card-bg-color: #ffffff;
+                --text-color: #1a1a1a;
+                --muted-text-color: #6b7280;
+            @endif
+        }
+        
+        /* Theme-specific styles */
+        .btn-primary {
+            background-color: var(--button-bg-color);
+            color: var(--button-text-color);
+            border: 1px solid var(--button-bg-color);
+        }
+        
+        .btn-outline-primary {
+            color: var(--button-bg-color);
+            border: 1px solid var(--button-bg-color);
+            background-color: transparent;
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: var(--button-bg-color);
+            color: var(--button-text-color);
+        }
+        
+        .text-primary {
+            color: var(--primary-color) !important;
+        }
+        
+        .bg-primary {
+            background-color: var(--primary-color) !important;
+        }
+        
+        .border-primary {
+            border-color: var(--primary-color) !important;
+        }
+        
+        .card {
+            background-color: var(--card-bg-color);
+            color: var(--text-color);
+        }
+        
+        .text-muted {
+            color: var(--muted-text-color) !important;
         }
         
         /* Theme-specific button styles */

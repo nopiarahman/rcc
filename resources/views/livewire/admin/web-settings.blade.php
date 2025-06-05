@@ -172,6 +172,70 @@
                 </div>
             </div>
 
+            <!-- Theme Selection -->
+            <div class="mb-6 p-4 border rounded-lg bg-gray-50">
+                <label class="block text-gray-700 text-sm font-bold mb-2">
+                    Tema Warna
+                </label>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                    @foreach($themeColors as $theme)
+                        <div class="relative">
+                            <input type="radio" 
+                                   id="theme_{{ $theme['name'] }}" 
+                                   wire:model.live="selectedTheme" 
+                                   value="{{ $theme['name'] }}" 
+                                   class="hidden peer">
+                            <label for="theme_{{ $theme['name'] }}" class="block cursor-pointer">
+                                <div class="p-4 rounded-lg border-2 border-gray-200 peer-checked:border-blue-500 transition-all duration-200">
+                                    <div class="w-full h-16 rounded mb-2" 
+                                         style="background: linear-gradient(to right, {{ $theme['primary_color'] }}, {{ $theme['secondary_color'] }});">
+                                    </div>
+                                    <div class="text-center text-sm font-medium text-gray-700">
+                                        {{ $theme['display_name'] }}
+                                    </div>
+                                    @if($selectedThemeColor && $theme['name'] === $selectedThemeColor['name'])
+                                        <div class="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                                            Dipilih
+                                        </div>
+                                    @endif
+                                </div>
+                            </label>
+                        </div>
+                    @endforeach
+                </div>
+                
+                @if($selectedThemeColor)
+                    <div class="mt-4 p-4 border rounded-lg bg-white">
+                        <h4 class="font-bold mb-2">Pratinjau Warna</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <div class="text-sm text-gray-600 mb-1">Warna Utama</div>
+                                <div class="h-8 rounded border" style="background-color: {{ $selectedThemeColor['primary_color'] }}"></div>
+                                <div class="text-xs text-gray-500 mt-1">{{ $selectedThemeColor['primary_color'] }}</div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-600 mb-1">Warna Sekunder</div>
+                                <div class="h-8 rounded border" style="background-color: {{ $selectedThemeColor['secondary_color'] }}"></div>
+                                <div class="text-xs text-gray-500 mt-1">{{ $selectedThemeColor['secondary_color'] }}</div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-600 mb-1">Tombol</div>
+                                <div class="h-8 rounded border flex items-center justify-center" 
+                                     style="background-color: {{ $selectedThemeColor['button_bg_color'] }}; color: {{ $selectedThemeColor['button_text_color'] }};">
+                                    Tombol
+                                </div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-600 mb-1">Kartu</div>
+                                <div class="h-8 rounded border p-2 text-sm" 
+                                     style="background-color: {{ $selectedThemeColor['card_bg_color'] }}; color: {{ $selectedThemeColor['text_color'] }};">
+                                    Contoh Teks
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
             <!-- Order Mode Selection -->
             <div class="mb-6 p-4 border rounded-lg bg-gray-50">
                 <label class="block text-gray-700 text-sm font-bold mb-3">
@@ -216,58 +280,7 @@
                     </div>
                 </div>
                 <div class="mt-3 text-sm text-gray-600">
-                    Pilih mode pemesanan yang tersedia untuk pelanggan.
                 </div>
-            </div>
-
-            <!-- Theme Selection -->
-            <div class="mb-6 p-4 border rounded-lg bg-gray-50">
-                <label for="theme" class="block text-gray-700 text-sm font-bold mb-2">
-                    Tema Warna
-                </label>
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                    @foreach($availableThemes as $themeValue => $themeLabel)
-                        @php
-                            $gradient = $this->getThemeGradient($themeValue);
-                            preg_match('/linear-gradient\([^,]+, *([^,]+), *([^)]+)\)/i', $gradient, $matches);
-                            $color1 = $matches[1] ?? '#011a0f';
-                            $color2 = $matches[2] ?? '#006a3e';
-                        @endphp
-                        <div class="relative">
-                            <input 
-                                type="radio" 
-                                id="theme-{{ $themeValue }}" 
-                                wire:model.live="theme"
-                                wire:change="$set('selectedTheme', '{{ $themeValue }}')" 
-                                value="{{ $themeValue }}" 
-                                class="hidden"
-                            >
-                            <label 
-                                for="theme-{{ $themeValue }}" 
-                                class="block cursor-pointer p-4 rounded-lg border-2 transition-all duration-200 {{ $selectedTheme === $themeValue ? 'border-blue-500 ring-2 ring-blue-200 ring-offset-2 transform scale-105' : 'border-gray-200 hover:border-blue-300 hover:shadow-md' }}"
-                            >
-                                <div class="relative">
-                                    
-                                    <div class="h-16 rounded mb-2 overflow-hidden" style="height: 100px; background: {{ $gradient }}">
-                                        @if($selectedTheme === $themeValue)
-                                            <div class="absolute inset-0 bg-opacity-10"></div>
-                                        @endif
-                                    </div>
-                                </div>
-                                <div class="text-center font-medium text-sm mt-1">{{ $themeLabel }}</div>
-                                @if($selectedTheme === $themeValue)
-                                    <div class="text-center text-xs text-blue-600 font-medium mt-1">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="inline h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                                        </svg>
-                                        Dipilih
-                                    </div>
-                                @endif
-                            </label>
-                        </div>
-                    @endforeach
-                </div>
-                @error('theme') <span class="text-red-500 text-xs italic">{{ $message }}</span> @enderror
             </div>
 
             <!-- Submit Button -->
