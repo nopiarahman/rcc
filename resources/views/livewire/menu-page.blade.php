@@ -1,23 +1,19 @@
 <div class="container col-md-6" style="padding: 2rem">
     @php
-        // Define theme colors
-        $themeColors = [
-            'brown' => '#5d4037',
-            'yellow' => '#ff8f00',
-            'blue' => '#1565c0',
-            'orange' => '#ef6c00',
-            'green' => '#006a3e'
-        ];
+        // Default theme colors if not set
+        $themeColor = '#4a5d4a';
+        $themeTextColor = '#2d2d2d';
+        $buttonTextColor = '#ffffff';
+        $cardBgColor = '#ffffff';
+        $mutedTextColor = '#6b7280';
         
-        // Set default color
-        $themeColor = '#006a3e'; // Default to green
-        
-        // Get theme color if web settings are available
-        if (isset($web_settings)) {
-            $theme = trim(strtolower($web_settings->theme));
-            if (array_key_exists($theme, $themeColors)) {
-                $themeColor = $themeColors[$theme];
-            }
+        // Get theme colors from database if web settings are available
+        if (isset($web_settings) && $web_settings->themeColor) {
+            $themeColor = $web_settings->themeColor->button_bg_color;
+            $themeTextColor = $web_settings->themeColor->text_color;
+            $buttonTextColor = $web_settings->themeColor->button_text_color;
+            $cardBgColor = $web_settings->themeColor->card_bg_color;
+            $mutedTextColor = $web_settings->themeColor->muted_text_color;
         }
     @endphp
     
@@ -35,20 +31,35 @@
         
         .btn-outline-theme:hover {
             background-color: {{ $themeColor }} !important;
-            color: white !important;
+            color: {{ $buttonTextColor }} !important;
         }
         
         /* Theme-specific filled button */
         .btn-theme {
             background-color: {{ $themeColor }} !important;
             border-color: {{ $themeColor }} !important;
-            color: white !important;
+            color: {{ $buttonTextColor }} !important;
         }
         
         .btn-theme:hover {
             opacity: 0.9;
             background-color: {{ $themeColor }} !important;
             border-color: {{ $themeColor }} !important;
+        }
+        
+        /* Card styling */
+        .card-theme {
+            background-color: {{ $cardBgColor }} !important;
+        }
+        
+        /* Text colors */
+        .text-muted-theme {
+            color: {{ $mutedTextColor }} !important;
+        }
+        
+        .text-theme-primary {
+            color: {{ $themeTextColor }} !important;
+        }
         }
         .carousel-image {
             height: 150px; /* Ubah sesuai kebutuhan */
@@ -88,10 +99,10 @@
     {{-- Logo dan Teks --}}
     <div class="logo-container mb-3">
         <img src="{{ asset('storage/' . $webSettings->logo_path) }}" alt="{{ $webSettings->site_name }}" style="width: 30px; height:auto">
-        <div class="logo-text text-white">{{ $webSettings->site_name }}</div>
+        <div class="logo-text text-theme">{{ $webSettings->site_name }}</div>
     </div>
     {{-- Info Pengguna --}}
-    <div class="d-flex align-items-center justify-content-between mb-3 ">
+    <div class="d-flex text-theme align-items-center justify-content-between mb-3 ">
         <div>
             @php
                 $jam = date('G');
@@ -105,8 +116,8 @@
                     $ucapan = 'Selamat malam!';
                 }
             @endphp
-            <div class="fw-bold" style="color: rgb(226, 226, 226)">{{ $ucapan }}</div>
-            <small style="color: rgb(175, 175, 175)">{{ $webSettings->tagline ?? 'Kopi ala cafe sampai ke pintu rumahmu' }}</small>
+            <div class="fw-bold text-theme">{{ $ucapan }}</div>
+            <small class="text-muted-theme">{{ $webSettings->tagline ?? 'Kopi ala cafe sampai ke pintu rumahmu' }}</small>
         </div>
         <div class="btn-theme rounded-circle p-1 shadow-sm">
             <img src="{{ asset('images/profile-placeholder.png') }}" class="rounded-circle" width="40" height="40" alt="Profile">
