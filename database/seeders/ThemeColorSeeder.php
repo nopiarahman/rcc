@@ -53,8 +53,8 @@ class ThemeColorSeeder extends Seeder
             [
                 'name' => 'white_green',
                 'display_name' => 'Putih Hijau',
-                'primary_color' => '#f5f9f0',
-                'secondary_color' => '#4a5d4a',
+                'primary_color' => '#FBFEF5',
+                'secondary_color' => '#F1FFD4',
                 'button_bg_color' => '#4a5d4a',
                 'button_text_color' => '#ffffff',
                 'card_bg_color' => '#ffffff',

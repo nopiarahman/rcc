@@ -1,9 +1,26 @@
 <div>
+    @php
+        // Default theme colors if not set
+        $themeColor = '#4a5d4a';
+        $themeTextColor = '#2d2d2d';
+        $buttonTextColor = '#ffffff';
+        $cardBgColor = '#ffffff';
+        $mutedTextColor = '#6b7280';
+        
+        // Get theme colors from database if web settings are available
+        if (isset($web_settings) && $web_settings->themeColor) {
+            $themeColor = $web_settings->themeColor->button_bg_color;
+            $themeTextColor = $web_settings->themeColor->text_color;
+            $buttonTextColor = $web_settings->themeColor->button_text_color;
+            $cardBgColor = $web_settings->themeColor->card_bg_color;
+            $mutedTextColor = $web_settings->themeColor->muted_text_color;
+        }
+    @endphp
     <style>
         .mobile-nav {
             padding: 4px 0;
-            background-color: white;
-            border-top: 1px solid #e9ecef;
+            background-color: {{ $cardBgColor }};
+            border-top: 1px solid {{ $mutedTextColor }}20;
         }
         .mobile-nav .nav-item {
             padding: 6px 0;
@@ -12,10 +29,10 @@
             align-items: center;
             justify-content: center;
             font-size: 0.75rem;
-            color: #6c757d;
+            color: {{ $mutedTextColor }};
         }
         .mobile-nav .nav-item.active {
-            color: {{ $themeColors['accent'] }};
+            color: {{ $themeColor }};
         }
         .mobile-nav .material-symbols-outlined {
             font-size: 20px;
@@ -28,7 +45,7 @@
             margin: 0;
         }
         .mobile-nav .badge {
-            background-color: red !important;
+            background-color: {{ $themeColor }} !important;
             color: white;
             font-weight: 600;
             font-size: 0.6rem;

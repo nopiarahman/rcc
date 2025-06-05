@@ -1,23 +1,19 @@
 <div class="container p-4 bg-white mb-5" style="height: 100vh; display: flex; flex-direction: column;" wire:poll.60s>
     @php
-        // Define theme colors
-        $themeColors = [
-            'brown' => '#5d4037',
-            'yellow' => '#ff8f00',
-            'blue' => '#1565c0',
-            'orange' => '#ef6c00',
-            'green' => '#006a3e'
-        ];
+        // Default theme colors if not set
+        $themeColor = '#4a5d4a';
+        $themeTextColor = '#2d2d2d';
+        $buttonTextColor = '#ffffff';
+        $cardBgColor = '#ffffff';
+        $mutedTextColor = '#6b7280';
         
-        // Set default color
-        $themeColor = '#006a3e'; // Default to green
-        
-        // Get theme color if web settings are available
-        if (isset($web_settings)) {
-            $theme = trim(strtolower($web_settings->theme));
-            if (array_key_exists($theme, $themeColors)) {
-                $themeColor = $themeColors[$theme];
-            }
+        // Get theme colors from database if web settings are available
+        if (isset($web_settings) && $web_settings->themeColor) {
+            $themeColor = $web_settings->themeColor->button_bg_color;
+            $themeTextColor = $web_settings->themeColor->text_color;
+            $buttonTextColor = $web_settings->themeColor->button_text_color;
+            $cardBgColor = $web_settings->themeColor->card_bg_color;
+            $mutedTextColor = $web_settings->themeColor->muted_text_color;
         }
     @endphp
     
@@ -35,20 +31,34 @@
         
         .btn-outline-theme:hover {
             background-color: {{ $themeColor }} !important;
-            color: white !important;
+            color: {{ $buttonTextColor }} !important;
         }
         
         /* Theme-specific filled button */
         .btn-theme {
             background-color: {{ $themeColor }} !important;
             border-color: {{ $themeColor }} !important;
-            color: white !important;
+            color: {{ $buttonTextColor }} !important;
         }
         
         .btn-theme:hover {
             opacity: 0.9;
             background-color: {{ $themeColor }} !important;
             border-color: {{ $themeColor }} !important;
+        }
+        
+        /* Card styling */
+        .card-theme {
+            background-color: {{ $cardBgColor }} !important;
+        }
+        
+        /* Text colors */
+        .text-muted-theme {
+            color: {{ $mutedTextColor }} !important;
+        }
+        
+        .text-theme-primary {
+            color: {{ $themeTextColor }} !important;
         }
         
         @keyframes fadeSlideUp {
