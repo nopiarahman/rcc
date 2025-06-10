@@ -17,7 +17,7 @@
         }
     @endphp
     @if($web_settings->themeColor->name == 'green')
-        <style>
+        <style> 
             .text-theme-primary {
                 color: #ffffff !important;
             }
@@ -109,7 +109,7 @@
     {{-- Logo dan Teks --}}
     <div class="logo-container mb-3">
         <img src="{{ asset('storage/' . $webSettings->logo_path) }}" alt="{{ $webSettings->site_name }}" style="width: 30px; height:auto">
-        <div class="logo-text text-theme">{{ $webSettings->site_name }}</div>
+        <div class="logo-text text-theme-primary">{{ $webSettings->site_name }}</div>
     </div>
     {{-- Info Pengguna --}}
     <div class="d-flex align-items-center justify-content-between mb-3 ">
