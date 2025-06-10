@@ -8,12 +8,12 @@
         $mutedTextColor = '#6b7280';
         
         // Get theme colors from database if web settings are available
-        if (isset($web_settings) && $web_settings->themeColor) {
-            $themeColor = $web_settings->themeColor->button_bg_color;
-            $themeTextColor = $web_settings->themeColor->text_color;
-            $buttonTextColor = $web_settings->themeColor->button_text_color;
-            $cardBgColor = $web_settings->themeColor->card_bg_color;
-            $mutedTextColor = $web_settings->themeColor->muted_text_color;
+        if (isset($settings) && $settings->themeColor) {
+            $themeColor = $settings->themeColor->button_bg_color;
+            $themeTextColor = $settings->themeColor->text_color;
+            $buttonTextColor = $settings->themeColor->button_text_color;
+            $cardBgColor = $settings->themeColor->card_bg_color;
+            $mutedTextColor = $settings->themeColor->muted_text_color;
         }
     @endphp
     <style>
@@ -29,7 +29,7 @@
             align-items: center;
             justify-content: center;
             font-size: 0.75rem;
-            color: {{ $mutedTextColor }};
+            color: {{ $themeTextColor }};
         }
         .mobile-nav .nav-item.active {
             color: {{ $themeColor }};

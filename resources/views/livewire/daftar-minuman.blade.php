@@ -47,14 +47,14 @@
         }
         
         /* Text colors */
-        .text-muted-theme {
+        /* .text-muted-theme {
             color: {{ $mutedTextColor }} !important;
-        }
+        } */
         
-        .text-theme-primary {
+        /* .text-theme-primary {
             color: {{ $themeTextColor }} !important;
         }
-        
+         */
         .btn-theme:hover {
             opacity: 0.9;
             background-color: {{ $themeColor }} !important;

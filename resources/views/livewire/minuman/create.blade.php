@@ -24,6 +24,7 @@
             <flux:select.option>Non-Coffee</flux:select.option>
             <flux:select.option>Mojito</flux:select.option>
             <flux:select.option>Matcha</flux:select.option>
+            <flux:select.option>Boba</flux:select.option>
         </flux:select>
 
         <div class="mb-4">

@@ -16,11 +16,26 @@
             $mutedTextColor = $web_settings->themeColor->muted_text_color;
         }
     @endphp
+    @if($web_settings->themeColor->name == 'green')
+        <style>
+            .text-theme-primary {
+                color: #ffffff !important;
+            }
+            .text-muted-theme {
+                color: #ffffff !important;
+            }
+    @else
+    .text-theme-primary {
+        color: {{ $themeTextColor }} !important;
+    }
+    .text-muted-theme {
+            color: {{ $mutedTextColor }} !important;
+        }
+    @endif
     
-    <style>
         /* Theme-specific text color */
         .text-theme {
-            color: {{ $themeColor }} !important;
+            color: {{ $themeTextColor }} !important;
         }
         
         /* Theme-specific button outline */
@@ -53,14 +68,9 @@
         }
         
         /* Text colors */
-        .text-muted-theme {
-            color: {{ $mutedTextColor }} !important;
-        }
         
-        .text-theme-primary {
-            color: {{ $themeTextColor }} !important;
-        }
-        }
+        
+        
         .carousel-image {
             height: 150px; /* Ubah sesuai kebutuhan */
             object-fit: cover;
@@ -102,7 +112,7 @@
         <div class="logo-text text-theme">{{ $webSettings->site_name }}</div>
     </div>
     {{-- Info Pengguna --}}
-    <div class="d-flex text-theme align-items-center justify-content-between mb-3 ">
+    <div class="d-flex align-items-center justify-content-between mb-3 ">
         <div>
             @php
                 $jam = date('G');
@@ -116,7 +126,7 @@
                     $ucapan = 'Selamat malam!';
                 }
             @endphp
-            <div class="fw-bold text-theme">{{ $ucapan }}</div>
+            <div class="fw-bold text-theme-primary">{{ $ucapan }}</div>
             <small class="text-muted-theme">{{ $webSettings->tagline ?? 'Kopi ala cafe sampai ke pintu rumahmu' }}</small>
         </div>
         <div class="btn-theme rounded-circle p-1 shadow-sm">
