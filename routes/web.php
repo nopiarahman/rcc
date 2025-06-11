@@ -13,6 +13,13 @@ use App\Http\Middleware\CheckStoreOpen;
 
 // Maintenance route (must be outside any middleware group)
 Route::get('/maintenance', function () {
+    $settings = \App\Models\WebSetting::first();
+    
+    // If store is not closed, redirect to home
+    if (!$settings || !$settings->is_temporarily_closed) {
+        return redirect()->route('home');
+    }
+    
     return view('maintenance');
 })->name('maintenance');
 

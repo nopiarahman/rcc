@@ -214,7 +214,6 @@
                     </label>
                     <p class="text-xs text-gray-500 mt-1">Centang jika toko sedang tutup sementara</p>
                     
-                    @if($is_temporarily_closed)
                         <div class="mt-3">
                             <label for="temporary_closure_message" class="block text-gray-700 text-sm font-bold mb-2">
                                 Pesan Penutupan Sementara
@@ -228,7 +227,6 @@
                             @error('temporary_closure_message') <span class="text-red-500 text-xs italic">{{ $message }}</span> @enderror
                             <p class="text-xs text-gray-500 mt-1">Pesan ini akan ditampilkan ke pelanggan</p>
                         </div>
-                    @endif
                 </div>
             </div>
 
