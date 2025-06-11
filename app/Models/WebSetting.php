@@ -8,8 +8,12 @@ class WebSetting extends Model
 {
     protected $fillable = [
         'site_name',
+        'tagline',
         'logo_path',
         'favicon_path',
+        'theme',
+        'latitude',
+        'longitude',
         'delivery_radius',
         'order_mode',
         'whatsapp_number',

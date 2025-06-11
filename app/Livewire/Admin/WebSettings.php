@@ -38,9 +38,9 @@ class WebSettings extends Component
     protected $listeners = ['refreshComponent' => '$refresh'];
 
     public array $availableOrderModes = [
-        'dine_in' => 'Makan di Tempat',
-        'take_away' => 'Bungkus',
-        'delivery' => 'Delivery',
+        'both' => 'Keduanya (Delivery & Takeaway)',
+        'delivery' => 'Hanya Delivery',
+        'takeaway' => 'Hanya Takeaway',
     ];
 
     public function mount()
@@ -92,7 +92,7 @@ class WebSettings extends Component
             'latitude' => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
             'delivery_radius' => 'required|integer|min:100',
-            'order_mode' => 'required|in:dine_in,take_away,delivery',
+            'order_mode' => 'required|in:both,delivery,takeaway',
             'whatsapp_number' => 'required|string|max:20',
             'opening_time' => 'required|date_format:H:i',
             'closing_time' => 'required|date_format:H:i|after:opening_time',
@@ -137,8 +137,8 @@ class WebSettings extends Component
 
         if ($this->favicon) {
             // Delete old favicon if exists
-            if ($settings->favicon_path && Storage::disk('public')->exists($settings->favicon_path)) {
-                Storage::disk('public')->delete($settings->favicon_path);
+            if ($this->settings->favicon_path && Storage::disk('public')->exists($this->settings->favicon_path)) {
+                Storage::disk('public')->delete($this->settings->favicon_path);
             }
             $faviconPath = $this->favicon->store('settings/favicon', 'public');
             $data['favicon_path'] = $faviconPath;
