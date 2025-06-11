@@ -274,13 +274,16 @@
         function checkWelcomeReset() {
             const lastShownDate = localStorage.getItem('welcomeLastShown');
             const today = new Date().toISOString().split('T')[0];
+            const welcomeShown = localStorage.getItem('welcomeShown') === 'yes';
             
-            if (!lastShownDate || lastShownDate !== today) {
-                localStorage.removeItem('welcomeShown');
-                localStorage.setItem('welcomeLastShown', today);
-                return false; // Show welcome screen
+            // If welcome screen was never shown or it's a new day
+            if (!welcomeShown || !lastShownDate || lastShownDate !== today) {
+                if (lastShownDate !== today) {
+                    localStorage.setItem('welcomeLastShown', today);
+                }
+                return true; // Show welcome screen
             }
-            return true; // Don't show welcome screen
+            return false; // Don't show welcome screen
         }
     </script>
 </body>

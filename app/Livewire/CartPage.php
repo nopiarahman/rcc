@@ -166,7 +166,7 @@ class CartPage extends Component
                     'type' => $discount->discount_type,
                     'amount' => $discount->discount_amount,
                     'discount_text' => $discount->discount_type === 'percentage' 
-                        ? $discount->discount_amount . '%' 
+                        ? (int)$discount->discount_amount . '%' 
                         : 'Rp' . number_format($discount->discount_amount, 0, ',', '.'),
                 ];
             }
