@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\WebSetting;
+use Carbon\Carbon;
 
 class CheckStoreOpen
 {
@@ -42,9 +43,14 @@ class CheckStoreOpen
 
         $settings = WebSetting::first();
         
-        // If store is not closed, continue with the request
-        if (!$settings || !$settings->is_temporarily_closed) {
-            return $next($request);
+        // If store is temporarily closed, redirect to maintenance
+        if ($settings && $settings->is_temporarily_closed) {
+            return $this->redirectToMaintenance($request, $next);
+        }
+
+        // Check if store is open based on business hours
+        if (!$this->isStoreOpen($settings)) {
+            return $this->redirectToMaintenance($request, $next);
         }
 
         // Allow access for admin users
@@ -52,12 +58,53 @@ class CheckStoreOpen
             return $next($request);
         }
 
+        return $next($request);
+    }
+
+    /**
+     * Determine if the request has a URI that should be accessible.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return bool
+     */
+    /**
+     * Check if store is open based on business hours
+     *
+     * @param  WebSetting  $settings
+     * @return bool
+     */
+    protected function isStoreOpen($settings)
+    {
+        if (!$settings || !$settings->opening_time || !$settings->closing_time) {
+            return true; // If no hours set, assume store is always open
+        }
+
+        $now = Carbon::now();
+        $openingTime = Carbon::parse($settings->opening_time);
+        $closingTime = Carbon::parse($settings->closing_time);
+
+        // Handle overnight hours (e.g., 18:00 - 02:00)
+        if ($closingTime->lessThan($openingTime)) {
+            return $now->greaterThanOrEqualTo($openingTime) || $now->lessThan($closingTime);
+        }
+
+        return $now->between($openingTime, $closingTime);
+    }
+
+    /**
+     * Redirect to maintenance page if not already there
+     *
+     * @param  Request  $request
+     * @param  Closure  $next
+     * @return mixed
+     */
+    protected function redirectToMaintenance($request, $next)
+    {
         // If we're already on the maintenance page, proceed to avoid redirect loop
         if ($request->is('maintenance')) {
             return $next($request);
         }
 
-        // Redirect to maintenance page for all other cases
         return redirect()->route('maintenance');
     }
 
