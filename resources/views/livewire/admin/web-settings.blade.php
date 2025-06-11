@@ -172,6 +172,66 @@
                 </div>
             </div>
 
+            <!-- Opening Hours -->
+            <div class="mb-6 p-4 border rounded-lg bg-gray-50">
+                <h3 class="text-lg font-semibold mb-4">Jam Operasional</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="opening_time" class="block text-gray-700 text-sm font-bold mb-2">
+                            Jam Buka
+                        </label>
+                        <input 
+                            type="time" 
+                            id="opening_time"
+                            wire:model="opening_time"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            required>
+                        @error('opening_time') <span class="text-red-500 text-xs italic">{{ $message }}</span> @enderror
+                    </div>
+                    
+                    <div>
+                        <label for="closing_time" class="block text-gray-700 text-sm font-bold mb-2">
+                            Jam Tutup
+                        </label>
+                        <input 
+                            type="time" 
+                            id="closing_time"
+                            wire:model="closing_time"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            required>
+                        @error('closing_time') <span class="text-red-500 text-xs italic">{{ $message }}</span> @enderror
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <label class="flex items-center">
+                        <input 
+                            type="checkbox" 
+                            wire:model="is_temporarily_closed"
+                            class="form-checkbox h-5 w-5 text-blue-600">
+                        <span class="ml-2 text-gray-700">Tutup Sementara</span>
+                    </label>
+                    <p class="text-xs text-gray-500 mt-1">Centang jika toko sedang tutup sementara</p>
+                    
+                    @if($is_temporarily_closed)
+                        <div class="mt-3">
+                            <label for="temporary_closure_message" class="block text-gray-700 text-sm font-bold mb-2">
+                                Pesan Penutupan Sementara
+                            </label>
+                            <textarea 
+                                id="temporary_closure_message"
+                                wire:model="temporary_closure_message"
+                                rows="3"
+                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                placeholder="Contoh: Tutup sementara hingga 30 Juni 2025 untuk perbaikan"></textarea>
+                            @error('temporary_closure_message') <span class="text-red-500 text-xs italic">{{ $message }}</span> @enderror
+                            <p class="text-xs text-gray-500 mt-1">Pesan ini akan ditampilkan ke pelanggan</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
             <!-- Theme Selection -->
             <div class="mb-6 p-4 border rounded-lg bg-gray-50">
                 <label class="block text-gray-700 text-sm font-bold mb-2">

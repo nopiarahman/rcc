@@ -28,6 +28,12 @@ class WebSettings extends Component
     public $settings;
     public $themeColors = [];
     public $selectedThemeColor = null;
+    
+    // Opening hours and temporary closure
+    public $opening_time;
+    public $closing_time;
+    public $is_temporarily_closed = false;
+    public $temporary_closure_message;
 
     protected $listeners = ['refreshComponent' => '$refresh'];
 
@@ -48,7 +54,17 @@ class WebSettings extends Component
             'delivery_radius' => 600,
             'order_mode' => 'dine_in',
             'whatsapp_number' => '6281234567890',
+            'opening_time' => '08:00:00',
+            'closing_time' => '22:00:00',
+            'is_temporarily_closed' => false,
+            'temporary_closure_message' => null,
         ]);
+        
+        // Initialize the time fields with the current settings
+        $this->opening_time = $this->settings->opening_time ? $this->settings->opening_time->format('H:i') : '08:00';
+        $this->closing_time = $this->settings->closing_time ? $this->settings->closing_time->format('H:i') : '22:00';
+        $this->is_temporarily_closed = $this->settings->is_temporarily_closed ?? false;
+        $this->temporary_closure_message = $this->settings->temporary_closure_message;
 
         $this->site_name = $this->settings->site_name;
         $this->tagline = $this->settings->tagline;
@@ -78,6 +94,10 @@ class WebSettings extends Component
             'delivery_radius' => 'required|integer|min:100',
             'order_mode' => 'required|in:dine_in,take_away,delivery',
             'whatsapp_number' => 'required|string|max:20',
+            'opening_time' => 'required|date_format:H:i',
+            'closing_time' => 'required|date_format:H:i|after:opening_time',
+            'is_temporarily_closed' => 'boolean',
+            'temporary_closure_message' => 'nullable|string|max:500',
         ];
     }
 
@@ -89,7 +109,7 @@ class WebSettings extends Component
 
     public function save()
     {
-        $validated = $this->validate();
+        $this->validate();
 
         $data = [
             'site_name' => $this->site_name,
@@ -100,6 +120,10 @@ class WebSettings extends Component
             'delivery_radius' => $this->delivery_radius,
             'order_mode' => $this->order_mode,
             'whatsapp_number' => $this->whatsapp_number,
+            'opening_time' => $this->opening_time,
+            'closing_time' => $this->closing_time,
+            'is_temporarily_closed' => $this->is_temporarily_closed,
+            'temporary_closure_message' => $this->temporary_closure_message,
         ];
 
         if ($this->logo) {

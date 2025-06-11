@@ -11,7 +11,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        // Register the CheckStoreOpen middleware
+        $middleware->alias([
+            'store.open' => \App\Http\Middleware\CheckStoreOpen::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
