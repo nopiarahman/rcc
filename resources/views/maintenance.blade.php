@@ -16,14 +16,14 @@
                 @endphp
                 <img src="{{ $logoPath }}" alt="Logo" class="h-20 mx-auto mb-4">
                 <h1 class="text-2xl font-bold text-gray-800">
-                    @if($settings->is_temporarily_closed==true)
-                        Kami Sedang Tutup Sementara
-                    @else
-                        Kami Sedang Tutup
-                    @endif
+                    Tutup
                 </h1>
                 
-                @if($settings->temporary_closure_message)
+                @if(isset($reason) && $reason === 'outside_business_hours')
+                    <p class="mt-4 text-gray-600">
+                        Maaf, kami saat ini sedang tutup, sekarang diluar jam operasional kami.
+                    </p>
+                @elseif($settings->temporary_closure_message)
                     <p class="mt-4 text-gray-600">{{ $settings->temporary_closure_message }}</p>
                 @else
                     <p class="mt-4 text-gray-600">Kami sedang tutup sementara. Silakan kunjungi kembali nanti.</p>

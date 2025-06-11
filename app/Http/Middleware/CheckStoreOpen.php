@@ -41,21 +41,37 @@ class CheckStoreOpen
             return $next($request);
         }
 
+        // Skip if we're already on the maintenance page
+        if ($request->is('maintenance') || $request->routeIs('maintenance')) {
+            return $next($request);
+        }
+
         $settings = WebSetting::first();
         
-        // If store is temporarily closed, redirect to maintenance
-        if ($settings && $settings->is_temporarily_closed) {
-            return $this->redirectToMaintenance($request, $next);
-        }
-
-        // Check if store is open based on business hours
-        if (!$this->isStoreOpen($settings)) {
-            return $this->redirectToMaintenance($request, $next);
-        }
-
-        // Allow access for admin users
+        // Always allow access for admin users
         if (Auth::check() && Auth::user()->is_admin) {
             return $next($request);
+        }
+
+        $shouldRedirect = false;
+        $redirectReason = '';
+
+        // Check if store is temporarily closed
+        if ($settings && $settings->is_temporarily_closed) {
+            $shouldRedirect = true;
+            $redirectReason = 'temporarily_closed';
+        } 
+        // Check store hours if they are set
+        elseif ($settings && $settings->opening_time && $settings->closing_time) {
+            if (!$this->isStoreOpen($settings)) {
+                $shouldRedirect = true;
+                $redirectReason = 'outside_business_hours';
+            }
+        }
+
+        // Only redirect if not already on the maintenance page
+        if ($shouldRedirect && !$request->is('maintenance')) {
+            return redirect()->route('maintenance', ['reason' => $redirectReason]);
         }
 
         return $next($request);
@@ -100,11 +116,17 @@ class CheckStoreOpen
      */
     protected function redirectToMaintenance($request, $next)
     {
-        // If we're already on the maintenance page, proceed to avoid redirect loop
-        if ($request->is('maintenance')) {
+        // If we're already on the maintenance page, return the response directly
+        if ($request->is('maintenance') || $request->routeIs('maintenance')) {
             return $next($request);
         }
 
+        // If this is an AJAX request, return a JSON response
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Store is currently closed.'], 403);
+        }
+
+        // Only redirect if we're not already going to the maintenance page
         return redirect()->route('maintenance');
     }
 

@@ -12,15 +12,21 @@ use App\Http\Controllers\FrontEndController;
 use App\Http\Middleware\CheckStoreOpen;
 
 // Maintenance route (must be outside any middleware group)
-Route::get('/maintenance', function () {
+Route::get('/maintenance', function (\Illuminate\Http\Request $request) {
     $settings = \App\Models\WebSetting::first();
+    $reason = $request->query('reason');
+    
+    // If we're in maintenance due to business hours, don't redirect back to home
+    if ($reason === 'outside_business_hours') {
+        return view('maintenance', ['reason' => $reason]);
+    }
     
     // If store is not closed, redirect to home
     if (!$settings || !$settings->is_temporarily_closed) {
         return redirect()->route('home');
     }
     
-    return view('maintenance');
+    return view('maintenance', ['reason' => $reason]);
 })->name('maintenance');
 
 // Auth routes (must be accessible when store is closed)
