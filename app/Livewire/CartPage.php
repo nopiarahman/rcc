@@ -43,9 +43,11 @@ class CartPage extends Component
     }
     public function updateTotal()
     {
-        $this->total = collect($this->cart)->sum(function ($item) {
+        $originalTotal = collect($this->cart)->sum(function ($item) {
             return $item['qty'] * $item['price'];
         });
+        // Round down to nearest 1000
+        $this->total = floor($originalTotal / 1000) * 1000;
     }
     public function increaseQty($key)
     {
@@ -187,12 +189,18 @@ class CartPage extends Component
     
         $total = $detailedCart->sum('subtotal');
         
+        // Calculate rounded total (down to nearest 1000)
+        $roundedTotal = floor($total / 1000) * 1000;
+        $roundingAmount = $roundedTotal - $total;
+        
         // Get web settings for order mode
         $webSettings = $this->web_settings ?: WebSetting::first();
     
         return view('livewire.cart-page', [
             'cartItems' => $detailedCart,
-            'total' => $total,
+            'total' => $roundedTotal, // Use rounded total as the main total
+            'originalTotal' => $total, // Keep original total for reference
+            'roundingAmount' => $roundingAmount, // The amount rounded (can be positive or negative)
             'orderMode' => $webSettings->order_mode,
             'web_settings' => $webSettings
         ])->layout('layouts.public');

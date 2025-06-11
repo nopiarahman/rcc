@@ -132,13 +132,20 @@
     {{-- Footer (tetap di bawah) --}}
     <div class="footer fixed-bottom bg-white p-3 shadow-lg" style="margin-bottom: 2.5rem">
         <div class="text-center mb-2">
+            @if($roundingAmount != 0)
+                <div class="mb-2">
+                    <span class="text-muted small">Sebelum pembulatan: Rp{{ number_format($originalTotal, 0, ',', '.') }}</span><br>
+                    <span class="text-muted small">Pembulatan: <span class="{{ $roundingAmount > 0 ? 'text-success' : 'text-danger' }}">
+                        {{ $roundingAmount > 0 ? '+' : '' }}{{ number_format($roundingAmount, 0, ',', '.') }}
+                    </span></span>
+                </div>
+            @endif
             <h5 class="fw-bold mb-1">Total: Rp{{ number_format($total, 0, ',', '.') }}</h5>
             <p class="text-muted small mb-2">Pastikan pesanan anda benar, siapkan uang pas jika memungkinkan, Jazakallahu khairan</p>
         </div>
         <button id="checkoutBtn" type="button" class="btn btn-theme w-100 mb-2">
             Checkout
         </button>
-        
     </div>
 
     <!-- Modal Pilih Jenis Pesanan -->
