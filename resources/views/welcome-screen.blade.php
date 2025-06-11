@@ -127,8 +127,8 @@
             font-weight: 600;
             letter-spacing: 1px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            position: absolute;
-            bottom: 60px;
+            position: fixed;
+            bottom: 30%;
             left: 50%;
             transform: translateX(-50%);
             width: 200px;
@@ -137,6 +137,7 @@
             align-items: center;
             justify-content: center;
             background: {{ $buttonGradient }};
+            z-index: 1000;
         }
         
         .btn-enter:hover {
