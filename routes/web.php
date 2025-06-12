@@ -16,13 +16,32 @@ Route::get('/maintenance', function (\Illuminate\Http\Request $request) {
     $settings = \App\Models\WebSetting::first();
     $reason = $request->query('reason');
     
-    // If we're in maintenance due to business hours, don't redirect back to home
-    if ($reason === 'outside_business_hours') {
-        return view('maintenance', ['reason' => $reason]);
+    // If store settings don't exist, redirect to home
+    if (!$settings) {
+        return redirect()->route('home');
+    }
+
+    // Check if store is open (not temporarily closed and within business hours)
+    $isStoreOpen = !$settings->is_temporarily_closed;
+    
+    // If business hours are set, check if current time is within opening hours
+    if ($settings->opening_time && $settings->closing_time) {
+        $now = now();
+        $openingTime = \Carbon\Carbon::parse($settings->opening_time);
+        $closingTime = \Carbon\Carbon::parse($settings->closing_time);
+        
+        // Handle overnight hours (e.g., 18:00 - 02:00)
+        if ($closingTime->lessThan($openingTime)) {
+            $isWithinHours = $now->greaterThanOrEqualTo($openingTime) || $now->lessThan($closingTime);
+        } else {
+            $isWithinHours = $now->between($openingTime, $closingTime);
+        }
+        
+        $isStoreOpen = $isStoreOpen && $isWithinHours;
     }
     
-    // If store is not closed, redirect to home
-    if (!$settings || !$settings->is_temporarily_closed) {
+    // If store is open, redirect to home
+    if ($isStoreOpen) {
         return redirect()->route('home');
     }
     
