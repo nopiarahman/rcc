@@ -131,6 +131,14 @@ Route::middleware(['auth'])->group(function () {
     Volt::route('minuman/{minuman}/edit', 'minuman.edit')->name('minuman.edit');
     Volt::route('minuman/bahan/create', 'bahan.create')->name('minuman.bahan.create');
     Volt::route('minuman/sizes/create', 'sizes.create')->name('minuman.sizes.create');
+
+    // Makanan routes
+    Volt::route('makanan', 'makanan.index')->name('makanan.index');
+    Volt::route('makanan/create', 'makanan.create')->name('makanan.create');
+    Volt::route('makanan/{makanan}/edit', 'makanan.edit')->name('makanan.edit');
+    Route::get('makanan/bahan', \App\Livewire\Makanan\BahanCrud::class)->name('makanan.bahan-crud');
+    Route::get('makanan/topping', \App\Livewire\Makanan\ToppingCrud::class)->name('makanan.topping-crud');
+
     Volt::route('minuman/sugar/create', 'sugar.create')->name('minuman.sugar.create');
     Volt::route('minuman/topping/create', 'topping.create')->name('minuman.topping.create');
     

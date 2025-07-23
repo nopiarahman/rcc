@@ -1,32 +1,22 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Livewire\Makanan;
 
 use Livewire\Component;
-use App\Models\Minuman;
 use App\Models\Makanan;
 
 class DetailHppModal extends Component
 {
-    public $item;
+    public $makanan;
     public $bahanList = [];
     public $show = false;
-    public $tipe = null;
 
-    protected $listeners = ['open-modal-hpp' => 'loadData'];
+    protected $listeners = ['open-modal-hpp-makanan' => 'loadData'];
 
     public function loadData($id)
     {
-        // Coba cari minuman dulu
-        $item = Minuman::with('bahans')->find($id);
-        $this->tipe = 'minuman';
-        if (!$item) {
-            // Jika tidak ditemukan, coba cari makanan
-            $item = Makanan::with('bahans')->find($id);
-            $this->tipe = 'makanan';
-        }
-        $this->item = $item;
-        $this->bahanList = $item && $item->bahans ? $item->bahans->map(function($bahan) {
+        $this->makanan = Makanan::with('bahans')->find($id);
+        $this->bahanList = $this->makanan && $this->makanan->bahans ? $this->makanan->bahans->map(function($bahan) {
             return [
                 'nama' => $bahan->nama,
                 'harga_satuan' => $bahan->harga_satuan,
@@ -35,7 +25,6 @@ class DetailHppModal extends Component
                 'total' => $bahan->harga_satuan * $bahan->pivot->jumlah,
             ];
         })->toArray() : [];
-
         $this->show = true;
     }
 
@@ -46,9 +35,8 @@ class DetailHppModal extends Component
 
     public function render()
     {
-        return view('livewire.detail-hpp-modal', [
-            'tipe' => $this->tipe,
-            'item' => $this->item,
+        return view('livewire.makanan.detail-hpp-modal', [
+            'makanan' => $this->makanan,
             'bahanList' => $this->bahanList,
             'show' => $this->show,
         ]);

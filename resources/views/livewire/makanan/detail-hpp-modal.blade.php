@@ -9,7 +9,7 @@
             class="bg-white p-6 rounded-lg w-full max-w-lg shadow-lg" 
             @click.away="$wire.closeModal()"
         >
-            <h2 class="text-xl font-semibold mb-4">Detail HPP: {{ $item ? $item->nama : '-' }}</h2>
+            <h2 class="text-xl font-semibold mb-4">Detail HPP: {{ $makanan ? $makanan->nama : '-' }}</h2>
 
             <table class="w-full text-sm border mb-4">
                 <thead class="bg-gray-100 text-left">
@@ -43,6 +43,5 @@
             </div>
         </div>
     </div>
-@endif
-
+    @endif
 </div>
