@@ -160,5 +160,56 @@
             </div>
         @endforelse
     </div>
+
+    {{-- Daftar Makanan --}}
+    <div class="mt-4">
+        <h5 class="fw-bold mb-2 text-theme">Makanan {{$filterKategori ?: 'Semua'}}</h5>
+        @php
+            $collectionsMakanan = $filterKategori == ''
+                ? $makanans->groupBy('kategori')
+                : collect([$filterKategori => $makanans->where('kategori', $filterKategori)]);
+        @endphp
+        @forelse ($collectionsMakanan as $kategori => $items)
+            <div class="row g-3 mt-1">
+                <h5 class="fw-bold text-theme" style="margin-bottom: -0.5rem">{{ $kategori }} Food</h5>
+                @forelse ($items as $item)
+                    <div class="col-6">
+                        <a wire:navigate href="{{ route('makanan.detail', $item->id) }}" class="text-decoration-none text-dark">
+                            <div class="card border-1 rounded-4 position-relative">
+                                @if($item->is_habis)
+                                    <div class="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style="background-color: rgba(0,0,0,0.6); z-index: 2; border-radius: 0.8rem;">
+                                        <div class="badge bg-secondary p-2" style="transform:font-size: 1rem;">
+                                            <i class="bi bi-x-circle me-1"></i> Habis
+                                        </div>
+                                    </div>
+                                @endif
+                                <img src="{{ $item->getFirstMediaUrl('foto') ?: asset('images/no-image.png') }}"
+                                     class="card-img-top object-fit-cover fixed-img-height rounded-4 p-2"
+                                     alt="{{ $item->nama }}">
+                                <div class="card-body p-2">
+                                    <div class="fw-bold small" style="min-height: 2.5rem; overflow: hidden; text-overflow: ellipsis;">
+                                        {{ $item->nama }}
+                                    </div>
+                                    <div class="small">
+                                        <div class="text-muted">
+                                            Rp {{ number_format($item->base_price, 0, ',', '.') }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                @empty
+                    <div class="col-12 text-center">
+                        <small class="text-muted">Belum ada makanan untuk kategori ini.</small>
+                    </div>
+                @endforelse
+            </div>
+        @empty
+            <div class="col-12 text-center">
+                <small class="text-muted">Belum ada makanan untuk kategori ini.</small>
+            </div>
+        @endforelse
+    </div>
     
 </div>              

@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Minuman;
+use App\Models\Makanan;
 use App\Models\Size;
 use App\Models\Sugar;
 use App\Models\Topping;
@@ -139,23 +140,48 @@ class CartPage extends Component
     public function render()
     {
         $detailedCart = collect($this->cart)->map(function ($item, $key) {
-            $minuman = Minuman::find($item['id']);
-            $size = $item['size_id'] ? Size::find($item['size_id']) : null;
-            $sugar = $item['sugar_id'] ? Sugar::find($item['sugar_id']) : null;
-            $topping = $item['topping_id'] ? Topping::find($item['topping_id']) : null;
+            $type = $item['type'] ?? 'minuman'; // Default to 'minuman' for backward compatibility
+            $model = null;
+            $size = null;
+            $sugar = null;
+            $topping = null;
+            
+            if ($type === 'minuman') {
+                $model = Minuman::find($item['id']);
+                // Safely access array keys with null coalescing operator
+                $sizeId = $item['size_id'] ?? null;
+                $sugarId = $item['sugar_id'] ?? null;
+                $toppingId = $item['topping_id'] ?? null;
+                
+                $size = $sizeId ? Size::find($sizeId) : null;
+                $sugar = $sugarId ? Sugar::find($sugarId) : null;
+                $topping = $toppingId ? Topping::find($toppingId) : null;
+                $name = $model?->nama ?? 'Unknown Drink';
+            } else {
+                $model = Makanan::find($item['id']);
+                $toppingId = $item['topping_id'] ?? null;
+                $topping = $toppingId ? Topping::find($toppingId) : null;
+                $name = $model?->nama ?? 'Unknown Food';
+            }
             
             // Calculate regular price (without discount)
             $regularPrice = null;
             $discountInfo = null;
             
-            if ($minuman && $minuman->activeDiscount()) {
-                $discount = $minuman->activeDiscount();
+            if ($model && $model->activeDiscount()) {
+                $discount = $model->activeDiscount();
                 
                 // Get the base price for this specific configuration
-                $basePrice = $minuman->base_price;
-                if ($size) $basePrice += $size->price;
-                if ($sugar) $basePrice += $sugar->price;
-                if ($topping) $basePrice += $topping->default_price;
+                $basePrice = $model->harga;
+                
+                if ($type === 'minuman') {
+                    if ($size) $basePrice += $size->price;
+                    if ($sugar) $basePrice += $sugar->price;
+                }
+                
+                if ($topping) {
+                    $basePrice += $topping->default_price;
+                }
                 
                 // Calculate regular price
                 $regularPrice = $basePrice;
@@ -176,14 +202,15 @@ class CartPage extends Component
                 'qty' => $item['qty'],
                 'price' => $item['price'],
                 'subtotal' => $item['qty'] * $item['price'],
-                'minuman' => $minuman?->nama ?? 'Unknown Drink',
-                'minuman_model' => $minuman,
-                'size' => $size?->name ?? '-',
-                'sugar' => $sugar?->level ?? '-',
+                'name' => $name,
+                'model' => $model,
+                'size' => $size?->name ?? ($type === 'minuman' ? '-' : null),
+                'sugar' => $sugar?->level ?? ($type === 'minuman' ? '-' : null),
                 'topping' => $topping?->nama ?? '-',
                 'regular_price' => $regularPrice,
                 'discount_info' => $discountInfo,
                 'has_discount' => $discountInfo !== null,
+                'type' => $type,
             ];
         });
     
@@ -220,22 +247,43 @@ class CartPage extends Component
         $this->validate($validationRules);
     
         $cartItems = collect($this->cart)->map(function ($item, $key) {
-            $minuman = Minuman::find($item['id']);
-            $size = $item['size_id'] ? Size::find($item['size_id']) : null;
-            $sugar = $item['sugar_id'] ? Sugar::find($item['sugar_id']) : null;
-            $topping = $item['topping_id'] ? Topping::find($item['topping_id']) : null;
+            $type = $item['type'] ?? 'minuman'; // Default to 'minuman' for backward compatibility
+            
+            if ($type === 'minuman') {
+                $model = Minuman::find($item['id']);
+                // Safely access array keys with null coalescing operator
+                $sizeId = $item['size_id'] ?? null;
+                $sugarId = $item['sugar_id'] ?? null;
+                $toppingId = $item['topping_id'] ?? null;
+                
+                $size = $sizeId ? Size::find($sizeId) : null;
+                $sugar = $sugarId ? Sugar::find($sugarId) : null;
+                $topping = $toppingId ? Topping::find($toppingId) : null;
+                $name = $model?->nama ?? 'Unknown Drink';
+                $modelType = 'minuman';
+            } else {
+                $model = Makanan::find($item['id']);
+                $toppingId = $item['topping_id'] ?? null;
+                $topping = $toppingId ? Topping::find($toppingId) : null;
+                $name = $model?->nama ?? 'Unknown Food';
+                $modelType = 'makanan';
+                $size = null;
+                $sugar = null;
+            }
     
             return [
                 'key' => $key,
-                'minuman_id' => $item['id'],
+                'model_id' => $item['id'],
+                'model_type' => $modelType,
                 'qty' => $item['qty'],
                 'harga' => $item['price'],
                 'subtotal' => $item['qty'] * $item['price'],
-                'minuman' => $minuman?->nama ?? 'Unknown Drink',
-                'size' => $size?->name ?? null,
-                'gula' => $sugar?->level ?? null,
+                'name' => $name,
+                'size' => $type === 'minuman' ? ($size?->name ?? null) : null,
+                'gula' => $type === 'minuman' ? ($sugar?->level ?? null) : null,
                 'topping' => $topping?->nama ?? null,
                 'catatan' => $item['catatan'] ?? null,
+                'type' => $type,
             ];
         });
     
@@ -262,27 +310,50 @@ class CartPage extends Component
         
         // Create order details
         foreach ($cartItems as $item) {
-            $pesanan->details()->create([
-                'minuman_id' => $item['minuman_id'],
-                'nama_minuman' => $item['minuman'],
+            $detailData = [
                 'harga' => $item['harga'],
                 'qty' => $item['qty'],
-                'size' => $item['size'],
-                'gula' => $item['gula'],
                 'topping' => $item['topping'],
                 'catatan' => $item['catatan'],
                 'subtotal' => $item['subtotal'],
-            ]);
+            ];
+            
+            // Handle both food and drink items with the updated schema
+            if ($item['type'] === 'minuman') {
+                $detailData['minuman_id'] = $item['model_id'];
+                $detailData['nama_minuman'] = $item['name'];
+                $detailData['makanan_id'] = null;
+                $detailData['nama_makanan'] = null;
+                $detailData['size'] = $item['size'] ?? null;
+                $detailData['gula'] = $item['gula'] ?? null;
+            } else {
+                // For food items, use makanan_id and nama_makanan
+                $detailData['makanan_id'] = $item['model_id'];
+                $detailData['nama_makanan'] = $item['name'];
+                $detailData['minuman_id'] = null;
+                $detailData['nama_minuman'] = null;
+                $detailData['size'] = null;
+                $detailData['gula'] = null;
+            }
+            
+            $pesanan->details()->create($detailData);
         }
     
         // Prepare WhatsApp message
         $message = "Assalamualaikum, saya ingin pesan:\n\n";
         foreach ($cartItems as $item) {
-            $message .= "- {$item['minuman']}";
-            $message .= $item['size'] ? " (Size: {$item['size']}" : "";
-            $message .= $item['gula'] ? ", Gula: {$item['gula']}" : "";
+            $message .= "- {$item['name']}";
+            
+            // Only show size and sugar for drinks
+            if ($item['type'] === 'minuman') {
+                $message .= $item['size'] ? " (Size: {$item['size']}" : "";
+                $message .= $item['gula'] ? ", Gula: {$item['gula']}" : "";
+                $message .= $item['size'] ? ")" : "";
+            }
+            
+            // Show topping if available for both food and drinks
             $message .= $item['topping'] ? ", Topping: {$item['topping']}" : "";
-            $message .= $item['size'] ? ")" : "";
+            
             $message .= " x {$item['qty']} = Rp " . number_format($item['subtotal'], 0, ',', '.') . "\n";
             if (!empty($item['catatan'])) {
                 $message .= "  Catatan: {$item['catatan']}\n";

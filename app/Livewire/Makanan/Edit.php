@@ -14,7 +14,6 @@ class Edit extends Component
 
     public $makanan;
     public $foto;
-    public $fotoPreview;
     public string $nama = '';
     public string $deskripsi = '';
     public string $short_description = '';
@@ -30,7 +29,7 @@ class Edit extends Component
 
     public function mount($makanan)
     {
-        $this->makanan = Makanan::with(['toppings', 'bahans'])->findOrFail($makanan);
+        $this->makanan = Makanan::with(['toppings', 'bahans', 'media'])->findOrFail($makanan);
         $this->nama = $this->makanan->nama;
         $this->deskripsi = $this->makanan->deskripsi;
         $this->short_description = $this->makanan->short_description;
@@ -69,6 +68,7 @@ class Edit extends Component
             'defaultTopping' => 'nullable',
             'tag' => 'nullable|string',
             'short_description' => 'nullable|string',
+            'foto' => 'nullable|image|max:2048', // 2MB Max
         ]);
 
         $this->makanan->update([
@@ -81,6 +81,14 @@ class Edit extends Component
             'is_habis' => $this->is_habis,
             'default_topping' => $this->defaultTopping,
         ]);
+
+        // Handle photo upload
+        if ($this->foto) {
+            $this->makanan->clearMediaCollection('gambar');
+            $this->makanan->addMedia($this->foto->getRealPath())
+                ->usingName($this->foto->getClientOriginalName())
+                ->toMediaCollection('gambar');
+        }
 
         $this->makanan->toppings()->sync(
             collect($this->selectedToppings)

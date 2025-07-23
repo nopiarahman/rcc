@@ -75,6 +75,7 @@ Route::middleware(['store.open'])->group(function () {
     Route::get('/home', MenuPage::class)->name('home');
     Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
     Route::get('/minuman-detail-{id}', MinumanDetail::class)->name('minuman.detail');
+    Route::get('/makanan-detail-{makanan}', \App\Livewire\MakananDetail::class)->name('makanan.detail');
     Route::get('/keranjang', CartPage::class)->name('cart');
     Route::get('/pesanan', HistoryPage::class)->name('pesanan');
 

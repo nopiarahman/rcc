@@ -6,10 +6,11 @@ use App\Models\Minuman;
 use Livewire\Component;
 use App\Helpers\DrinkPriceHelper;
 class DaftarMinuman extends Component
-    {
+{
     public $filterKategori = '';
     public $allKategoris = [];
     public $minumans = [];
+    public $makanans = []; // Tambah property untuk makanan
 
     protected $listeners = ['gantiKategori'];
 
@@ -34,6 +35,9 @@ class DaftarMinuman extends Component
         $this->minumans = Minuman::when($this->filterKategori, function ($query) {
             $query->where('kategori', $this->filterKategori);
         })->get();
+        $this->makanans = \App\Models\Makanan::when($this->filterKategori, function ($query) {
+            $query->where('kategori', $this->filterKategori);
+        })->get();
     }
 
     public function render()
@@ -42,7 +46,8 @@ class DaftarMinuman extends Component
         
         return view('livewire.daftar-minuman', [
             'theme' => $webSettings ? $webSettings->theme : 'green',
-            'web_settings' => $webSettings
+            'web_settings' => $webSettings,
+            'makanans' => $this->makanans,
         ]);
     }
 }

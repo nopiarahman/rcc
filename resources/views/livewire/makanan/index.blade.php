@@ -35,13 +35,13 @@
                         <tr>
                             <td class="px-4 py-2">{{ $makanan->nama }}</td>
                             <td class="px-4 py-2">Rp {{ number_format($makanan->hpp ?? 0,0,',','.') }}</td>
-<td class="px-4 py-2">
-    Rp {{ number_format(
-        $makanan->bahans->sum(function($bahan) {
-            return ($bahan->harga_satuan ?? 0) * ($bahan->pivot->jumlah ?? 0);
-        })
-    , 0, ',', '.') }}
-</td>
+                        <td class="px-4 py-2">
+                            Rp {{ number_format(
+                                $makanan->bahans->sum(function($bahan) {
+                                    return ($bahan->harga_satuan ?? 0) * ($bahan->pivot->jumlah ?? 0);
+                                })
+                            , 0, ',', '.') }}
+                        </td>
                             <td class="px-4 py-2">Rp {{ number_format($makanan->base_price,0,',','.') }}</td>
                             <td class="px-4 py-2">
                                 @if($makanan->is_habis)

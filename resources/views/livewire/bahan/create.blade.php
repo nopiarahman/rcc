@@ -39,6 +39,8 @@
                 <flux:error name="kategori" />
             </flux:field>
             
+            <input type="hidden" wire:model="jenis">
+            
             <div class="flex items-center space-x-2">
                 <flux:button type="submit" variant="primary">
                     {{ $bahan_id ? 'Update' : 'Simpan' }}
@@ -107,6 +109,7 @@ new class extends Component
     public string $nama = '';
     public string $satuan = '';
     public string $kategori = '';
+    public string $jenis = 'minuman';
     public $harga_satuan;
     public ?int $bahan_id = null;
     public $bahans = [];
@@ -121,6 +124,7 @@ new class extends Component
         return [
             'nama' => 'required|string|min:2',
             'kategori' => 'required|string|min:2',
+            'jenis' => 'required|in:minuman,makanan',
             'satuan' => 'required|string',
             'harga_satuan' => 'required|numeric|min:0',
         ];
@@ -130,15 +134,22 @@ new class extends Component
     {
         $this->validate();
 
-        Bahan::updateOrCreate(
-            ['id' => $this->bahan_id],
-            [
-                'nama' => $this->nama,
-                'satuan' => $this->satuan,
-                'kategori' => $this->kategori,
-                'harga_satuan' => $this->harga_satuan,
-            ]
-        );
+        $data = [
+            'nama' => $this->nama,
+            'satuan' => $this->satuan,
+            'kategori' => $this->kategori,
+            'jenis' => $this->jenis,
+            'harga_satuan' => $this->harga_satuan,
+        ];
+
+        if ($this->bahan_id) {
+            // Update existing record
+            $bahan = Bahan::findOrFail($this->bahan_id);
+            $bahan->update($data);
+        } else {
+            // Create new record
+            Bahan::create($data);
+        }
 
         $this->resetForm();
         $this->ambilData();
@@ -148,6 +159,7 @@ new class extends Component
     function edit($id)
     {
         $bahan = Bahan::findOrFail($id);
+        $this->jenis = $bahan->jenis;
         $this->bahan_id = $bahan->id;
         $this->nama = $bahan->nama ?? '';
         $this->kategori = $bahan->kategori ?? '';
@@ -164,15 +176,16 @@ new class extends Component
 
     function resetForm()
     {
-        $this->bahan_id = null;
-        $this->nama = '';
-        $this->kategori = '';
-        $this->satuan = '';
-        $this->harga_satuan = '';
+        $this->reset(['bahan_id', 'nama', 'satuan', 'kategori', 'harga_satuan']);
+        $this->jenis = 'minuman'; 
+        $this->resetErrorBag();
+        $this->resetValidation();
     }
 
     function ambilData()
     {
-        $this->bahans = Bahan::orderBy('nama')->get();
+        $this->bahans = Bahan::where('jenis', 'minuman')
+                           ->orderBy('nama')
+                           ->get();
     }
 };

@@ -9,8 +9,13 @@ class BahanCrud extends Component
 {
     public $nama = '';
     public $satuan = '';
-    public $kategori = 'makanan';
+    public $kategori = Bahan::KATEGORI_DISPLAY;
     public $harga_satuan;
+    
+    public $kategoriOptions = [
+        Bahan::KATEGORI_DISPLAY => 'Display',
+        Bahan::KATEGORI_NON_DISPLAY => 'Non-Display'
+    ];
     public $bahan_id = null;
     public $bahans = [];
 
@@ -32,18 +37,31 @@ class BahanCrud extends Component
     public function simpan()
     {
         $this->validate();
-        Bahan::updateOrCreate(
-            ['id' => $this->bahan_id],
-            [
+        
+        try {
+            $data = [
                 'nama' => $this->nama,
                 'satuan' => $this->satuan,
                 'kategori' => $this->kategori,
                 'harga_satuan' => $this->harga_satuan,
-            ]
-        );
-        $this->resetForm();
-        $this->ambilData();
-        session()->flash('success', 'Bahan makanan berhasil disimpan!');
+                'jenis' => Bahan::JENIS_MAKANAN, // Set jenis to 'makanan' for this component
+            ];
+            
+            if ($this->bahan_id) {
+                // Update existing record
+                $bahan = Bahan::findOrFail($this->bahan_id);
+                $bahan->update($data);
+            } else {
+                // Create new record
+                $bahan = Bahan::create($data);
+            }
+            
+            $this->resetForm();
+            $this->ambilData();
+            session()->flash('success', 'Bahan makanan berhasil disimpan!');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Gagal menyimpan bahan: ' . $e->getMessage());
+        }
     }
 
     public function edit($id)
@@ -58,23 +76,32 @@ class BahanCrud extends Component
 
     public function hapus($id)
     {
-        Bahan::destroy($id);
-        $this->ambilData();
-        session()->flash('success', 'Bahan makanan berhasil dihapus!');
+        try {
+            Bahan::destroy($id);
+            $this->ambilData();
+            session()->flash('success', 'Bahan makanan berhasil dihapus!');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Gagal menghapus bahan: ' . $e->getMessage());
+        }
     }
 
     public function resetForm()
     {
         $this->bahan_id = null;
         $this->nama = '';
-        $this->kategori = 'makanan';
+        $this->kategori = Bahan::KATEGORI_DISPLAY;
         $this->satuan = '';
-        $this->harga_satuan = '';
+        $this->harga_satuan = null;
+        $this->resetErrorBag();
+        $this->resetValidation();
     }
 
     public function ambilData()
     {
-        $this->bahans = Bahan::where('kategori', 'makanan')->orderBy('nama')->get();
+        // Only get bahan with jenis 'makanan'
+        $this->bahans = Bahan::where('jenis', Bahan::JENIS_MAKANAN)
+                           ->orderBy('nama')
+                           ->get();
     }
 
     public function render()

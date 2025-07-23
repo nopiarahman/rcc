@@ -8,4 +8,7 @@ class Topping extends Model
 {
     protected $table = 'toppings';
     protected $guarded = ['id','created_at','updated_at'];
+
+    // Allow mass assignment for these fields, including category
+    protected $fillable = ['nama', 'default_price', 'kategori'];
 }

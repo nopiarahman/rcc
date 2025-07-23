@@ -11,13 +11,20 @@ class MenuPage extends Component
 {
     public $filterKategori = '';
     public $allKategoris = [];
+    public $allKategoriMakanan = [];
     public $minumans = [];
+    public $makanans = [];
     public $banners = [];
 
     public function mount()
     {
         $this->muatData();
         $this->allKategoris = Minuman::distinct()
+            ->pluck('kategori')
+            ->filter()
+            ->values()
+            ->toArray();
+        $this->allKategoriMakanan = \App\Models\Makanan::distinct()
             ->pluck('kategori')
             ->filter()
             ->values()
@@ -38,6 +45,9 @@ class MenuPage extends Component
         $this->minumans = Minuman::when($this->filterKategori, function ($query) {
             $query->where('kategori', $this->filterKategori);
         })->latest()->get();
+        $this->makanans = \App\Models\Makanan::when($this->filterKategori, function ($query) {
+            $query->where('kategori', $this->filterKategori);
+        })->latest()->get();
     }
 
     public function render()
@@ -46,6 +56,7 @@ class MenuPage extends Component
         
         return view('livewire.menu-page', [
             'minumans' => $this->minumans,
+            'makanans' => $this->makanans,
             'web_settings' => $webSettings
         ])->layout('layouts.public');
     }

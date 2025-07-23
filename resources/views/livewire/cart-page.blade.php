@@ -93,14 +93,20 @@
             <div class="card mb-2">
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center">
-                        <img src="{{ $item['minuman_model']?->getFirstMediaUrl('foto') ?? asset('default-drink.jpg') }}"
+                        <img src="{{ $item['model']?->getFirstMediaUrl('foto') ?? ($item['type'] === 'minuman' ? asset('default-drink.jpg') : asset('default-food.jpg')) }}"
                              class="rounded me-3"
-                             alt="{{ $item['minuman'] }}"
+                             alt="{{ $item['name'] }}"
                              width="60" height="60"
                              style="object-fit: cover; object-position: center;">
                         <div class="text-muted" style="font-size: 10pt">
-                            <h6 class="mb-1 fw-bold text-theme">{{ $item['minuman'] }}</h6>
-                            <small>Size: {{ $item['size'] }} | Gula: {{ $item['sugar'] }} | Topping: {{ $item['topping'] }}</small><br>
+                            <h6 class="mb-1 fw-bold text-theme">{{ $item['name'] }}</h6>
+                            <small>
+                                @if($item['type'] === 'minuman')
+                                    @if($item['size'])Size: {{ $item['size'] }} |@endif
+                                    @if($item['sugar'])Gula: {{ $item['sugar'] }} |@endif
+                                @endif
+                                @if($item['topping'] !== '-')Topping: {{ $item['topping'] }}@endif
+                            </small><br>
                             @if($item['has_discount'])
                                 <div class="d-flex align-items-center gap-1">
                                     <small class="text-decoration-line-through text-muted">Rp{{ number_format($item['regular_price'], 0, ',', '.') }}</small>

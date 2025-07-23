@@ -25,6 +25,7 @@
                 <flux:input type="number" wire:model.defer="default_price" />
                 <flux:error name="default_price" />
             </flux:field>
+            <input type="hidden" wire:model.defer="kategori" />
 
             <div class="flex items-center space-x-2">
                 <flux:button type="submit" variant="primary">
@@ -89,6 +90,7 @@ new class extends Component
 {
     public string $nama = '';
     public $default_price;
+    public $kategori = 'minuman'; // 'makanan' or 'minuman' to separate toppings
     public ?int $topping_id = null;
     public $toppings = [];
 
@@ -101,6 +103,7 @@ new class extends Component
     {
         return [
             'nama' => 'required|string|min:2',
+            'kategori' => 'required|string',
             'default_price' => 'required|numeric|min:0',
         ];
     }
@@ -114,6 +117,7 @@ new class extends Component
             [
                 'nama' => $this->nama,
                 'default_price' => $this->default_price,
+                'kategori' => $this->kategori,
             ]
         );
 
@@ -128,6 +132,7 @@ new class extends Component
         $this->topping_id = $topping->id;
         $this->nama = $topping->nama;
         $this->default_price = $topping->default_price;
+        $this->kategori = $topping->kategori;
     }
 
     function hapus($id)
@@ -142,10 +147,11 @@ new class extends Component
         $this->topping_id = null;
         $this->nama = '';
         $this->default_price = '';
+        $this->kategori = 'minuman';
     }
 
     function ambilData()
     {
-        $this->toppings = Topping::orderBy('nama')->get();
+        $this->toppings = Topping::where('kategori', $this->kategori)->orderBy('nama')->get();
     }
 };
