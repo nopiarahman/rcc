@@ -128,9 +128,9 @@
                 <select id="kategori" wire:model.defer="kategori" 
                     class="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
                     <option value="">Pilih Kategori</option>
-                    <option value="makanan">Makanan</option>
-                    <option value="snack">Snack</option>
-                    <option value="makanan_berat">Makanan Berat</option>
+                    <option value="Best Seller">Best Seller</option>
+                    <option value="Snack">Snack</option>
+                    <option value="Makanan Berat">Makanan Berat</option>
                 </select>
                 @error('kategori') 
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p> 

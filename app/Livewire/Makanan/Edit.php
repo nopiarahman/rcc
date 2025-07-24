@@ -39,7 +39,7 @@ class Edit extends Component
         $this->is_habis = $this->makanan->is_habis;
         $this->defaultTopping = $this->makanan->default_topping;
         $this->toppings = Topping::where('kategori', 'makanan')->get();
-        $this->bahans = Bahan::where('kategori', 'makanan')->get();
+        $this->bahans = Bahan::where('jenis', 'makanan')->get();
         $this->selectedToppings = $this->makanan->toppings->mapWithKeys(function($topping) {
             return [
                 $topping->id => [

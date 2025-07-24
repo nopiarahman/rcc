@@ -329,8 +329,8 @@ new class extends Component
     {
         $this->sizes = Size::all();
         $this->sugars = Sugar::all();
-        $this->toppings = Topping::all();
-        $this->bahans = Bahan::all();
+        $this->toppings = Topping::where('kategori', 'minuman')->get();
+        $this->bahans = Bahan::where('jenis', 'minuman')->get();
     }
 
     public function simpan()

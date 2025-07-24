@@ -63,7 +63,7 @@
     </style>
     
     {{-- Kategori --}}
-    <h5 class="fw-bold mb-2 text-theme">Minuman {{$filterKategori ?: 'Semua'}}</h5>
+    <h5 class="fw-bold mb-2 text-theme">Minuman {{$filterKategori }}</h5>
     <div class="d-flex gap-2 overflow-auto pb-2">
         
         <button 
@@ -161,9 +161,10 @@
         @endforelse
     </div>
 
+    @if($makanans->count())
     {{-- Daftar Makanan --}}
     <div class="mt-4">
-        <h5 class="fw-bold mb-2 text-theme">Makanan {{$filterKategori ?: 'Semua'}}</h5>
+        <h5 class="fw-bold mb-2 text-theme">Makanan {{$filterKategori }}</h5>
         @php
             $collectionsMakanan = $filterKategori == ''
                 ? $makanans->groupBy('kategori')
@@ -171,7 +172,7 @@
         @endphp
         @forelse ($collectionsMakanan as $kategori => $items)
             <div class="row g-3 mt-1">
-                <h5 class="fw-bold text-theme" style="margin-bottom: -0.5rem">{{ $kategori }} Food</h5>
+                <h5 class="fw-bold text-theme" style="margin-bottom: -0.5rem">{{ $kategori }}</h5>
                 @forelse ($items as $item)
                     <div class="col-6">
                         <a wire:navigate href="{{ route('makanan.detail', $item->id) }}" class="text-decoration-none text-dark">
@@ -211,5 +212,6 @@
             </div>
         @endforelse
     </div>
-    
+    @endif
+
 </div>              

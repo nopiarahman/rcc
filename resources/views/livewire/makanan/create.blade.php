@@ -1,178 +1,234 @@
 <div class="max-w-4xl mx-auto p-6">
     <x-navbar-makanan/>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load CKEditor script
+            if (!document.querySelector('script[src*="ckeditor5"]')) {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.ckeditor.com/ckeditor5/40.0.0/classic/ckeditor.js';
+                script.onload = initCKEditor;
+                document.head.appendChild(script);
+            } else {
+                initCKEditor();
+            }
+        });
+    
+        function initCKEditor() {
+            const editorElement = document.getElementById('deskripsi');
+            if (!editorElement || editorElement.classList.contains('ck-editor__editable')) {
+                return;
+            }
+    
+            ClassicEditor
+                .create(editorElement, {
+                    toolbar: [
+                        'heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|',
+                        'indent', 'outdent', '|', 'blockQuote', 'insertTable', 'undo', 'redo'
+                    ]
+                })
+                .then(editor => {
+                    // Set initial data if available
+                    const initialContent = editorElement.dataset.initialValue;
+                    if (initialContent) {
+                        editor.setData(initialContent);
+                    }
+                    // Update Livewire model when editor content changes
+                    editor.model.document.on('change:data', () => {
+                        @this.set('deskripsi', editor.getData());
+                    });
+                })
+                .catch(error => {
+                    console.error('CKEditor initialization error:', error);
+                });
+        }
+    
+        // Cleanup when navigating away
+        document.addEventListener('livewire:navigating', function() {
+            const editor = document.querySelector('.ck-editor__editable');
+            if (editor) {
+                editor.remove();
+            }
+        });
+    </script>
     @if (session()->has('success'))
-        <div class="p-4 mb-4 text-green-700 bg-green-100 rounded">
+        <div class="p-4 mb-6 text-green-700 bg-green-100 rounded-lg">
             {{ session('success') }}
         </div>
     @endif
-    <h2 class="text-xl font-bold mb-4 dark:text-white">Tambah Makanan</h2>
-    <form wire:submit.prevent="simpan" class="space-y-6">
-        <flux:field class="mb-2">
-            <flux:label>Foto Makanan</flux:label>
-            <input type="file" wire:model="foto" class="input w-full" accept="image/*">
-            @if ($foto)
-                <img src="{{ $foto->temporaryUrl() }}" alt="Preview" class="mt-2 w-32 h-32 object-cover rounded">
-            @endif
-            <flux:error name="foto" />
-        </flux:field>
-        <flux:field class="mb-2">
-            <flux:label>Nama</flux:label>
-            <flux:input type="text" wire:model.defer="nama" />
-            <flux:error name="nama" />
-        </flux:field>
-        <flux:field class="mb-2">
-            <flux:label>Kategori</flux:label>
-            <flux:input type="text" wire:model.defer="kategori" />
-        </flux:field>
-        <div class="mb-4">
-            <flux:label>Tag</flux:label>
-            <select wire:model.defer="tag" class="w-full border rounded p-2">
-                <option value="">Pilih default tag</option>
-                <option value="Recommended">★Recommended</option>
-                <option value="Terfavorit">❤︎Terfavorit</option>
-                <option value="Must Try">Must Try</option>
-            </select>
-        </div>
-        <flux:field class="mb-2">
-            <flux:label>Short Description</flux:label>
-            <flux:input type="text" wire:model.defer="short_description" />
-            <flux:error name="short_description" />
-        </flux:field>
-        <div class="mb-4">
-    <label for="deskripsi" class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
-    <div wire:ignore>
-        <textarea
-            id="deskripsi"
-            wire:model.defer="deskripsi"
-            data-initial-value="{{ $deskripsi ?? '' }}"
-            rows="8"
-            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-        >{{ $deskripsi ?? '' }}</textarea>
-    </div>
-    @error('deskripsi')
-        <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
-    @enderror
-</div>
-<!-- CKEditor Script -->
-<script>
-    function loadCKEditorScript() {
-        if (document.querySelector('script[src*="ckeditor5"]')) {
-            initCKEditorWithRetry();
-            return;
-        }
-        const script = document.createElement('script');
-        script.src = 'https://cdn.ckeditor.com/ckeditor5/40.0.0/classic/ckeditor.js';
-        script.onload = function() { initCKEditorWithRetry(); };
-        script.onerror = function() { console.error('Failed to load CKEditor script'); };
-        document.head.appendChild(script);
-    }
-    function initCKEditorWithRetry(attempts = 0) {
-        const maxAttempts = 5;
-        if (typeof ClassicEditor === 'undefined') {
-            if (attempts < maxAttempts) {
-                setTimeout(() => { initCKEditorWithRetry(attempts + 1); }, 200 * Math.pow(2, attempts));
-            } else {
-                console.error('CKEditor failed to initialize after multiple attempts');
-            }
-            return;
-        }
-        initCKEditor();
-    }
-    window.editorInitialized = false;
-    window.editor = null;
-    function initCKEditor() {
-        if (window.editorInitialized) return;
-        const editorElement = document.getElementById('deskripsi');
-        if (!editorElement) return;
-        window.editorInitialized = true;
-        ClassicEditor
-            .create(editorElement, {
-                toolbar: [
-                    'heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|',
-                    'indent', 'outdent', '|', 'blockQuote', 'insertTable', 'undo', 'redo'
-                ]
-            })
-            .then(editor => {
-                window.editor = editor;
-                const initialContent = editorElement.dataset.initialValue;
-                if (initialContent) { editor.setData(initialContent); }
-                editor.model.document.on('change:data', () => {
-                    @this.set('deskripsi', editor.getData());
-                });
-            })
-            .catch(error => {
-                console.error(error);
-                window.editorInitialized = false;
-            });
-    }
-    document.addEventListener('livewire:navigating', function() {
-        if (window.editor) {
-            try {
-                window.editor.destroy().then(() => {
-                    window.editor = null;
-                    window.editorInitialized = false;
-                }).catch(error => { console.error('Error during editor cleanup:', error); });
-            } catch (e) {
-                console.error('Error during editor cleanup:', e);
-                window.editor = null;
-                window.editorInitialized = false;
-            }
-        }
-    });
-    document.addEventListener('DOMContentLoaded', loadCKEditorScript);
-    document.addEventListener('livewire:navigated', loadCKEditorScript);
-    document.addEventListener('livewire:load', loadCKEditorScript);
-</script>
-        <flux:field class="mb-2">
-    <flux:label>Harga Dasar</flux:label>
-    <flux:input type="number" wire:model.defer="base_price" />
-    <flux:error name="base_price" />
-</flux:field>
-<div class="mb-4">
-    <label class="block mb-1 font-semibold">Default Topping</label>
-    <select wire:model="defaultTopping" class="w-full border rounded p-2">
-        <option value="">Pilih default topping</option>
-        @foreach($toppings as $topping)
-            <option value="{{ $topping->id }}">{{ $topping->nama }}</option>
-        @endforeach
-    </select>
-</div>
-        <div class="mb-4">
-            <label class="flex items-center space-x-2">
-                <input type="checkbox" wire:model.defer="is_habis" class="rounded text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                <span class="text-gray-700 dark:text-gray-300">Tandai sebagai habis (out of stock)</span>
-            </label>
-        </div>
-        <hr class="mt-4 mb-4">
-        <div class="mb-6">
-            <label class="font-semibold block mb-2">Bahan</label>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                @foreach($bahans as $bahan)
-                    <div class="flex items-center gap-3 bg-gray-50 p-3 rounded border">
-                        <input type="checkbox" wire:model="selectedBahans.{{ $bahan->id }}.aktif" class="checkbox">
-                        <span class="flex-1">{{ $bahan->nama }}</span>
-                        <input type="number" wire:model="selectedBahans.{{ $bahan->id }}.qty" class="input w-20" placeholder="Qty">
-                        <input type="number" wire:model="selectedBahans.{{ $bahan->id }}.harga" class="input w-28" placeholder="Extra Price">
+
+    <h2 class="text-2xl font-bold mb-6 text-gray-800">Tambah Makanan</h2>
+    <form wire:submit.prevent="simpan" class="space-y-6 bg-white p-6 rounded-lg shadow-md">
+        <!-- Foto Makanan -->
+        <div class="mb-8 p-4 bg-gray-50 rounded-lg">
+            <label class="block text-sm font-medium text-gray-700 mb-3">Foto Makanan</label>
+            <div class="flex flex-col sm:flex-row gap-6">
+                <div class="shrink-0">
+                    @if ($foto)
+                        <img src="{{ $foto->temporaryUrl() }}" alt="Preview" class="h-32 w-32 object-cover rounded-lg border-2 border-dashed border-gray-300">
+                    @else
+                        <div class="h-32 w-32 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                    @endif
+                </div>
+                <div class="flex-1">
+                    <div class="relative inline-block">
+                        <input type="file" wire:model="foto" id="foto-upload" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                        <label for="foto-upload" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer">
+                            <svg class="-ml-1 mr-2 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                            </svg>
+                            Pilih Gambar
+                        </label>
                     </div>
-                @endforeach
+                    <p class="mt-2 text-xs text-gray-500">Format: JPG, PNG, atau WebP (maks. 2MB)</p>
+                    @error('foto')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
             </div>
         </div>
+
+        <!-- Informasi Dasar -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- Nama -->
+            <div>
+                <label for="nama" class="block text-sm font-medium text-gray-700 mb-1">Nama Makanan</label>
+                <input type="text" id="nama" wire:model.defer="nama" 
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border">
+                @error('nama') 
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p> 
+                @enderror
+            </div>
+
+            <!-- Harga Dasar -->
+            <div>
+                <label for="base_price" class="block text-sm font-medium text-gray-700 mb-1">Harga Dasar</label>
+                <div class="relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span class="text-gray-500 text-sm">Rp</span>
+                    </div>
+                    <input type="number" id="base_price" wire:model.defer="base_price"
+                        class="block w-full pl-10 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                </div>
+                @error('base_price') 
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p> 
+                @enderror
+            </div>
+
+            <!-- Kategori -->
+            <div>
+                <label for="kategori" class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
+                <select id="kategori" wire:model.defer="kategori" 
+                    class="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                    <option value="">Pilih Kategori</option>
+                    <option value="Best Seller">Best Seller</option>
+                    <option value="Snack">Snack</option>
+                    <option value="Makanan Berat">Makanan Berat</option>
+                </select>
+                @error('kategori') 
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p> 
+                @enderror
+            </div>
+
+            <!-- Tag -->
+            <div>
+                <label for="tag" class="block text-sm font-medium text-gray-700 mb-1">Tag</label>
+                <select id="tag" wire:model.defer="tag" 
+                    class="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                    <option value="">Pilih tag</option>
+                    <option value="Recommended">★ Recommended</option>
+                    <option value="Terfavorit">❤︎ Terfavorit</option>
+                    <option value="Must Try">Must Try</option>
+                </select>
+                @error('tag') 
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p> 
+                @enderror
+            </div>
+        </div>
+        <!-- Deskripsi Singkat -->
+        <div class="mb-8">
+            <label for="short_description" class="block text-sm font-medium text-gray-700 mb-2">Deskripsi Singkat</label>
+            <textarea 
+                id="short_description" 
+                wire:model.defer="short_description"
+                rows="2"
+                class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                placeholder="Contoh: Nasi goreng spesial dengan bumbu rahasia"
+            ></textarea>
+            <p class="mt-1 text-xs text-gray-500">Deskripsi singkat yang akan ditampilkan di halaman menu (maks. 160 karakter).</p>
+            @error('short_description') 
+                <p class="mt-1 text-sm text-red-600">{{ $message }}</p> 
+            @enderror
+        </div>
+        <!-- Deskripsi -->
+        <div class="mb-8">
+            <label for="deskripsi" class="block text-sm font-medium text-gray-700 mb-2">Deskripsi Lengkap</label>
+            <div wire:ignore>
+                <textarea
+                    id="deskripsi"
+                    wire:model.defer="deskripsi"
+                    data-initial-value="{{ $deskripsi ?? '' }}"
+                    rows="6"
+                    class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                >{{ $deskripsi ?? '' }}</textarea>
+            </div>
+            @error('deskripsi')
+                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+            @enderror
+        </div>
+        <!-- Topping -->
         <div class="mb-6">
             <label class="font-semibold block mb-2">Topping</label>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 @foreach($toppings as $topping)
                     <div class="flex items-center gap-3 bg-gray-50 p-3 rounded border">
-                        <input type="checkbox" wire:model="selectedToppings.{{ $topping->id }}.aktif" class="checkbox">
+                        <input
+                            type="checkbox"
+                            wire:model="selectedToppings.{{ $topping->id }}.aktif"
+                            class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                        >
                         <span class="flex-1">{{ $topping->nama }}</span>
-                        <input type="number" wire:model="selectedToppings.{{ $topping->id }}.qty" class="input w-20" placeholder="Qty">
-                        <input type="number" wire:model="selectedToppings.{{ $topping->id }}.harga" class="input w-28" placeholder="Extra Price">
                     </div>
                 @endforeach
             </div>
+            @if($toppings->isEmpty())
+                <p class="text-sm text-gray-500 mt-2">Tidak ada topping tersedia.</p>
+            @endif
+        </div>
+        <!-- Bahan-bahan -->
+        <div class="mb-6">
+            <label class="font-semibold block mb-2">Bahan</label>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                @foreach($bahans as $bahan)
+                    <div class="flex items-center gap-3 bg-gray-50 p-3 rounded border">
+                        <input
+                            type="checkbox"
+                            wire:model="selectedBahans.{{ $bahan->id }}.aktif"
+                            class="checkbox"
+                        >
+                        <span class="flex-1">{{ $bahan->nama }}</span>
+                        <div class="flex items-center gap-2">
+                            <input
+                                type="number"
+                                wire:model.lazy="selectedBahans.{{ $bahan->id }}.qty"
+                                class="input w-32"
+                                placeholder="Qty"
+                            >
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+            @if($bahans->isEmpty())
+                <p class="text-sm text-gray-500 mt-2">Tidak ada bahan tersedia.</p>
+            @endif
         </div>
         <div class="pt-4 flex gap-3">
-            <flux:button type="submit" variant="primary">Simpan</flux:button>
+            <flux:button type="submit" wire:loading.attr="disabled">Simpan</flux:button>
             <flux:button href="{{ route('makanan.index') }}">Batal</flux:button>
         </div>
     </form>
 </div>
+   

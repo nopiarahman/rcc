@@ -31,7 +31,7 @@ class Create extends Component
     public function mount()
     {
         $this->toppings = Topping::where('kategori', 'makanan')->get();
-        $this->bahans = Bahan::where('kategori', 'makanan')->get();
+        $this->bahans = Bahan::where('jenis', 'makanan')->get();
     }
 
     public function simpan()
