@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             WebSettingsTableSeeder::class,
             SizeSugarToppingSeeder::class,
             ThemeColorSeeder::class,
+            DiscountCodeSeeder::class,
         ]);
     }
 }

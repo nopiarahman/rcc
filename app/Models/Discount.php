@@ -12,6 +12,7 @@ class Discount extends Model
 
     protected $fillable = [
         'minuman_id',
+        'makanan_id',
         'name',
         'description',
         'discount_amount',
@@ -34,6 +35,42 @@ class Discount extends Model
     public function minuman(): BelongsTo
     {
         return $this->belongsTo(Minuman::class);
+    }
+
+    /**
+     * Get the makanan that owns the discount.
+     */
+    public function makanan(): BelongsTo
+    {
+        return $this->belongsTo(Makanan::class);
+    }
+
+    /**
+     * Get the product (minuman or makanan) that owns the discount.
+     */
+    public function product()
+    {
+        if ($this->minuman_id) {
+            return $this->minuman();
+        } elseif ($this->makanan_id) {
+            return $this->makanan();
+        }
+        
+        return null;
+    }
+
+    /**
+     * Get the product name.
+     */
+    public function getProductNameAttribute(): string
+    {
+        if ($this->minuman) {
+            return $this->minuman->nama;
+        } elseif ($this->makanan) {
+            return $this->makanan->nama;
+        }
+        
+        return 'Unknown Product';
     }
 
     /**

@@ -9,6 +9,8 @@ use App\Models\Size;
 use App\Models\Sugar;
 use App\Models\Topping;
 use App\Models\WebSetting;
+use App\Models\DiscountCode;
+use App\Models\DiscountCodeUsage;
 
 class CartPage extends Component
 {
@@ -21,6 +23,10 @@ class CartPage extends Component
     public $total = 0;
     public $order_type = 'delivery';
     public $web_settings;
+    public $discount_code = '';
+    public $applied_discount = null;
+    public $discount_amount = 0;
+    public $discount_error = '';
 
     public function mount()
     {
@@ -47,8 +53,17 @@ class CartPage extends Component
         $originalTotal = collect($this->cart)->sum(function ($item) {
             return $item['qty'] * $item['price'];
         });
+        
+        // Apply discount if valid
+        $this->discount_amount = 0;
+        if ($this->applied_discount) {
+            $this->discount_amount = $this->applied_discount->calculateDiscount($originalTotal);
+        }
+        
+        $totalAfterDiscount = $originalTotal - $this->discount_amount;
+        
         // Round down to nearest 1000
-        $this->total = floor($originalTotal / 1000) * 1000;
+        $this->total = floor($totalAfterDiscount / 1000) * 1000;
     }
     public function increaseQty($key)
     {
@@ -95,6 +110,67 @@ class CartPage extends Component
         
         // Clear Local Storage
         $this->dispatch('clearLocalCart');
+        
+        // Clear discount code when cart is cleared
+        $this->clearDiscountCode();
+    }
+    
+    public function applyDiscountCode()
+    {
+        $this->discount_error = '';
+        
+        if (empty($this->discount_code)) {
+            $this->discount_error = 'Please enter a discount code.';
+            return;
+        }
+        
+        $discountCode = DiscountCode::where('code', strtoupper($this->discount_code))->first();
+        
+        if (!$discountCode) {
+            $this->discount_error = 'Invalid discount code.';
+            return;
+        }
+        
+        $cartTotal = collect($this->cart)->sum(function ($item) {
+            return $item['qty'] * $item['price'];
+        });
+        
+        if (!$discountCode->canBeApplied($cartTotal)) {
+            if (!$discountCode->isActive()) {
+                $this->discount_error = 'This discount code is not active or has expired.';
+            } elseif ($cartTotal < $discountCode->minimum_purchase) {
+                $this->discount_error = 'Minimum purchase of Rp ' . number_format($discountCode->minimum_purchase, 0, ',', '.') . ' required to use this code.';
+            } else {
+                $this->discount_error = 'This discount code cannot be applied.';
+            }
+            return;
+        }
+        
+        $this->applied_discount = $discountCode;
+        $this->updateTotal();
+        $this->dispatch('discount-applied');
+    }
+    
+    public function clearDiscountCode()
+    {
+        $this->discount_code = '';
+        $this->applied_discount = null;
+        $this->discount_amount = 0;
+        $this->discount_error = '';
+        $this->updateTotal();
+    }
+    
+    public function updatedDiscountCode()
+    {
+        // Clear discount error when user types
+        $this->discount_error = '';
+        
+        // Auto-apply if discount was previously applied and user changes the code
+        if ($this->applied_discount && strtoupper($this->discount_code) !== $this->applied_discount->code) {
+            $this->applied_discount = null;
+            $this->discount_amount = 0;
+            $this->updateTotal();
+        }
     }
     public function checkout()
     {
@@ -216,9 +292,17 @@ class CartPage extends Component
     
         $total = $detailedCart->sum('subtotal');
         
+        // Apply discount if valid
+        $discountAmount = 0;
+        if ($this->applied_discount) {
+            $discountAmount = $this->applied_discount->calculateDiscount($total);
+        }
+        
+        $totalAfterDiscount = $total - $discountAmount;
+        
         // Calculate rounded total (down to nearest 1000)
-        $roundedTotal = floor($total / 1000) * 1000;
-        $roundingAmount = $roundedTotal - $total;
+        $roundedTotal = floor($totalAfterDiscount / 1000) * 1000;
+        $roundingAmount = $roundedTotal - $totalAfterDiscount;
         
         // Get web settings for order mode
         $webSettings = $this->web_settings ?: WebSetting::first();
@@ -227,6 +311,8 @@ class CartPage extends Component
             'cartItems' => $detailedCart,
             'total' => $roundedTotal, // Use rounded total as the main total
             'originalTotal' => $total, // Keep original total for reference
+            'totalAfterDiscount' => $totalAfterDiscount, // Total after discount but before rounding
+            'discountAmount' => $discountAmount, // Discount amount applied
             'roundingAmount' => $roundingAmount, // The amount rounded (can be positive or negative)
             'orderMode' => $webSettings->order_mode,
             'web_settings' => $webSettings
@@ -293,6 +379,33 @@ class CartPage extends Component
         // Store session ID in cookie for persistence
         \Illuminate\Support\Facades\Cookie::queue('user_session', $sessionId, 60 * 24 * 30); // 30 days
         
+        // Calculate totals
+        $cartTotal = collect($this->cart)->sum(function ($item) {
+            return $item['qty'] * $item['price'];
+        });
+        
+        $discountAmount = 0;
+        $discountCodeId = null;
+        
+        if ($this->applied_discount) {
+            $discountAmount = $this->applied_discount->calculateDiscount($cartTotal);
+            $discountCodeId = $this->applied_discount->id;
+            
+            // Apply the discount code (increment usage)
+            $this->applied_discount->apply();
+            
+            // Create discount usage record
+            DiscountCodeUsage::create([
+                'discount_code_id' => $discountCodeId,
+                'pesanan_id' => $pesanan->id ?? null, // Will be set after order creation
+                'discount_amount' => $discountAmount,
+                'original_total' => $cartTotal,
+            ]);
+        }
+        
+        $totalAfterDiscount = $cartTotal - $discountAmount;
+        $finalTotal = floor($totalAfterDiscount / 1000) * 1000;
+        
         // Create the order
         $pesanan = \App\Models\Pesanan::create([
             'user_id' => auth()->id(),
@@ -301,12 +414,21 @@ class CartPage extends Component
             'alamat_pengantaran' => $this->order_type === 'delivery' ? $this->alamat_pengantaran : 'Takeaway',
             'waktu_pengantaran' => $this->waktu_pengantaran,
             'catatan' => $this->catatan ?? null,
-            'total' => (int) $this->total,
-            'total_harga' => $this->total,
+            'total' => (int) $finalTotal,
+            'total_harga' => $finalTotal,
+            'discount_code_id' => $discountCodeId,
+            'discount_amount' => $discountAmount,
             'status' => 'menunggu_konfirmasi',
             'order_type' => $this->order_type,
             'nomor_pesanan' => 'ORD-' . now()->format('Ymd') . '-' . strtoupper(uniqid())
         ]);
+        
+        // Update discount usage with order ID
+        if ($discountCodeId) {
+            DiscountCodeUsage::where('discount_code_id', $discountCodeId)
+                ->whereNull('pesanan_id')
+                ->update(['pesanan_id' => $pesanan->id]);
+        }
         
         // Create order details
         foreach ($cartItems as $item) {
@@ -360,7 +482,13 @@ class CartPage extends Component
             }
         }
     
-        $message .= "\nTotal: Rp " . number_format($this->total, 0, ',', '.');
+        $message .= "\nSubtotal: Rp " . number_format($cartTotal, 0, ',', '.');
+        
+        if ($discountAmount > 0) {
+            $message .= "\nDiscount ({$this->applied_discount->code}): -Rp " . number_format($discountAmount, 0, ',', '.');
+        }
+        
+        $message .= "\nTotal: Rp " . number_format($finalTotal, 0, ',', '.');
         $message .= "\n\nNama: {$this->nama_pemesan}";
         $message .= "\nJenis Pesanan: " . ($this->order_type === 'delivery' ? 'Antar ke Alamat' : 'Ambil Sendiri');
         if ($this->order_type === 'delivery') {
@@ -373,6 +501,9 @@ class CartPage extends Component
         session()->forget('cart');
         $this->dispatch('cartUpdated');
         $this->dispatch('clearLocalCart');
+        
+        // Clear discount code
+        $this->clearDiscountCode();
         
         // Redirect to WhatsApp
         $wa = WebSetting::first()->whatsapp_number;

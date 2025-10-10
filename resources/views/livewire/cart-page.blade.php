@@ -137,17 +137,68 @@
     
     {{-- Footer (tetap di bawah) --}}
     <div class="footer fixed-bottom bg-white p-3 shadow-lg" style="margin-bottom: 2.5rem">
+        {{-- Discount Code Section --}}
+        <div class="card mb-3">
+            <div class="card-body">
+                <h6 class="card-title mb-3">Discount Code</h6>
+                
+                @if($applied_discount)
+                    <div class="alert alert-success d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ $applied_discount->code }}</strong> applied
+                            <div class="small">{{ $applied_discount->name }} - {{ $applied_discount->formatted_discount }}</div>
+                        </div>
+                        <button wire:click="clearDiscountCode" class="btn btn-sm btn-outline-danger">Remove</button>
+                    </div>
+                @else
+                    <div class="input-group">
+                        <input type="text"
+                               class="form-control"
+                               wire:model.live="discount_code"
+                               placeholder="Enter discount code"
+                               wire:keydown.enter="applyDiscountCode">
+                        <button wire:click="applyDiscountCode" class="btn btn-theme" type="button">Apply</button>
+                    </div>
+                    
+                    @if($discount_error)
+                        <div class="text-danger small mt-2">{{ $discount_error }}</div>
+                    @endif
+                @endif
+            </div>
+        </div>
+        
         <div class="text-center mb-2">
-            @if($roundingAmount != 0)
-                <div class="mb-2">
-                    <span class="text-muted small">Sebelum pembulatan: Rp{{ number_format($originalTotal, 0, ',', '.') }}</span><br>
-                    <span class="text-muted small">Pembulatan: <span class="{{ $roundingAmount > 0 ? 'text-success' : 'text-danger' }}">
-                        {{ $roundingAmount > 0 ? '+' : '' }}{{ number_format($roundingAmount, 0, ',', '.') }}
-                    </span></span>
+            <!-- Subtotal -->
+            <div class="d-flex justify-content-between mb-1">
+                <span>Subtotal:</span>
+                <span>Rp{{ number_format($originalTotal, 0, ',', '.') }}</span>
+            </div>
+            
+            <!-- Discount -->
+            @if($discountAmount > 0)
+                <div class="d-flex justify-content-between mb-1 text-success">
+                    <span>Discount {{ $applied_discount->code }}:</span>
+                    <span>-Rp{{ number_format($discountAmount, 0, ',', '.') }}</span>
                 </div>
             @endif
-            <h5 class="fw-bold mb-1">Total: Rp{{ number_format($total, 0, ',', '.') }}</h5>
-            <p class="text-muted small mb-2">Pastikan pesanan anda benar, siapkan uang pas jika memungkinkan, Jazakallahu khairan</p>
+            
+            <!-- Rounding -->
+            @if($roundingAmount != 0)
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="text-muted small">Pembulatan:</span>
+                    <span class="{{ $roundingAmount > 0 ? 'text-success' : 'text-danger' }}">
+                        {{ $roundingAmount > 0 ? '+' : '' }}Rp{{ number_format(abs($roundingAmount), 0, ',', '.') }}
+                    </span>
+                </div>
+            @endif
+            
+            <!-- Total -->
+            <div class="d-flex justify-content-between fw-bold">
+                <span>Total:</span>
+                <span>Rp{{ number_format($total, 0, ',', '.') }}</span>
+            </div>
+            
+            <p class="text-muted small mb-2 mt-2">Pastikan pesanan anda benar, siapkan uang pas jika memungkinkan, Jazakallahu khairan</p>
         </div>
         <button id="checkoutBtn" type="button" class="btn btn-theme w-100 mb-2">
             Checkout
