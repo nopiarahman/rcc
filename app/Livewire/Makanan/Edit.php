@@ -84,22 +84,36 @@ class Edit extends Component
 
         // Handle photo upload
         if ($this->foto) {
-            $this->makanan->clearMediaCollection('gambar');
-            $this->makanan->addMedia($this->foto->getRealPath())
-                ->usingName($this->foto->getClientOriginalName())
-                ->toMediaCollection('gambar');
+            try {
+                $this->makanan->clearMediaCollection('gambar');
+                $this->makanan->addMedia($this->foto->getRealPath())
+                    ->usingFileName($this->foto->getClientOriginalName())
+                    ->toMediaCollection('gambar');
+            } catch (\Exception $e) {
+                \Log::error('Failed to upload foto: ' . $e->getMessage());
+            }
         }
 
-        $this->makanan->toppings()->sync(
-            collect($this->selectedToppings)
-                ->filter(fn($aktif) => $aktif)
-                ->keys()
-        );
-        $this->makanan->bahans()->sync(
-            collect($this->selectedBahans)
-                ->filter(fn($aktif) => $aktif)
-                ->keys()
-        );
+        // Sync Toppings with extra_price
+        $syncToppings = collect($this->selectedToppings)
+            ->filter(fn($data) => isset($data['aktif']) && $data['aktif'])
+            ->mapWithKeys(function($data, $id) {
+                return [$id => [
+                    'extra_price' => isset($data['harga']) ? $data['harga'] : 0
+                ]];
+            })->toArray();
+        $this->makanan->toppings()->sync($syncToppings);
+
+        // Sync Bahans with qty and harga
+        $syncBahans = collect($this->selectedBahans)
+            ->filter(fn($data) => isset($data['aktif']) && $data['aktif'])
+            ->mapWithKeys(function($data, $id) {
+                return [$id => [
+                    'jumlah' => isset($data['qty']) ? $data['qty'] : 0,
+                    'harga_satuan' => isset($data['harga']) ? $data['harga'] : 0
+                ]];
+            })->toArray();
+        $this->makanan->bahans()->sync($syncBahans);
 
         session()->flash('success', 'Makanan berhasil diperbarui!');
         return redirect()->route('makanan.index');

@@ -67,8 +67,8 @@
                 <div class="shrink-0">
                     @if ($foto)
                         <img src="{{ $foto->temporaryUrl() }}" alt="Preview" class="h-32 w-32 object-cover rounded-lg border-2 border-dashed border-gray-300">
-                    @elseif($makanan->getFirstMediaUrl('foto'))
-                        <img src="{{ $makanan->getFirstMediaUrl('foto', 'preview') }}" alt="{{ $makanan->nama }}" class="h-32 w-32 object-cover rounded-lg border-2 border-dashed border-gray-300">
+                    @elseif($makanan->getFirstMediaUrl('gambar'))
+                        <img src="{{ $makanan->getFirstMediaUrl('gambar', 'preview') }}" alt="{{ $makanan->nama }}" class="h-32 w-32 object-cover rounded-lg border-2 border-dashed border-gray-300">
                     @else
                         <div class="h-32 w-32 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">

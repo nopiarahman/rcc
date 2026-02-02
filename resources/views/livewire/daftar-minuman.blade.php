@@ -184,7 +184,7 @@
                                         </div>
                                     </div>
                                 @endif
-                                <img src="{{ $item->getFirstMediaUrl('foto') ?: asset('images/no-image.png') }}"
+                                <img src="{{ $item->getFirstMediaUrl('gambar') ?: asset('images/no-image.png') }}"
                                      class="card-img-top object-fit-cover fixed-img-height rounded-4 p-2"
                                      alt="{{ $item->nama }}">
                                 <div class="card-body p-2">

@@ -54,8 +54,8 @@
     <flux:dropdown>
         <flux:button size="sm" icon:trailing="chevron-down">Aksi</flux:button>
         <flux:menu>
-            <flux:menu.item 
-                @click="$dispatch('open-modal-foto', { url: '{{ $makanan->getFirstMediaUrl('foto') }}' })"
+            <flux:menu.item
+                @click="$dispatch('open-modal-foto', { url: '{{ $makanan->getFirstMediaUrl('gambar') }}' })"
             >
                 Lihat Foto
             </flux:menu.item>

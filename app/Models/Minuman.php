@@ -98,11 +98,56 @@ class Minuman extends Model implements HasMedia
     {
         $activeDiscount = $this->activeDiscount();
         $defaultPrice = $this->default_price;
-        
+
         if (!$activeDiscount) {
             return $defaultPrice;
         }
-        
+
         return $activeDiscount->calculateDiscountedPrice($defaultPrice);
+    }
+
+    /**
+     * Register media collections
+     */
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('foto')
+            ->singleFile()
+            ->registerMediaConversions(function (Media $media = null) {
+                $this->addMediaConversion('thumb')
+                    ->width(150)
+                    ->height(150);
+
+                $this->addMediaConversion('preview')
+                    ->width(300)
+                    ->height(300);
+            });
+    }
+
+    /**
+     * Get the first media URL with fallback to custom directory
+     */
+    public function getFirstMediaUrlWithFallback($conversionName = ''): string
+    {
+        // Try to get from Spatie Media Library first
+        $url = $this->getFirstMediaUrl('foto', $conversionName);
+
+        if ($url) {
+            return $url;
+        }
+
+        // Fallback to custom directory if not found in Media Library
+        // Check for any file that starts with the ID in the custom directory
+        $customDir = storage_path('app/public/minuman_images/');
+        if (is_dir($customDir)) {
+            $files = scandir($customDir);
+            foreach ($files as $file) {
+                if (strpos($file, (string)$this->id) === 0 && pathinfo($file, PATHINFO_EXTENSION) === 'jpg') {
+                    return url('storage/minuman_images/' . $file);
+                }
+            }
+        }
+
+        return asset('images/no-image.png');
     }
 }

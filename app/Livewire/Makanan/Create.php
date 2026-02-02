@@ -59,9 +59,13 @@ class Create extends Component
 
         // Handle foto upload with Spatie Media Library
         if ($this->foto) {
-            $makanan->addMedia($this->foto->getRealPath())
-                ->usingFileName($this->foto->getClientOriginalName())
-                ->toMediaCollection('foto');
+            try {
+                $makanan->addMedia($this->foto->getRealPath())
+                    ->usingFileName($this->foto->getClientOriginalName())
+                    ->toMediaCollection('gambar');
+            } catch (\Exception $e) {
+                \Log::error('Failed to upload foto: ' . $e->getMessage());
+            }
         }
 
         // Sync Toppings with extra_price

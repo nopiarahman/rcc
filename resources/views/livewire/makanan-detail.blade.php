@@ -212,13 +212,13 @@
             @endif
         </div>
         {{-- Gambar --}}
-        <img 
-            wire:ignore.self 
-            src="{{ $makanan->getFirstMediaUrl('foto') }}" 
-            alt="{{ $makanan->nama }}" 
-            class="sticky-image" 
-            style="cursor: pointer;" 
-            data-bs-toggle="modal" 
+        <img
+            wire:ignore.self
+            src="{{ $makanan->getFirstMediaUrl('gambar') }}"
+            alt="{{ $makanan->nama }}"
+            class="sticky-image"
+            style="cursor: pointer;"
+            data-bs-toggle="modal"
             data-bs-target="#imageModal"
         >
 
@@ -370,9 +370,9 @@
                     <!-- Close button as overlay -->
                     <button type="button" class="btn-close position-absolute top-0 end-0 bg-white rounded-circle p-2 m-3 shadow-sm" style="z-index: 1050;" data-bs-dismiss="modal" aria-label="Close"></button>
                     
-                    <img 
-                        src="{{ $makanan->getFirstMediaUrl('foto') }}" 
-                        alt="{{ $makanan->nama }}" 
+                    <img
+                        src="{{ $makanan->getFirstMediaUrl('gambar') }}"
+                        alt="{{ $makanan->nama }}"
                         class="img-fluid rounded"
                     >
                 </div>
