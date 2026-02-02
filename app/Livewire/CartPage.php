@@ -393,14 +393,6 @@ class CartPage extends Component
             
             // Apply the discount code (increment usage)
             $this->applied_discount->apply();
-            
-            // Create discount usage record
-            DiscountCodeUsage::create([
-                'discount_code_id' => $discountCodeId,
-                'pesanan_id' => $pesanan->id ?? null, // Will be set after order creation
-                'discount_amount' => $discountAmount,
-                'original_total' => $cartTotal,
-            ]);
         }
         
         $totalAfterDiscount = $cartTotal - $discountAmount;
@@ -423,11 +415,14 @@ class CartPage extends Component
             'nomor_pesanan' => 'ORD-' . now()->format('Ymd') . '-' . strtoupper(uniqid())
         ]);
         
-        // Update discount usage with order ID
+        // Create discount usage record with order ID
         if ($discountCodeId) {
-            DiscountCodeUsage::where('discount_code_id', $discountCodeId)
-                ->whereNull('pesanan_id')
-                ->update(['pesanan_id' => $pesanan->id]);
+            DiscountCodeUsage::create([
+                'discount_code_id' => $discountCodeId,
+                'pesanan_id' => $pesanan->id,
+                'discount_amount' => $discountAmount,
+                'original_total' => $cartTotal,
+            ]);
         }
         
         // Create order details
