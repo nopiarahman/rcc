@@ -3,9 +3,15 @@
 
 <title>{{ $title ?? config('app.name') }}</title>
 
-<link rel="icon" href="{{asset('favicon.png')}}" sizes="any">
-<link rel="icon" href="{{asset('favicon.png')}}" type="image/svg+xml">
-<link rel="apple-touch-icon" href="{{asset('touch-icon.png')}}">
+    @if($webSettings->favicon_path ?? false)
+        <link rel="icon" href="{{ asset('storage/' . $webSettings->favicon_path) }}" sizes="any">
+        <link rel="icon" href="{{ asset('storage/' . $webSettings->favicon_path) }}" type="image/svg+xml">
+        <link rel="apple-touch-icon" href="{{ asset('storage/' . $webSettings->favicon_path) }}">
+    @else
+        <link rel="icon" href="{{ asset('favicon.png') }}" sizes="any">
+        <link rel="icon" href="{{ asset('favicon.png') }}" type="image/svg+xml">
+        <link rel="apple-touch-icon" href="{{ asset('touch-icon.png') }}">
+    @endif
 
 <link rel="preconnect" href="https://fonts.bunny.net">
 <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
