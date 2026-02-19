@@ -55,7 +55,15 @@
 <head>
     <meta charset="UTF-8">
     <title>Selamat Datang {{ $webSettings->site_name ?? 'Raihaan Coffee Corner' }}</title>
-    <link rel="shortcut icon" href="{{$webSettings->favicon_path}}" type="image/x-icon">
+        @if($webSettings->favicon_path ?? false)
+        <link rel="icon" href="{{ asset('storage/' . $webSettings->favicon_path) }}" sizes="any">
+        <link rel="icon" href="{{ asset('storage/' . $webSettings->favicon_path) }}" type="image/svg+xml">
+        <link rel="apple-touch-icon" href="{{ asset('storage/' . $webSettings->favicon_path) }}">
+    @else
+        <link rel="icon" href="{{ asset('favicon.png') }}" sizes="any">
+        <link rel="icon" href="{{ asset('favicon.png') }}" type="image/svg+xml">
+        <link rel="apple-touch-icon" href="{{ asset('touch-icon.png') }}">
+    @endif
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="//unpkg.com/alpinejs" defer></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
