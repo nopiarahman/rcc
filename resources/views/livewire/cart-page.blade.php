@@ -93,11 +93,19 @@
             <div class="card mb-2">
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center">
+                        @if($item['type']==="makanan")
+                        <img src="{{ $item['model']?->getFirstMediaUrl('gambar') ?? ($item['type'] === 'minuman' ? asset('default-drink.jpg') : asset('default-food.jpg')) }}"
+                             class="rounded me-3"
+                             alt="{{ $item['name'] }}"
+                             width="60" height="60"
+                             style="object-fit: cover; object-position: center;">
+                        @else
                         <img src="{{ $item['model']?->getFirstMediaUrl('foto') ?? ($item['type'] === 'minuman' ? asset('default-drink.jpg') : asset('default-food.jpg')) }}"
                              class="rounded me-3"
                              alt="{{ $item['name'] }}"
                              width="60" height="60"
                              style="object-fit: cover; object-position: center;">
+                        @endif
                         <div class="text-muted" style="font-size: 10pt">
                             <h6 class="mb-1 fw-bold text-theme">{{ $item['name'] }}</h6>
                             <small>
