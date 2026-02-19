@@ -1,4 +1,7 @@
 <!DOCTYPE html>
+@php
+    $webSettings = \App\Models\WebSetting::first();
+@endphp
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
     <head>
         @include('partials.head')
@@ -9,7 +12,7 @@
                 <a href="{{ route('home') }}" class="flex flex-col items-center gap-2 font-medium" wire:navigate>
                     <span class="flex h-9 w-9 mb-1 items-center justify-center rounded-md">
                         {{-- <x-app-logo-icon class="size-9 fill-current text-black dark:text-white" /> --}}
-                        <img src="{{asset('favicon.png')}}" alt="">
+                        <img src="{{ $webSettings->favicon_path ? asset('storage/' . $webSettings->favicon_path) : asset('favicon.png') }}" alt="">
                     </span>
                     <span class="sr-only">{{ config('app.name', 'Laravel') }}</span>
                 </a>
@@ -20,4 +23,6 @@
         </div>
         @fluxScripts
     </body>
+</html>
+
 </html>
