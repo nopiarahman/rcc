@@ -46,10 +46,10 @@ class MenuPage extends Component
     {
         $this->minumans = Minuman::when($this->filterKategori, function ($query) {
             $query->where('kategori', $this->filterKategori);
-        })->latest()->get();
+        })->orderBy('nama', 'asc')->get();
         $this->makanans = \App\Models\Makanan::when($this->filterKategori, function ($query) {
             $query->where('kategori', $this->filterKategori);
-        })->latest()->get();
+        })->orderBy('nama', 'asc')->get();
     }
 
     public function render()
