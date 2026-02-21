@@ -1,4 +1,4 @@
-<div class="container p-4 bg-white mb-5" style="height: 100vh; display: flex; flex-direction: column;" wire:poll.60s>
+<div class="container p-4 bg-white" style="min-height: 100vh; padding-bottom: 120px;" wire:poll.60s>
     @php
         // Default theme colors if not set
         $themeColor = '#4a5d4a';
@@ -80,16 +80,15 @@
         <a wire:navigate href="{{ route('home') }}" class="btn btn-light rounded-circle shadow-sm">
             <i class="fas fa-chevron-left"></i>
         </a>
-        <h5 class="fw-bold pt-3 pe-2">Keranjang</h5>
+        <h5 class="fw-bold pt-3 pe-2" style="font-size: 1.1rem;">Keranjang</h5>
     </div>
 
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="mb-0 small">Jumlah Keranjang: {{ count($cart) }}</h5>
+        <h5 class="mb-0 small" style="font-size: 0.85rem;">Jumlah Keranjang: {{ count($cart) }}</h5>
         <button wire:click="clearCart" class="btn btn-link text-danger text-decoration-none btn-sm">Kosongkan Keranjang</button>
     </div>
-    {{-- Scrollable Cart --}}
-    <div  style="padding-bottom:200px;">
-        @forelse($cartItems as $item)
+    {{-- Cart Items --}}
+    @forelse($cartItems as $item)
             <div class="card mb-2">
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center">
@@ -106,8 +105,8 @@
                              width="60" height="60"
                              style="object-fit: cover; object-position: center;">
                         @endif
-                        <div class="text-muted" style="font-size: 10pt">
-                            <h6 class="mb-1 fw-bold text-theme">{{ $item['name'] }}</h6>
+                        <div class="text-muted" style="font-size: 9pt">
+                            <h6 class="mb-1 fw-bold text-theme" style="font-size: 0.9rem;">{{ $item['name'] }}</h6>
                             <small>
                                 @if($item['type'] === 'minuman')
                                     @if($item['size'])Size: {{ $item['size'] }} |@endif
@@ -141,14 +140,13 @@
         @empty
             <div class="alert alert-info">Keranjang kosong.</div>
         @endforelse
-    </div>
     
-    {{-- Footer (tetap di bawah) --}}
-    <div class="footer fixed-bottom bg-white p-3 shadow-lg" style="margin-bottom: 2.5rem">
+    {{-- Footer --}}
+    <div class="footer bg-white p-3 shadow-lg mb-5">
         {{-- Discount Code Section --}}
         <div class="card mb-3">
             <div class="card-body">
-                <h6 class="card-title mb-3">Discount Code</h6>
+                <h6 class="card-title mb-3" style="font-size: 0.9rem;">Discount Code</h6>
                 
                 @if($applied_discount)
                     <div class="alert alert-success d-flex justify-content-between align-items-center">
@@ -178,23 +176,23 @@
         <div class="text-center mb-2">
             <!-- Subtotal -->
             <div class="d-flex justify-content-between mb-1">
-                <span>Subtotal:</span>
-                <span>Rp{{ number_format($originalTotal, 0, ',', '.') }}</span>
+                <span style="font-size: 0.85rem;">Subtotal:</span>
+                <span style="font-size: 0.85rem;">Rp{{ number_format($originalTotal, 0, ',', '.') }}</span>
             </div>
             
             <!-- Discount -->
             @if($discountAmount > 0)
                 <div class="d-flex justify-content-between mb-1 text-success">
-                    <span>Discount {{ $applied_discount->code }}:</span>
-                    <span>-Rp{{ number_format($discountAmount, 0, ',', '.') }}</span>
+                    <span style="font-size: 0.85rem;">Discount {{ $applied_discount->code }}:</span>
+                    <span style="font-size: 0.85rem;">-Rp{{ number_format($discountAmount, 0, ',', '.') }}</span>
                 </div>
             @endif
             
             <!-- Rounding -->
             @if($roundingAmount != 0)
                 <div class="d-flex justify-content-between mb-1">
-                    <span class="text-muted small">Pembulatan:</span>
-                    <span class="{{ $roundingAmount > 0 ? 'text-success' : 'text-danger' }}">
+                    <span class="text-muted small" style="font-size: 0.75rem;">Pembulatan:</span>
+                    <span class="{{ $roundingAmount > 0 ? 'text-success' : 'text-danger' }}" style="font-size: 0.75rem;">
                         {{ $roundingAmount > 0 ? '+' : '' }}Rp{{ number_format(abs($roundingAmount), 0, ',', '.') }}
                     </span>
                 </div>
@@ -202,11 +200,11 @@
             
             <!-- Total -->
             <div class="d-flex justify-content-between fw-bold">
-                <span>Total:</span>
-                <span>Rp{{ number_format($total, 0, ',', '.') }}</span>
+                <span style="font-size: 0.9rem;">Total:</span>
+                <span style="font-size: 0.9rem;">Rp{{ number_format($total, 0, ',', '.') }}</span>
             </div>
             
-            <p class="text-muted small mb-2 mt-2">Pastikan pesanan anda benar, siapkan uang pas jika memungkinkan, Jazakallahu khairan</p>
+            <p class="text-muted small mb-2 mt-2" style="font-size: 0.75rem;">Pastikan pesanan anda benar, siapkan uang pas jika memungkinkan, Jazakallahu khairan</p>
         </div>
         <button id="checkoutBtn" type="button" class="btn btn-theme w-100 mb-2">
             Checkout
