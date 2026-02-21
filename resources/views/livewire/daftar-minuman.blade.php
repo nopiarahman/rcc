@@ -86,7 +86,7 @@
     <div>
         @php
             $collections = $filterKategori == ''
-                ? $minumans->groupBy('kategori')
+                ? $minumans->groupBy('kategori')->sortKeys()
                 : collect([$filterKategori => $minumans->where('kategori', $filterKategori)]);
         @endphp
     
@@ -167,7 +167,7 @@
         <h5 class="fw-bold mb-2 text-theme">Makanan {{$filterKategori }}</h5>
         @php
             $collectionsMakanan = $filterKategori == ''
-                ? $makanans->groupBy('kategori')
+                ? $makanans->groupBy('kategori')->sortKeys()
                 : collect([$filterKategori => $makanans->where('kategori', $filterKategori)]);
         @endphp
         @forelse ($collectionsMakanan as $kategori => $items)
