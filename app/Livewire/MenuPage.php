@@ -22,11 +22,13 @@ class MenuPage extends Component
         $this->allKategoris = Minuman::distinct()
             ->pluck('kategori')
             ->filter()
+            ->sort()
             ->values()
             ->toArray();
         $this->allKategoriMakanan = \App\Models\Makanan::distinct()
             ->pluck('kategori')
             ->filter()
+            ->sort()
             ->values()
             ->toArray();
         $this->banners = Banner::where('status', true)
