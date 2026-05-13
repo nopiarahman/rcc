@@ -120,28 +120,26 @@ class CartPage extends Component
         $this->discount_error = '';
         
         if (empty($this->discount_code)) {
-            $this->discount_error = 'Please enter a discount code.';
+            $this->discount_error = 'Masukkan kode diskon terlebih dahulu.';
             return;
         }
-        
-        $discountCode = DiscountCode::where('code', strtoupper($this->discount_code))->first();
-        
+
+        $discountCode = DiscountCode::where('code', strtoupper(trim($this->discount_code)))->first();
+
         if (!$discountCode) {
-            $this->discount_error = 'Invalid discount code.';
+            $this->discount_error = 'Kode diskon tidak valid.';
             return;
         }
-        
-        $cartTotal = collect($this->cart)->sum(function ($item) {
-            return $item['qty'] * $item['price'];
-        });
-        
+
+        $cartTotal = collect($this->cart)->sum(fn($item) => $item['qty'] * $item['price']);
+
         if (!$discountCode->canBeApplied($cartTotal)) {
             if (!$discountCode->isActive()) {
-                $this->discount_error = 'This discount code is not active or has expired.';
+                $this->discount_error = 'Kode diskon sudah tidak aktif atau telah kadaluarsa.';
             } elseif ($cartTotal < $discountCode->minimum_purchase) {
-                $this->discount_error = 'Minimum purchase of Rp ' . number_format($discountCode->minimum_purchase, 0, ',', '.') . ' required to use this code.';
+                $this->discount_error = 'Minimum pembelian Rp ' . number_format($discountCode->minimum_purchase, 0, ',', '.') . ' untuk menggunakan kode ini.';
             } else {
-                $this->discount_error = 'This discount code cannot be applied.';
+                $this->discount_error = 'Kode diskon tidak dapat digunakan.';
             }
             return;
         }
@@ -215,78 +213,78 @@ class CartPage extends Component
     }
     public function render()
     {
-        $detailedCart = collect($this->cart)->map(function ($item, $key) {
-            $type = $item['type'] ?? 'minuman'; // Default to 'minuman' for backward compatibility
-            $model = null;
-            $size = null;
-            $sugar = null;
-            $topping = null;
-            
+        // Preload semua data sekaligus untuk menghindari N+1 queries
+        // Item minuman lama mungkin tidak punya field 'type', default ke 'minuman'
+        $cart = $this->cart;
+        $minumanIds = collect($cart)->filter(fn($i) => ($i['type'] ?? 'minuman') === 'minuman')->pluck('id')->unique()->filter()->values()->all();
+        $makananIds  = collect($cart)->filter(fn($i) => ($i['type'] ?? 'minuman') === 'makanan')->pluck('id')->unique()->filter()->values()->all();
+        $sizeIds    = collect($cart)->pluck('size_id')->unique()->filter()->values()->all();
+        $sugarIds   = collect($cart)->pluck('sugar_id')->unique()->filter()->values()->all();
+        $toppingIds = collect($cart)->pluck('topping_id')->unique()->filter()->values()->all();
+
+        $minumans = $minumanIds ? Minuman::whereIn('id', $minumanIds)->get()->keyBy('id') : collect();
+        $makanans = $makananIds ? Makanan::whereIn('id', $makananIds)->get()->keyBy('id') : collect();
+        $sizes    = $sizeIds    ? Size::whereIn('id', $sizeIds)->get()->keyBy('id')       : collect();
+        $sugars   = $sugarIds   ? Sugar::whereIn('id', $sugarIds)->get()->keyBy('id')     : collect();
+        $toppings = $toppingIds ? Topping::whereIn('id', $toppingIds)->get()->keyBy('id') : collect();
+
+        $detailedCart = collect($cart)->map(function ($item, $key) use ($minumans, $makanans, $sizes, $sugars, $toppings) {
+            $type = $item['type'] ?? 'minuman';
+
             if ($type === 'minuman') {
-                $model = Minuman::find($item['id']);
-                // Safely access array keys with null coalescing operator
-                $sizeId = $item['size_id'] ?? null;
-                $sugarId = $item['sugar_id'] ?? null;
-                $toppingId = $item['topping_id'] ?? null;
-                
-                $size = $sizeId ? Size::find($sizeId) : null;
-                $sugar = $sugarId ? Sugar::find($sugarId) : null;
-                $topping = $toppingId ? Topping::find($toppingId) : null;
-                $name = $model?->nama ?? 'Unknown Drink';
+                $model  = $minumans[$item['id']] ?? null;
+                $size   = isset($item['size_id'])   ? ($sizes[$item['size_id']]     ?? null) : null;
+                $sugar  = isset($item['sugar_id'])  ? ($sugars[$item['sugar_id']]   ?? null) : null;
+                $topping = isset($item['topping_id']) ? ($toppings[$item['topping_id']] ?? null) : null;
+                $name   = $model?->nama ?? 'Unknown Drink';
             } else {
-                $model = Makanan::find($item['id']);
-                $toppingId = $item['topping_id'] ?? null;
-                $topping = $toppingId ? Topping::find($toppingId) : null;
-                $name = $model?->nama ?? 'Unknown Food';
+                $model  = $makanans[$item['id']] ?? null;
+                $topping = isset($item['topping_id']) ? ($toppings[$item['topping_id']] ?? null) : null;
+                $name   = $model?->nama ?? 'Unknown Food';
+                $size   = null;
+                $sugar  = null;
             }
-            
-            // Calculate regular price (without discount)
+
             $regularPrice = null;
             $discountInfo = null;
-            
+
             if ($model && $model->activeDiscount()) {
-                $discount = $model->activeDiscount();
-                
-                // Get the base price for this specific configuration
-                $basePrice = $model->harga;
-                
+                $discount  = $model->activeDiscount();
+                $basePrice = $type === 'minuman'
+                    ? ($model->harga ?? $model->base_price ?? 0)
+                    : ($model->base_price ?? 0);
+
                 if ($type === 'minuman') {
-                    if ($size) $basePrice += $size->price;
-                    if ($sugar) $basePrice += $sugar->price;
+                    if ($size)    $basePrice += $size->price;
+                    if ($sugar)   $basePrice += $sugar->price;
                 }
-                
-                if ($topping) {
-                    $basePrice += $topping->default_price;
-                }
-                
-                // Calculate regular price
+                if ($topping) $basePrice += $topping->default_price;
+
                 $regularPrice = $basePrice;
-                
-                // Get discount information
                 $discountInfo = [
-                    'name' => $discount->name,
-                    'type' => $discount->discount_type,
-                    'amount' => $discount->discount_amount,
-                    'discount_text' => $discount->discount_type === 'percentage' 
-                        ? (int)$discount->discount_amount . '%' 
+                    'name'          => $discount->name,
+                    'type'          => $discount->discount_type,
+                    'amount'        => $discount->discount_amount,
+                    'discount_text' => $discount->discount_type === 'percentage'
+                        ? (int)$discount->discount_amount . '%'
                         : 'Rp' . number_format($discount->discount_amount, 0, ',', '.'),
                 ];
             }
-    
+
             return [
-                'key' => $key,
-                'qty' => $item['qty'],
-                'price' => $item['price'],
-                'subtotal' => $item['qty'] * $item['price'],
-                'name' => $name,
-                'model' => $model,
-                'size' => $size?->name ?? ($type === 'minuman' ? '-' : null),
-                'sugar' => $sugar?->level ?? ($type === 'minuman' ? '-' : null),
-                'topping' => $topping?->nama ?? '-',
+                'key'          => $key,
+                'qty'          => $item['qty'],
+                'price'        => $item['price'],
+                'subtotal'     => $item['qty'] * $item['price'],
+                'name'         => $name,
+                'model'        => $model,
+                'size'         => $size?->name ?? ($type === 'minuman' ? '-' : null),
+                'sugar'        => $sugar?->level ?? ($type === 'minuman' ? '-' : null),
+                'topping'      => $topping?->nama ?? '-',
                 'regular_price' => $regularPrice,
                 'discount_info' => $discountInfo,
-                'has_discount' => $discountInfo !== null,
-                'type' => $type,
+                'has_discount'  => $discountInfo !== null,
+                'type'          => $type,
             ];
         });
     
@@ -320,56 +318,68 @@ class CartPage extends Component
     }
     public function konfirmasiCheckout()
     {
+        if (empty($this->cart)) {
+            $this->addError('nama_pemesan', 'Keranjang belanja kosong.');
+            return;
+        }
+
         $validationRules = [
-            'nama_pemesan' => 'required',
+            'nama_pemesan'    => 'required',
             'waktu_pengantaran' => 'required',
         ];
-        
-        // Only require address for delivery orders
+
         if ($this->order_type === 'delivery') {
             $validationRules['alamat_pengantaran'] = 'required';
         }
-        
+
         $this->validate($validationRules);
-    
-        $cartItems = collect($this->cart)->map(function ($item, $key) {
-            $type = $item['type'] ?? 'minuman'; // Default to 'minuman' for backward compatibility
-            
+
+        // Preload semua data sekaligus untuk menghindari N+1 queries
+        // Item minuman lama mungkin tidak punya field 'type', default ke 'minuman'
+        $minumanIds = collect($this->cart)->filter(fn($i) => ($i['type'] ?? 'minuman') === 'minuman')->pluck('id')->unique()->filter()->values()->all();
+        $makananIds  = collect($this->cart)->filter(fn($i) => ($i['type'] ?? 'minuman') === 'makanan')->pluck('id')->unique()->filter()->values()->all();
+        $sizeIds    = collect($this->cart)->pluck('size_id')->unique()->filter()->values()->all();
+        $sugarIds   = collect($this->cart)->pluck('sugar_id')->unique()->filter()->values()->all();
+        $toppingIds = collect($this->cart)->pluck('topping_id')->unique()->filter()->values()->all();
+
+        $minumans = $minumanIds ? Minuman::whereIn('id', $minumanIds)->get()->keyBy('id') : collect();
+        $makanans = $makananIds  ? Makanan::whereIn('id', $makananIds)->get()->keyBy('id')  : collect();
+        $sizes    = $sizeIds    ? Size::whereIn('id', $sizeIds)->get()->keyBy('id')         : collect();
+        $sugars   = $sugarIds   ? Sugar::whereIn('id', $sugarIds)->get()->keyBy('id')       : collect();
+        $toppings = $toppingIds ? Topping::whereIn('id', $toppingIds)->get()->keyBy('id')   : collect();
+
+        $cartItems = collect($this->cart)->map(function ($item, $key) use ($minumans, $makanans, $sizes, $sugars, $toppings) {
+            $type = $item['type'] ?? 'minuman';
+
             if ($type === 'minuman') {
-                $model = Minuman::find($item['id']);
-                // Safely access array keys with null coalescing operator
-                $sizeId = $item['size_id'] ?? null;
-                $sugarId = $item['sugar_id'] ?? null;
-                $toppingId = $item['topping_id'] ?? null;
-                
-                $size = $sizeId ? Size::find($sizeId) : null;
-                $sugar = $sugarId ? Sugar::find($sugarId) : null;
-                $topping = $toppingId ? Topping::find($toppingId) : null;
-                $name = $model?->nama ?? 'Unknown Drink';
+                $model     = $minumans[$item['id']] ?? null;
+                $size      = isset($item['size_id'])    ? ($sizes[$item['size_id']]      ?? null) : null;
+                $sugar     = isset($item['sugar_id'])   ? ($sugars[$item['sugar_id']]    ?? null) : null;
+                $topping   = isset($item['topping_id']) ? ($toppings[$item['topping_id']] ?? null) : null;
+                $name      = $model?->nama ?? 'Unknown Drink';
                 $modelType = 'minuman';
             } else {
-                $model = Makanan::find($item['id']);
-                $toppingId = $item['topping_id'] ?? null;
-                $topping = $toppingId ? Topping::find($toppingId) : null;
-                $name = $model?->nama ?? 'Unknown Food';
+                $model     = $makanans[$item['id']] ?? null;
+                $topping   = isset($item['topping_id']) ? ($toppings[$item['topping_id']] ?? null) : null;
+                $name      = $model?->nama ?? 'Unknown Food';
                 $modelType = 'makanan';
-                $size = null;
-                $sugar = null;
+                $size      = null;
+                $sugar     = null;
             }
-    
+
             return [
-                'key' => $key,
-                'model_id' => $item['id'],
+                'key'       => $key,
+                'model_id'  => $item['id'],
                 'model_type' => $modelType,
-                'qty' => $item['qty'],
-                'harga' => $item['price'],
-                'subtotal' => $item['qty'] * $item['price'],
-                'name' => $name,
-                'size' => $type === 'minuman' ? ($size?->name ?? null) : null,
-                'gula' => $type === 'minuman' ? ($sugar?->level ?? null) : null,
-                'topping' => $topping?->nama ?? null,
-                'catatan' => $item['catatan'] ?? null,
-                'type' => $type,
+                'qty'       => $item['qty'],
+                'harga'     => $item['price'],
+                'subtotal'  => $item['qty'] * $item['price'],
+                'name'      => $name,
+                'size'      => $type === 'minuman' ? ($size?->name ?? null) : null,
+                'gula'      => $type === 'minuman' ? ($sugar?->level ?? null) : null,
+                'topping'   => $topping?->nama ?? null,
+                'catatan'   => $item['catatan'] ?? null,
+                'type'      => $type,
             ];
         });
     
@@ -501,7 +511,12 @@ class CartPage extends Component
         $this->clearDiscountCode();
         
         // Redirect to WhatsApp
-        $wa = WebSetting::first()->whatsapp_number;
+        $waRaw = WebSetting::first()->whatsapp_number ?? '';
+        $wa = preg_replace('/[^0-9]/', '', $waRaw);
+        if (empty($wa)) {
+            session()->flash('error', 'Nomor WhatsApp belum dikonfigurasi.');
+            return;
+        }
         return redirect()->away("https://wa.me/{$wa}?text=" . urlencode($message));
     }
 }

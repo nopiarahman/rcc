@@ -395,16 +395,26 @@
                     {{-- Topping --}}
                     @if ($toppings->isNotEmpty())
                         <div class="mb-3">
-                            <h6 class="fw-bold text-theme">Topping</h6>
-                            <div class="btn-group" role="group">
-                                @foreach ($toppings->sortByDesc('nama') as $topping)
-                                    <input type="radio" wire:model.live="selectedToppingId" class="btn-check" name="topping" value="{{ $topping->id }}" id="topping-{{ $topping->id }}">
-                                    @php
-                                        $isSelected = $selectedToppingId == $topping->id;
-                                    @endphp
-                                    <label class="btn m-1 px-3 py-2 position-relative {{ $isSelected ? 'btn-theme' : 'btn-outline-theme' }}" 
-                                           for="topping-{{ $topping->id }}">
-                                        {{ $topping->nama }}
+                            <h6 class="fw-bold text-theme mb-2" style="font-size: 0.9rem;">Topping</h6>
+                            <div class="d-flex flex-column gap-2">
+                                @foreach ($toppings->sortBy('nama') as $topping)
+                                    @php $isSelected = $selectedToppingId == $topping->id; @endphp
+                                    <label class="d-flex align-items-center justify-content-between px-3 py-2 rounded-3"
+                                           for="topping-{{ $topping->id }}"
+                                           style="cursor: pointer; font-size: 0.88rem; border: 1.5px solid {{ $isSelected ? $themeColor : '#dee2e6' }}; background-color: {{ $isSelected ? 'rgba(0,0,0,0.03)' : '#fff' }};">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <input type="radio"
+                                                   wire:model.live="selectedToppingId"
+                                                   class="form-check-input mt-0"
+                                                   name="topping"
+                                                   value="{{ $topping->id }}"
+                                                   id="topping-{{ $topping->id }}"
+                                                   style="accent-color: {{ $themeColor }};">
+                                            <span class="{{ $isSelected ? 'fw-semibold' : '' }}">{{ $topping->nama }}</span>
+                                        </div>
+                                        @if(isset($topping->default_price) && $topping->default_price > 0)
+                                            <small class="text-muted">+Rp{{ number_format($topping->default_price, 0, ',', '.') }}</small>
+                                        @endif
                                     </label>
                                 @endforeach
                             </div>

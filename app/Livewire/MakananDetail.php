@@ -9,7 +9,6 @@ class MakananDetail extends Component
 {
     public $makanan;
     public $selectedToppingId;
-    public $cart = [];
     public $toppings = [];
     public $theme;
 
@@ -17,7 +16,7 @@ class MakananDetail extends Component
     {
         $this->makanan = \App\Models\Makanan::with(['toppings', 'bahans'])->findOrFail($makanan);
         $this->toppings = $this->makanan->toppings;
-        $this->selectedToppingId = $this->makanan->default_topping_id ?? ($this->toppings->first()->id ?? null);
+        $this->selectedToppingId = $this->makanan->default_topping ?? ($this->toppings->first()->id ?? null);
         $webSetting = \App\Models\WebSetting::first();
         $this->theme = $webSetting ? $webSetting->theme : 'green';
     }

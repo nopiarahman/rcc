@@ -58,10 +58,4 @@ class Index extends Component
     {
         return view('livewire.minuman.index');
     }
-    // public function getFilteredMinumansProperty()
-    // {
-    //     return Minuman::when($this->filterKategori, function ($query) {
-    //         $query->where('kategori', $this->filterKategori);
-    //     })->latest()->get();
-    // }
 };

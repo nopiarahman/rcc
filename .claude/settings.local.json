@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git fetch *)",
+      "Bash(git merge *)",
+      "Bash(php artisan *)",
+      "Bash(git reset *)",
+      "Bash(php -l app/Livewire/CartPage.php)",
+      "Bash(php -l app/Livewire/MakananDetail.php)",
+      "Bash(php -l app/Livewire/Minuman/Index.php)",
+      "Bash(php -l app/Models/Minuman.php)",
+      "Bash(php -l app/Models/Makanan.php)",
+      "Bash(grep -n 'Media $media = null' app/Models/Makanan.php)",
+      "Bash(php -l app/Livewire/MinumanDetail.php)"
+    ]
+  }
+}

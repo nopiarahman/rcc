@@ -16,19 +16,19 @@
             $mutedTextColor = $web_settings->themeColor->muted_text_color;
         }
     @endphp
-    @if($web_settings->themeColor->name == 'green')
-        <style> 
-            .text-theme-primary {
-                color: #ffffff !important;
-            }
-            .text-muted-theme {
-                color: #ffffff !important;
-            }
+    <style>
+    @if(isset($web_settings->themeColor) && $web_settings->themeColor->name == 'green')
+        .text-theme-primary {
+            color: #ffffff !important;
+        }
+        .text-muted-theme {
+            color: #ffffff !important;
+        }
     @else
-    .text-theme-primary {
-        color: {{ $themeTextColor }} !important;
-    }
-    .text-muted-theme {
+        .text-theme-primary {
+            color: {{ $themeTextColor }} !important;
+        }
+        .text-muted-theme {
             color: {{ $mutedTextColor }} !important;
         }
     @endif

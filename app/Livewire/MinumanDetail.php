@@ -73,6 +73,7 @@ class MinumanDetail extends Component
         } else {
             $cart[$key] = [
                 'id' => $this->minuman->id,
+                'type' => 'minuman',
                 'size_id' => $this->selectedSizeId,
                 'sugar_id' => $this->selectedSugarId,
                 'topping_id' => $this->selectedToppingId,

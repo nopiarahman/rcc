@@ -1,4 +1,4 @@
-<div class="container p-4 bg-white" style="min-height: 100vh; padding-bottom: 120px;" wire:poll.60s>
+<div class="container p-4 bg-white" style="min-height: 100vh; padding-bottom: 120px;">
     @php
         // Default theme colors if not set
         $themeColor = '#4a5d4a';
@@ -261,7 +261,10 @@
     
             <div class="mb-3">
                 <label class="form-label">Waktu {{ $order_type === 'delivery' ? 'Pengantaran' : 'Pengambilan' }}</label>
-                <input type="text" class="form-control" wire:model.defer="waktu_pengantaran" placeholder="Misal: 16.00 WIB / Sekarang">
+                <select class="form-select" id="waktu_select" wire:model.defer="waktu_pengantaran">
+                    <option value="">-- Pilih Waktu --</option>
+                </select>
+                <div class="form-text text-muted" style="font-size:0.78rem;">Waktu mulai dari 30 menit sejak sekarang</div>
             </div>
             </div>
             <div class="modal-footer">
@@ -382,6 +385,50 @@
         );
     }
     
+    // Generate pilihan waktu 30-menit dari sekarang+30mnt
+    function generateTimeSlots() {
+        const select = document.getElementById('waktu_select');
+        if (!select) return;
+
+        const now = new Date();
+
+        // Minimum: sekarang + 30 menit
+        const min = new Date(now.getTime() + 30 * 60 * 1000);
+
+        // Bulatkan ke atas ke slot 30-menit terdekat
+        const m = min.getMinutes();
+        if (m > 0 && m <= 30) {
+            min.setMinutes(30, 0, 0);
+        } else if (m > 30) {
+            min.setHours(min.getHours() + 1, 0, 0, 0);
+        } else {
+            min.setSeconds(0, 0);
+        }
+
+        // Batas akhir: 22:00 hari ini
+        const end = new Date(now);
+        end.setHours(22, 0, 0, 0);
+
+        // Reset opsi
+        select.innerHTML = '<option value="">-- Pilih Waktu --</option>';
+
+        const cur = new Date(min);
+        while (cur <= end) {
+            const hh = String(cur.getHours()).padStart(2, '0');
+            const mm = String(cur.getMinutes()).padStart(2, '0');
+            const label = `${hh}.${mm} WIB`;
+            select.appendChild(new Option(label, label));
+            cur.setMinutes(cur.getMinutes() + 30);
+        }
+
+        // Jika tidak ada slot tersedia hari ini
+        if (select.options.length === 1) {
+            const o = new Option('Tidak ada jadwal tersedia hari ini', '');
+            o.disabled = true;
+            select.appendChild(o);
+        }
+    }
+
     // The main function to attach all event handlers
     function initCartPage() {
         // Skip if already initialized to prevent duplicate handlers
@@ -429,6 +476,9 @@
                     cleanupModal();
                 }, 150);
             });
+
+            // Generate slot waktu setiap kali modal checkout dibuka
+            checkoutModalEl.addEventListener('show.bs.modal', generateTimeSlots);
             
             // Add checkout button click handler
             checkoutBtn.addEventListener('click', function(e) {

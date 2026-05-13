@@ -57,7 +57,7 @@ class Makanan extends Model implements HasMedia
     {
         $this->addMediaCollection('gambar')
             ->singleFile()
-            ->registerMediaConversions(function (Media $media = null) {
+            ->registerMediaConversions(function (?Media $media = null) {
                 $this->addMediaConversion('thumb')
                     ->width(150)
                     ->height(150);

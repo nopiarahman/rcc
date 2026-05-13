@@ -60,8 +60,7 @@
         .text-theme-primary {
             color: {{ $themeTextColor }} !important;
         }
-        }
-        
+
         @keyframes fadeSlideUp {
             0% {
                 opacity: 0;

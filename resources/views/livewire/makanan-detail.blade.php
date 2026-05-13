@@ -325,18 +325,28 @@
                 <div class="modal-body">
                     {{-- Topping Picker --}}
                     @if($toppings && count($toppings))
-                        <div class="mb-4">
-                            <h6 class="fw-bold text-theme">Pilih Topping</h6>
-                            <div class="d-flex flex-wrap gap-2">
+                        <div class="mb-3">
+                            <h6 class="fw-bold text-theme mb-2" style="font-size: 0.9rem;">Pilih Topping</h6>
+                            <div class="d-flex flex-column gap-2">
                                 @foreach($toppings as $topping)
-                                    <button type="button" 
-                                            wire:click="$set('selectedToppingId', {{ $topping->id }})" 
-                                            class="size-btn {{ $selectedToppingId == $topping->id ? 'active' : 'inactive' }}">
-                                        {{ $topping->nama }}
-                                        {{-- @if($topping->pivot && $topping->default_price)
-                                            <span class="badge bg-success ms-2">+Rp {{ number_format($topping->default_price, 0, ',', '.') }}</span>
-                                        @endif --}}
-                                    </button>
+                                    @php $isSelected = $selectedToppingId == $topping->id; @endphp
+                                    <label class="d-flex align-items-center justify-content-between px-3 py-2 rounded-3"
+                                           for="makan-topping-{{ $topping->id }}"
+                                           style="cursor: pointer; font-size: 0.88rem; border: 1.5px solid {{ $isSelected ? $themeColor : '#dee2e6' }}; background-color: {{ $isSelected ? 'rgba(0,0,0,0.03)' : '#fff' }};">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <input type="radio"
+                                                   wire:model.live="selectedToppingId"
+                                                   class="form-check-input mt-0"
+                                                   name="makan-topping"
+                                                   value="{{ $topping->id }}"
+                                                   id="makan-topping-{{ $topping->id }}"
+                                                   style="accent-color: {{ $themeColor }};">
+                                            <span class="{{ $isSelected ? 'fw-semibold' : '' }}">{{ $topping->nama }}</span>
+                                        </div>
+                                        @if(isset($topping->default_price) && $topping->default_price > 0)
+                                            <small class="text-muted">+Rp{{ number_format($topping->default_price, 0, ',', '.') }}</small>
+                                        @endif
+                                    </label>
                                 @endforeach
                             </div>
                         </div>

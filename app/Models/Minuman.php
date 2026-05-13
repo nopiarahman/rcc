@@ -113,7 +113,7 @@ class Minuman extends Model implements HasMedia
     {
         $this->addMediaCollection('foto')
             ->singleFile()
-            ->registerMediaConversions(function (Media $media = null) {
+            ->registerMediaConversions(function (?Media $media = null) {
                 $this->addMediaConversion('thumb')
                     ->width(150)
                     ->height(150);
@@ -137,15 +137,10 @@ class Minuman extends Model implements HasMedia
         }
 
         // Fallback to custom directory if not found in Media Library
-        // Check for any file that starts with the ID in the custom directory
         $customDir = storage_path('app/public/minuman_images/');
-        if (is_dir($customDir)) {
-            $files = scandir($customDir);
-            foreach ($files as $file) {
-                if (strpos($file, (string)$this->id) === 0 && pathinfo($file, PATHINFO_EXTENSION) === 'jpg') {
-                    return url('storage/minuman_images/' . $file);
-                }
-            }
+        $matches = glob($customDir . $this->id . '*.jpg');
+        if (!empty($matches)) {
+            return url('storage/minuman_images/' . basename($matches[0]));
         }
 
         return asset('images/no-image.png');
