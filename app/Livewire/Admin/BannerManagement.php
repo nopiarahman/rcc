@@ -19,6 +19,7 @@ class BannerManagement extends Component
     public $order = 0;
     public $bannerId;
     public $editing = false;
+    public $showForm = false;
 
     protected $rules = [
         'title' => 'required|string|max:255',
@@ -69,6 +70,12 @@ class BannerManagement extends Component
         $this->dispatch('banner-updated');
     }
 
+    public function openForm()
+    {
+        $this->resetFields();
+        $this->showForm = true;
+    }
+
     public function editBanner($id)
     {
         $banner = Banner::with('media')->findOrFail($id);
@@ -78,6 +85,7 @@ class BannerManagement extends Component
         $this->status = $banner->status;
         $this->order = $banner->order;
         $this->editing = true;
+        $this->showForm = true;
     }
 
     public function deleteBanner($id)
@@ -90,7 +98,7 @@ class BannerManagement extends Component
 
     public function resetFields()
     {
-        $this->reset(['title', 'description', 'image', 'status', 'order', 'bannerId', 'editing']);
+        $this->reset(['title', 'description', 'image', 'status', 'order', 'bannerId', 'editing', 'showForm']);
         $this->status = true;
         $this->order = 0;
     }

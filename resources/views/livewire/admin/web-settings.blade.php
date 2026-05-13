@@ -1,357 +1,240 @@
-<div class="container mx-auto px-4 py-8">
-    <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-2xl font-bold mb-6">Web Settings</h2>
-        
-        @if (session()->has('message'))
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-                <span class="block sm:inline">{{ session('message') }}</span>
-            </div>
-        @endif
+<div class="max-w-3xl mx-auto p-6">
 
-        <form wire:submit.prevent="save">
-            <!-- Site Name -->
-            <div class="mb-6 p-4 border rounded-lg bg-gray-50">
-                <label for="site_name" class="block text-gray-700 text-sm font-bold mb-2">
-                    Nama Website
-                </label>
-                <input 
-                    type="text" 
-                    id="site_name"
-                    wire:model="site_name"
-                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    placeholder="Masukkan Nama Website">
-                @error('site_name') <span class="text-red-500 text-xs italic">{{ $message }}</span> @enderror
-            </div>
+    {{-- Header --}}
+    <div class="mb-6">
+        <h1 class="text-xl font-bold text-gray-900 dark:text-white">Pengaturan Website</h1>
+        <p class="text-sm text-gray-500 mt-0.5">Konfigurasi nama, tampilan, lokasi, dan operasional toko</p>
+    </div>
 
-            <!-- Tagline -->
-            <div class="mb-6 p-4 border rounded-lg bg-gray-50">
-                <label for="tagline" class="block text-gray-700 text-sm font-bold mb-2">
-                    Tagline Website
-                </label>
-                <input 
-                    type="text" 
-                    id="tagline"
-                    wire:model="tagline"
-                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    placeholder="Masukkan Tagline Website">
-                @error('tagline') <span class="text-red-500 text-xs italic">{{ $message }}</span> @enderror
-                <p class="text-xs text-gray-500 mt-1">Tagline akan ditampilkan di halaman menu</p>
-            </div>
+    @if(session()->has('message'))
+        <div class="flex items-center gap-2 p-3 mb-6 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            {{ session('message') }}
+        </div>
+    @endif
 
-            <!-- Logo -->
-            <div class="mb-6 p-4 border rounded-lg bg-gray-50">
-                <label class="block text-gray-700 text-sm font-bold mb-2">
-                    Logo Website
-                </label>
-                
-                @if($current_logo)
-                    <div class="mb-2">
-                        <p class="text-sm text-gray-600 mb-2">Logo saat ini:</p>
-                        <img src="{{ asset('storage/' . $current_logo) }}" alt="Current Logo" class="h-20 w-auto mb-2">
-                    </div>
-                @endif
-                
-                <div class="flex items-center">
-                    <label class="w-64 flex flex-col items-center px-4 py-2 bg-white text-blue-500 rounded-lg tracking-wide uppercase border border-blue-500 cursor-pointer hover:bg-blue-500 hover:text-white">
-                        <span class="text-sm leading-normal">Pilih Logo</span>
-                        <input type='file' class="hidden" wire:model="logo" accept="image/*" />
-                    </label>
-                    <span class="ml-4 text-sm text-gray-600">
-                        {{ $logo ? $logo->getClientOriginalName() : 'Belum ada file dipilih' }}
-                    </span>
+    <form wire:submit.prevent="save" class="space-y-6">
+
+        {{-- Identitas --}}
+        <div class="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-sm overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100 dark:border-neutral-700">
+                <h2 class="font-semibold text-gray-800 dark:text-white text-sm">Identitas Toko</h2>
+            </div>
+            <div class="p-5 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nama Website</label>
+                    <input type="text" wire:model="site_name"
+                        class="w-full px-3 py-2 border border-gray-200 dark:border-neutral-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-neutral-700 dark:text-white"
+                        placeholder="Nama toko / website">
+                    @error('site_name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
-                @error('logo') <span class="text-red-500 text-xs italic">{{ $message }}</span> @enderror
-                <p class="text-xs text-gray-500 mt-1">Ukuran maksimal: 2MB. Format: JPG, JPEG, PNG</p>
-            </div>
-
-            <!-- Favicon -->
-            <div class="mb-6 p-4 border rounded-lg bg-gray-50">
-                <label class="block text-gray-700 text-sm font-bold mb-2">
-                    Favicon
-                </label>
-                
-                @if($current_favicon)
-                    <div class="mb-2">
-                        <p class="text-sm text-gray-600 mb-2">Favicon saat ini:</p>
-                        <img src="{{ asset('storage/' . $current_favicon) }}" alt="Current Favicon" class="h-16 w-16 mb-2">
-                    </div>
-                @endif
-                
-                <div class="flex items-center">
-                    <label class="w-64 flex flex-col items-center px-4 py-2 bg-white text-blue-500 rounded-lg tracking-wide uppercase border border-blue-500 cursor-pointer hover:bg-blue-500 hover:text-white">
-                        <span class="text-sm leading-normal">Pilih Favicon</span>
-                        <input type='file' class="hidden" wire:model="favicon" accept="image/*" />
-                    </label>
-                    <span class="ml-4 text-sm text-gray-600">
-                        {{ $favicon ? $favicon->getClientOriginalName() : 'Belum ada file dipilih' }}
-                    </span>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tagline</label>
+                    <input type="text" wire:model="tagline"
+                        class="w-full px-3 py-2 border border-gray-200 dark:border-neutral-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-neutral-700 dark:text-white"
+                        placeholder="Slogan singkat toko">
+                    @error('tagline') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    <p class="text-xs text-gray-400 mt-1">Ditampilkan di halaman menu utama</p>
                 </div>
-                @error('favicon') <span class="text-red-500 text-xs italic">{{ $message }}</span> @enderror
-                <p class="text-xs text-gray-500 mt-1">Ukuran: 32x32px - 192x192px. Format: ICO, PNG</p>
             </div>
+        </div>
 
-            <!-- Location Settings -->
-            <div class="mb-6 p-4 border rounded-lg bg-gray-50">
-                <h3 class="text-lg font-semibold mb-4">Pengaturan Lokasi Pengiriman</h3>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        {{-- Logo & Favicon --}}
+        <div class="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-sm overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100 dark:border-neutral-700">
+                <h2 class="font-semibold text-gray-800 dark:text-white text-sm">Logo & Favicon</h2>
+            </div>
+            <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Logo</label>
+                    @if($current_logo)
+                        <img src="{{ asset('storage/' . $current_logo) }}" alt="Logo" class="h-12 w-auto mb-3 rounded">
+                    @endif
+                    <input type="file" wire:model="logo" accept="image/*"
+                        class="block w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    @error('logo') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    <p class="text-xs text-gray-400 mt-1">JPG, PNG — maks. 2MB</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Favicon</label>
+                    @if($current_favicon)
+                        <img src="{{ asset('storage/' . $current_favicon) }}" alt="Favicon" class="h-12 w-12 mb-3 rounded">
+                    @endif
+                    <input type="file" wire:model="favicon" accept="image/*"
+                        class="block w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    @error('favicon') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    <p class="text-xs text-gray-400 mt-1">ICO, PNG — 32×32 atau 192×192px</p>
+                </div>
+            </div>
+        </div>
+
+        {{-- Lokasi & WhatsApp --}}
+        <div class="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-sm overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100 dark:border-neutral-700">
+                <h2 class="font-semibold text-gray-800 dark:text-white text-sm">Lokasi & WhatsApp</h2>
+            </div>
+            <div class="p-5 space-y-4">
+                <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label for="latitude" class="block text-gray-700 text-sm font-bold mb-2">
-                            Latitude
-                        </label>
-                        <input 
-                            type="number" 
-                            step="0.00000001"
-                            id="latitude"
-                            wire:model="latitude"
-                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                            placeholder="-1.66651"
-                            required>
-                        @error('latitude') <span class="text-red-500 text-xs italic">{{ $message }}</span> @enderror
-                        <p class="text-xs text-gray-500 mt-1">Contoh: -1.66651</p>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Latitude</label>
+                        <input type="number" step="0.00000001" wire:model="latitude"
+                            class="w-full px-3 py-2 border border-gray-200 dark:border-neutral-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 dark:bg-neutral-700 dark:text-white"
+                            placeholder="-1.66651">
+                        @error('latitude') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
-                    
                     <div>
-                        <label for="longitude" class="block text-gray-700 text-sm font-bold mb-2">
-                            Longitude
-                        </label>
-                        <input 
-                            type="number" 
-                            step="0.00000001"
-                            id="longitude"
-                            wire:model="longitude"
-                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                            placeholder="103.65238"
-                            required>
-                        @error('longitude') <span class="text-red-500 text-xs italic">{{ $message }}</span> @enderror
-                        <p class="text-xs text-gray-500 mt-1">Contoh: 103.65238</p>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Longitude</label>
+                        <input type="number" step="0.00000001" wire:model="longitude"
+                            class="w-full px-3 py-2 border border-gray-200 dark:border-neutral-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 dark:bg-neutral-700 dark:text-white"
+                            placeholder="103.65238">
+                        @error('longitude') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
                 </div>
-                
-                <div class="w-full md:w-1/2">
-                    <label for="delivery_radius" class="block text-gray-700 text-sm font-bold mb-2">
-                        Radius Pengiriman (meter)
-                    </label>
-                    <input 
-                        type="number" 
-                        id="delivery_radius"
-                        wire:model="delivery_radius"
-                        min="100"
-                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                        placeholder="600"
-                        required>
-                    @error('delivery_radius') <span class="text-red-500 text-xs italic">{{ $message }}</span> @enderror
-                    <p class="text-xs text-gray-500 mt-1">Jarak maksimal pengiriman dalam meter (minimal 100m)</p>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Radius Pengiriman (meter)</label>
+                    <input type="number" wire:model="delivery_radius" min="100"
+                        class="w-full px-3 py-2 border border-gray-200 dark:border-neutral-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 dark:bg-neutral-700 dark:text-white"
+                        placeholder="600">
+                    @error('delivery_radius') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    <p class="text-xs text-gray-400 mt-1">Jarak maksimal pengiriman (minimal 100m)</p>
                 </div>
-                
-                <!-- WhatsApp Number -->
-                <div class="mt-4 w-full">
-                    <label for="whatsapp_number" class="block text-gray-700 text-sm font-bold mb-2">
-                        Nomor WhatsApp
-                    </label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                            <span class="text-gray-500">+</span>
-                        </div>
-                        <input 
-                            type="text" 
-                            id="whatsapp_number"
-                            wire:model="whatsapp_number"
-                            class="pl-6 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                            placeholder="6281234567890"
-                            required>
-                    </div>
-                    @error('whatsapp_number') <span class="text-red-500 text-xs italic">{{ $message }}</span> @enderror
-                    <p class="text-xs text-gray-500 mt-1">Masukkan nomor WhatsApp tanpa tanda + di depan</p>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nomor WhatsApp</label>
+                    <input type="text" wire:model="whatsapp_number"
+                        class="w-full px-3 py-2 border border-gray-200 dark:border-neutral-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 dark:bg-neutral-700 dark:text-white"
+                        placeholder="6281234567890">
+                    @error('whatsapp_number') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    <p class="text-xs text-gray-400 mt-1">Tanpa tanda + di depan. Pesanan akan dikirim ke nomor ini.</p>
                 </div>
-                
-                <div class="mt-4 p-3 bg-blue-50 rounded border border-blue-100">
-                    <p class="text-sm text-blue-700">
-                        <span class="font-medium">Cara mendapatkan koordinat:</span> Buka <a href="https://www.google.com/maps" target="_blank" class="text-blue-600 underline">Google Maps</a>, klik kanan pada lokasi, dan salin koordinat yang muncul.
+                <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
+                    <p class="text-xs text-blue-700 dark:text-blue-300">
+                        <span class="font-semibold">Cara dapat koordinat:</span> Buka Google Maps → klik kanan lokasi toko → salin koordinat.
                     </p>
                 </div>
             </div>
+        </div>
 
-            <!-- Opening Hours -->
-            <div class="mb-6 p-4 border rounded-lg bg-gray-50">
-                <h3 class="text-lg font-semibold mb-4">Jam Operasional</h3>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {{-- Jam Operasional --}}
+        <div class="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-sm overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100 dark:border-neutral-700">
+                <h2 class="font-semibold text-gray-800 dark:text-white text-sm">Jam Operasional</h2>
+            </div>
+            <div class="p-5 space-y-4">
+                <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label for="opening_time" class="block text-gray-700 text-sm font-bold mb-2">
-                            Jam Buka
-                        </label>
-                        <input 
-                            type="time" 
-                            id="opening_time"
-                            wire:model="opening_time"
-                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                            required>
-                        @error('opening_time') <span class="text-red-500 text-xs italic">{{ $message }}</span> @enderror
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Jam Buka</label>
+                        <input type="time" wire:model="opening_time"
+                            class="w-full px-3 py-2 border border-gray-200 dark:border-neutral-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 dark:bg-neutral-700 dark:text-white">
+                        @error('opening_time') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
-                    
                     <div>
-                        <label for="closing_time" class="block text-gray-700 text-sm font-bold mb-2">
-                            Jam Tutup
-                        </label>
-                        <input 
-                            type="time" 
-                            id="closing_time"
-                            wire:model="closing_time"
-                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                            required>
-                        @error('closing_time') <span class="text-red-500 text-xs italic">{{ $message }}</span> @enderror
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Jam Tutup</label>
+                        <input type="time" wire:model="closing_time"
+                            class="w-full px-3 py-2 border border-gray-200 dark:border-neutral-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 dark:bg-neutral-700 dark:text-white">
+                        @error('closing_time') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
                 </div>
-                
-                <div class="mt-4">
-                    <label class="flex items-center">
-                        <input 
-                            type="checkbox" 
-                            wire:model="is_temporarily_closed"
-                            class="form-checkbox h-5 w-5 text-blue-600">
-                        <span class="ml-2 text-gray-700">Tutup Sementara</span>
-                    </label>
-                    <p class="text-xs text-gray-500 mt-1">Centang jika toko sedang tutup sementara</p>
-                    
-                        <div class="mt-3">
-                            <label for="temporary_closure_message" class="block text-gray-700 text-sm font-bold mb-2">
-                                Pesan Penutupan Sementara
-                            </label>
-                            <textarea 
-                                id="temporary_closure_message"
-                                wire:model="temporary_closure_message"
-                                rows="3"
-                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                placeholder="Contoh: Tutup sementara hingga 30 Juni 2025 untuk perbaikan"></textarea>
-                            @error('temporary_closure_message') <span class="text-red-500 text-xs italic">{{ $message }}</span> @enderror
-                            <p class="text-xs text-gray-500 mt-1">Pesan ini akan ditampilkan ke pelanggan</p>
+                <div class="p-4 border border-gray-200 dark:border-neutral-600 rounded-lg space-y-3">
+                    <label class="flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" wire:model="is_temporarily_closed" class="rounded text-red-500 w-4 h-4">
+                        <div>
+                            <div class="text-sm font-medium text-gray-800 dark:text-white">Tutup Sementara</div>
+                            <div class="text-xs text-gray-500">Centang jika toko sedang tidak beroperasi</div>
                         </div>
+                    </label>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pesan untuk Pelanggan</label>
+                        <textarea wire:model="temporary_closure_message" rows="2"
+                            class="w-full px-3 py-2 border border-gray-200 dark:border-neutral-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 dark:bg-neutral-700 dark:text-white"
+                            placeholder="Contoh: Tutup untuk renovasi, dibuka kembali 1 Juli 2025"></textarea>
+                        @error('temporary_closure_message') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Theme Selection -->
-            <div class="mb-6 p-4 border rounded-lg bg-gray-50">
-                <label class="block text-gray-700 text-sm font-bold mb-2">
-                    Tema Warna
-                </label>
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                    @foreach($themeColors as $theme)
-                        <div class="relative">
-                            <input type="radio" 
-                                   id="theme_{{ $theme['name'] }}" 
-                                   wire:model.live="selectedTheme" 
-                                   value="{{ $theme['name'] }}" 
-                                   class="hidden peer">
-                            <label for="theme_{{ $theme['name'] }}" class="block cursor-pointer">
-                                <div class="p-4 rounded-lg border-2 border-gray-200 peer-checked:border-blue-500 transition-all duration-200">
-                                    <div class="w-full h-16 rounded mb-2" 
-                                         style="background: linear-gradient(to right, {{ $theme['primary_color'] }}, {{ $theme['secondary_color'] }});">
-                                    </div>
-                                    <div class="text-center text-sm font-medium text-gray-700">
-                                        {{ $theme['display_name'] }}
-                                    </div>
-                                    @if($selectedThemeColor && $theme['name'] === $selectedThemeColor['name'])
-                                        <div class="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
-                                            Dipilih
-                                        </div>
-                                    @endif
-                                </div>
-                            </label>
+        {{-- Mode Pemesanan --}}
+        <div class="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-sm overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100 dark:border-neutral-700">
+                <h2 class="font-semibold text-gray-800 dark:text-white text-sm">Mode Pemesanan</h2>
+            </div>
+            <div class="p-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                @foreach(['both' => ['label' => 'Delivery & Takeaway', 'icon' => '🛵🏪', 'desc' => 'Pelanggan bisa pilih keduanya'], 'delivery' => ['label' => 'Hanya Delivery', 'icon' => '🛵', 'desc' => 'Wajib antar ke alamat'], 'takeaway' => ['label' => 'Hanya Takeaway', 'icon' => '🏪', 'desc' => 'Wajib ambil sendiri']] as $value => $opt)
+                    <label class="relative cursor-pointer">
+                        <input type="radio" wire:model.live="order_mode" value="{{ $value }}" class="peer sr-only">
+                        <div class="p-4 border-2 rounded-xl transition peer-checked:border-blue-500 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/20 border-gray-200 dark:border-neutral-600 hover:border-gray-300">
+                            <div class="text-2xl mb-1">{{ $opt['icon'] }}</div>
+                            <div class="text-sm font-semibold text-gray-800 dark:text-white">{{ $opt['label'] }}</div>
+                            <div class="text-xs text-gray-500 mt-0.5">{{ $opt['desc'] }}</div>
                         </div>
+                        <div class="absolute top-2 right-2 hidden peer-checked:flex items-center justify-center w-5 h-5 bg-blue-500 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                    </label>
+                @endforeach
+            </div>
+        </div>
+
+        {{-- Tema Warna --}}
+        <div class="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-sm overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100 dark:border-neutral-700">
+                <h2 class="font-semibold text-gray-800 dark:text-white text-sm">Tema Warna</h2>
+            </div>
+            <div class="p-5">
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                    @foreach($themeColors as $theme)
+                        <label class="relative cursor-pointer">
+                            <input type="radio" id="theme_{{ $theme['name'] }}" wire:model.live="selectedTheme"
+                                value="{{ $theme['name'] }}" class="peer sr-only">
+                            <div class="p-3 border-2 rounded-xl transition peer-checked:border-blue-500 border-gray-200 dark:border-neutral-600 hover:border-gray-300">
+                                <div class="h-10 rounded-lg mb-2" style="background: linear-gradient(to right, {{ $theme['primary_color'] }}, {{ $theme['secondary_color'] }});"></div>
+                                <div class="text-xs font-medium text-center text-gray-700 dark:text-gray-300">{{ $theme['display_name'] }}</div>
+                            </div>
+                            <div class="absolute top-1.5 right-1.5 hidden peer-checked:flex items-center justify-center w-4 h-4 bg-blue-500 rounded-full">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                        </label>
                     @endforeach
                 </div>
-                
+
                 @if($selectedThemeColor)
-                    <div class="mt-4 p-4 border rounded-lg bg-white">
-                        <h4 class="font-bold mb-2">Pratinjau Warna</h4>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <div class="text-sm text-gray-600 mb-1">Warna Utama</div>
-                                <div class="h-8 rounded border" style="background-color: {{ $selectedThemeColor['primary_color'] }}"></div>
-                                <div class="text-xs text-gray-500 mt-1">{{ $selectedThemeColor['primary_color'] }}</div>
-                            </div>
-                            <div>
-                                <div class="text-sm text-gray-600 mb-1">Warna Sekunder</div>
-                                <div class="h-8 rounded border" style="background-color: {{ $selectedThemeColor['secondary_color'] }}"></div>
-                                <div class="text-xs text-gray-500 mt-1">{{ $selectedThemeColor['secondary_color'] }}</div>
-                            </div>
-                            <div>
-                                <div class="text-sm text-gray-600 mb-1">Tombol</div>
-                                <div class="h-8 rounded border flex items-center justify-center" 
-                                     style="background-color: {{ $selectedThemeColor['button_bg_color'] }}; color: {{ $selectedThemeColor['button_text_color'] }};">
-                                    Tombol
+                    <div class="mt-4 p-4 bg-gray-50 dark:bg-neutral-900 rounded-xl border border-gray-100 dark:border-neutral-700">
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Pratinjau Warna</p>
+                        <div class="grid grid-cols-4 gap-2">
+                            @foreach(['Utama' => $selectedThemeColor['primary_color'], 'Sekunder' => $selectedThemeColor['secondary_color'], 'Tombol' => $selectedThemeColor['button_bg_color'], 'Kartu' => $selectedThemeColor['card_bg_color']] as $label => $color)
+                                <div>
+                                    <div class="h-8 rounded-lg border border-gray-200 mb-1" style="background-color: {{ $color }}"></div>
+                                    <div class="text-xs text-center text-gray-500">{{ $label }}</div>
                                 </div>
-                            </div>
-                            <div>
-                                <div class="text-sm text-gray-600 mb-1">Kartu</div>
-                                <div class="h-8 rounded border p-2 text-sm" 
-                                     style="background-color: {{ $selectedThemeColor['card_bg_color'] }}; color: {{ $selectedThemeColor['text_color'] }};">
-                                    Contoh Teks
-                                </div>
-                            </div>
+                            @endforeach
                         </div>
                     </div>
                 @endif
-
-            <!-- Order Mode Selection -->
-            <div class="mb-6 p-4 border rounded-lg bg-gray-50">
-                <label class="block text-gray-700 text-sm font-bold mb-3">
-                    Mode Pemesanan
-                </label>
-                <div class="space-y-3">
-                    <div class="flex items-center">
-                        <input 
-                            type="radio" 
-                            id="order-mode-both" 
-                            wire:model.live="order_mode" 
-                            value="both" 
-                            class="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                        >
-                        <label for="order-mode-both" class="ml-2 block text-sm font-medium text-gray-700">
-                            Keduanya (Delivery & Takeaway)
-                        </label>
-                    </div>
-                    <div class="flex items-center">
-                        <input 
-                            type="radio" 
-                            id="order-mode-delivery" 
-                            wire:model.live="order_mode" 
-                            value="delivery" 
-                            class="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                        >
-                        <label for="order-mode-delivery" class="ml-2 block text-sm font-medium text-gray-700">
-                            Hanya Delivery
-                        </label>
-                    </div>
-                    <div class="flex items-center">
-                        <input 
-                            type="radio" 
-                            id="order-mode-takeaway" 
-                            wire:model.live="order_mode" 
-                            value="takeaway" 
-                            class="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                        >
-                        <label for="order-mode-takeaway" class="ml-2 block text-sm font-medium text-gray-700">
-                            Hanya Takeaway
-                        </label>
-                    </div>
-                </div>
-                <div class="mt-3 text-sm text-gray-600">
-                </div>
             </div>
+        </div>
 
-            <!-- Submit Button -->
-            <div class="flex items-center justify-end">
-                <button 
-                    type="submit" 
-                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                    wire:loading.attr="disabled"
-                    wire:target="save">
-                    <span wire:loading.remove wire:target="save">Simpan Pengaturan</span>
-                    <span wire:loading wire:target="save">Menyimpan...</span>
-                </button>
-            </div>
-        </form>
-    </div>
+        {{-- Save Button --}}
+        <div class="flex justify-end">
+            <button type="submit"
+                wire:loading.attr="disabled"
+                wire:target="save"
+                class="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-semibold rounded-xl transition shadow-sm">
+                <span wire:loading.remove wire:target="save">Simpan Pengaturan</span>
+                <span wire:loading wire:target="save" class="flex items-center gap-2">
+                    <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
+                    Menyimpan...
+                </span>
+            </button>
+        </div>
+
+    </form>
 </div>

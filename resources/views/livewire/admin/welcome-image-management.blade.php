@@ -1,141 +1,137 @@
-<div class="max-w-5xl mx-auto p-6">
-    <h2 class="text-2xl font-semibold mb-4 mt-5 dark:text-white">
-        {{ $editing ? 'Edit Gambar Welcome Screen' : 'Tambah Gambar Baru' }}
-    </h2>
+<div class="max-w-6xl mx-auto p-6">
 
-    <div class="max-w-sm">
-        @if (session()->has('message'))
-            <div class="p-4 mb-4 text-green-700 bg-green-100 rounded">
-                {{ session('message') }}
-            </div>
-        @endif
-        
-        @if($errors->any())
-            <div class="p-4 mb-4 text-red-700 bg-red-100 rounded">
-                @foreach($errors->all() as $error)
-                    <p>{{ $error }}</p>
-                @endforeach
-            </div>
-        @endif
-        
-        <form wire:submit.prevent="saveImage" class="space-y-4">
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Judul</label>
-                <input type="text" wire:model.defer="title" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                @error('title') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-            </div>
-
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Gambar</label>
-                <input type="file" wire:model="image" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600">
-                @error('image') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                @if($editing && !$image)
-                    <div class="mt-2">
-                        <span class="text-xs text-gray-500">Biarkan kosong jika tidak ingin mengubah gambar</span>
-                    </div>
-                @endif
-            </div>
-
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
-                    <select wire:model.defer="is_active" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                        <option value="1">Aktif</option>
-                        <option value="0">Nonaktif</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Urutan</label>
-                    <input type="number" wire:model.defer="order" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                </div>
-            </div>
-
-            <div class="flex justify-end space-x-3">
-                @if($editing)
-                    <button type="button" wire:click="resetForm" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-600 dark:text-white dark:border-gray-600">
-                        Batal
-                    </button>
-                @endif
-                <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    {{ $editing ? 'Perbarui' : 'Simpan' }}
-                </button>
-            </div>
-        </form>
+    {{-- Header --}}
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-xl font-bold text-gray-900 dark:text-white">Gambar Welcome Screen</h1>
+            <p class="text-sm text-gray-500 mt-0.5">Gambar yang ditampilkan di layar pembuka aplikasi</p>
+        </div>
+        <flux:button variant="primary" wire:click="openForm" icon="plus">Tambah Gambar</flux:button>
     </div>
 
-    <div class="mt-8">
-        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Daftar Gambar Welcome Screen</h3>
-        
-        <div class="overflow-x-auto shadow-lg rounded-lg">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-gray-50 dark:bg-gray-800">
-                    <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gambar</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Judul</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Urutan</th>
-                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-900 dark:divide-gray-700">
-                    @forelse($images as $index => $image)
-                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{{ $index + 1 }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                @if($image->hasMedia('welcome_images'))
-                                    <img src="{{ $image->getFirstMediaUrl('welcome_images', 'thumb') }}" alt="{{ $image->title }}" class="h-10 w-10 object-cover rounded">
-                                @else
-                                    <span class="text-sm text-gray-500">Tidak ada gambar</span>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{{ $image->title }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $image->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+    @if(session()->has('message'))
+        <div class="flex items-center gap-2 p-3 mb-4 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            {{ session('message') }}
+        </div>
+    @endif
+
+    {{-- Table --}}
+    <div class="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm overflow-hidden">
+        <table class="min-w-full text-sm divide-y divide-gray-100 dark:divide-neutral-700">
+            <thead class="bg-gray-50 dark:bg-neutral-900">
+                <tr>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Gambar</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Judul</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Urutan</th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Aksi</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50 dark:divide-neutral-700">
+                @forelse($images as $image)
+                    <tr class="hover:bg-gray-50 dark:hover:bg-neutral-700 transition">
+                        <td class="px-4 py-3">
+                            @if($image->hasMedia('welcome_images'))
+                                <img src="{{ $image->getFirstMediaUrl('welcome_images', 'thumb') }}" alt="{{ $image->title }}"
+                                    class="h-14 w-20 object-cover rounded-lg">
+                            @else
+                                <div class="h-14 w-20 bg-gray-100 dark:bg-neutral-700 rounded-lg flex items-center justify-center text-gray-400 text-xs">
+                                    No Image
+                                </div>
+                            @endif
+                        </td>
+                        <td class="px-4 py-3 font-medium text-gray-800 dark:text-white">{{ $image->title }}</td>
+                        <td class="px-4 py-3 text-center">
+                            <button wire:click="toggleActive({{ $image->id }})" class="focus:outline-none">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium cursor-pointer transition
+                                    {{ $image->is_active ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}">
                                     {{ $image->is_active ? 'Aktif' : 'Nonaktif' }}
                                 </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{{ $image->order }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <div class="flex items-center justify-end space-x-2">
-                                    <button wire:click="edit({{ $image->id }})" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                                        </svg>
-                                    </button>
-                                    <button wire:click="delete({{ $image->id }})" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300" onclick="return confirm('Apakah Anda yakin ingin menghapus gambar ini?')">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-                                        </svg>
-                                    </button>
-                                    <button wire:click="toggleActive({{ $image->id }})" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                            <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
-                                Tidak ada data gambar
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                            </button>
+                        </td>
+                        <td class="px-4 py-3 text-center text-gray-600 dark:text-gray-400">{{ $image->order }}</td>
+                        <td class="px-4 py-3 text-right">
+                            <div class="flex items-center justify-end gap-1">
+                                <button wire:click="edit({{ $image->id }})"
+                                    class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition" title="Edit">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                </button>
+                                <button
+                                    x-data x-on:click="if(confirm('Hapus gambar ini?')) $wire.delete({{ $image->id }})"
+                                    class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition" title="Hapus">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="5" class="px-4 py-12 text-center">
+                            <div class="text-gray-400 text-sm">Belum ada gambar. Klik "Tambah Gambar" untuk mulai.</div>
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
     </div>
-</div>
 
-@push('scripts')
-<script>
-    document.addEventListener('livewire:load', function () {
-        Livewire.on('imageUpdated', () => {
-            // Reset file input after successful upload
-            @this.set('image', null);
-        });
-    });
-</script>
-@endpush
+    {{-- Modal Form --}}
+    <flux:modal wire:model="showForm" class="max-w-lg w-full">
+        <flux:heading size="lg">{{ $editing ? 'Edit Gambar' : 'Tambah Gambar Baru' }}</flux:heading>
+
+        <form wire:submit.prevent="saveImage" class="mt-4 space-y-4">
+            @if($errors->any())
+                <div class="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                    @foreach($errors->all() as $error)<p>{{ $error }}</p>@endforeach
+                </div>
+            @endif
+
+            <flux:field>
+                <flux:label>Judul <span class="text-red-500">*</span></flux:label>
+                <flux:input type="text" wire:model.defer="title" placeholder="Judul gambar" />
+                <flux:error name="title" />
+            </flux:field>
+
+            <flux:field>
+                <flux:label>Gambar {{ $editing ? '(kosongkan jika tidak diganti)' : '' }}</flux:label>
+                <flux:input type="file" wire:model="image" accept="image/*" />
+                <flux:error name="image" />
+                @if($editing)
+                    @php $img = $images->firstWhere('id', $welcomeImageId); @endphp
+                    @if($img && $img->hasMedia('welcome_images'))
+                        <img src="{{ $img->getFirstMediaUrl('welcome_images', 'thumb') }}" class="h-16 mt-2 rounded-lg" alt="preview">
+                    @endif
+                @endif
+            </flux:field>
+
+            <div class="grid grid-cols-2 gap-3">
+                <flux:field>
+                    <flux:label>Status</flux:label>
+                    <flux:select wire:model.defer="is_active">
+                        <option value="1">Aktif</option>
+                        <option value="0">Nonaktif</option>
+                    </flux:select>
+                </flux:field>
+                <flux:field>
+                    <flux:label>Urutan</flux:label>
+                    <flux:input type="number" wire:model.defer="order" min="0" />
+                    <flux:error name="order" />
+                </flux:field>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2">
+                <flux:button variant="ghost" wire:click="resetForm">Batal</flux:button>
+                <flux:button type="submit" variant="primary">
+                    {{ $editing ? 'Perbarui' : 'Simpan' }}
+                </flux:button>
+            </div>
+        </form>
+    </flux:modal>
+</div>

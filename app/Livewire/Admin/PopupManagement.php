@@ -21,6 +21,7 @@ class PopupManagement extends Component
     public $order      = 0;
     public $popupId;
     public $editing    = false;
+    public $showForm   = false;
 
     protected $rules = [
         'title'      => 'nullable|string|max:255',
@@ -73,6 +74,12 @@ class PopupManagement extends Component
         $this->loadPopups();
     }
 
+    public function openForm()
+    {
+        $this->resetFields();
+        $this->showForm = true;
+    }
+
     public function editPopup($id)
     {
         $popup = Popup::with('media')->findOrFail($id);
@@ -85,6 +92,7 @@ class PopupManagement extends Component
         $this->end_date   = $popup->end_date?->format('Y-m-d');
         $this->order      = $popup->order;
         $this->editing    = true;
+        $this->showForm   = true;
     }
 
     public function deletePopup($id)
@@ -95,7 +103,7 @@ class PopupManagement extends Component
 
     public function resetFields()
     {
-        $this->reset(['title', 'content', 'image', 'start_date', 'end_date', 'popupId', 'editing']);
+        $this->reset(['title', 'content', 'image', 'start_date', 'end_date', 'popupId', 'editing', 'showForm']);
         $this->type      = 'text';
         $this->is_active = true;
         $this->order     = 0;

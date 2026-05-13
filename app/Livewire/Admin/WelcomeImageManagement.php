@@ -18,6 +18,7 @@ class WelcomeImageManagement extends Component
     public $order = 0;
     public $welcomeImageId;
     public $editing = false;
+    public $showForm = false;
 
     protected $rules = [
         'title' => 'required|string|max:255',
@@ -68,6 +69,12 @@ class WelcomeImageManagement extends Component
         session()->flash('message', $message);
     }
 
+    public function openForm()
+    {
+        $this->resetForm();
+        $this->showForm = true;
+    }
+
     public function edit($id)
     {
         $welcomeImage = WelcomeImage::findOrFail($id);
@@ -76,6 +83,7 @@ class WelcomeImageManagement extends Component
         $this->is_active = $welcomeImage->is_active;
         $this->order = $welcomeImage->order;
         $this->editing = true;
+        $this->showForm = true;
     }
 
     public function delete($id)
@@ -97,7 +105,7 @@ class WelcomeImageManagement extends Component
 
     private function resetForm()
     {
-        $this->reset(['title', 'image', 'is_active', 'order', 'welcomeImageId', 'editing']);
+        $this->reset(['title', 'image', 'is_active', 'order', 'welcomeImageId', 'editing', 'showForm']);
     }
 
     public function render()
