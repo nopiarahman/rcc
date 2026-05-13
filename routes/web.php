@@ -120,6 +120,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('dashboard.discounts');
     Route::get('/dashboard/discount-codes', \App\Livewire\Admin\DiscountCodeManager::class)
         ->name('dashboard.discount-codes');
+    Route::get('/dashboard/popups', \App\Livewire\Admin\PopupManagement::class)
+        ->name('dashboard.popups');
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');

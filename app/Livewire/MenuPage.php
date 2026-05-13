@@ -6,6 +6,7 @@ use App\Models\Minuman;
 use Livewire\Component;
 
 use App\Models\Banner;
+use App\Models\Popup;
 
 class MenuPage extends Component
 {
@@ -15,6 +16,7 @@ class MenuPage extends Component
     public $minumans = [];
     public $makanans = [];
     public $banners = [];
+    public $popup = null;
 
     public function mount()
     {
@@ -34,6 +36,17 @@ class MenuPage extends Component
         $this->banners = Banner::where('status', true)
             ->orderBy('order')
             ->get();
+        $today = now()->toDateString();
+        $this->popup = Popup::where('is_active', true)
+            ->where(function ($q) use ($today) {
+                $q->whereNull('start_date')->orWhere('start_date', '<=', $today);
+            })
+            ->where(function ($q) use ($today) {
+                $q->whereNull('end_date')->orWhere('end_date', '>=', $today);
+            })
+            ->with('media')
+            ->orderBy('order')
+            ->first();
     }
 
     public function gantiKategori($kategori)

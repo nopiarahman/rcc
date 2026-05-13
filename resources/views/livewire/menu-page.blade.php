@@ -162,4 +162,55 @@
     </div>
     <x-mobile-nav/>
 
+    @if($popup)
+    @php
+        $popupKey = 'popup_closed_' . $popup->id . '_' . now()->toDateString();
+    @endphp
+    <div
+        x-data="{ open: false, key: '{{ $popupKey }}' }"
+        x-init="open = !localStorage.getItem(key)"
+        x-show="open"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.55); display:flex; align-items:center; justify-content:center; padding:1rem;"
+        x-cloak>
+        <div
+            x-show="open"
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 transform scale-90"
+            x-transition:enter-end="opacity-100 transform scale-100"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100 transform scale-100"
+            x-transition:leave-end="opacity-0 transform scale-90"
+            style="background:#fff; border-radius:1rem; max-width:360px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.3); overflow:hidden; position:relative;">
+            <button
+                @click="open = false; localStorage.setItem(key, '1')"
+                style="position:absolute; top:0.5rem; right:0.6rem; background:rgba(0,0,0,0.15); border:none; border-radius:50%; width:28px; height:28px; cursor:pointer; font-size:1rem; line-height:1; color:#fff; z-index:1;">
+                &times;
+            </button>
+            @if($popup->title)
+                <div style="padding:1rem 1.2rem 0.5rem; font-weight:700; font-size:1.05rem; color:#1a1a1a;">
+                    {{ $popup->title }}
+                </div>
+            @endif
+            @if($popup->type === 'image' && $popup->hasMedia('popups'))
+                <img src="{{ $popup->getFirstMediaUrl('popups') }}" alt="{{ $popup->title }}" style="width:100%; display:block; max-height:300px; object-fit:cover;">
+            @elseif($popup->type === 'text' && $popup->content)
+                <div style="padding:{{ $popup->title ? '0.5rem' : '1.5rem' }} 1.2rem 1.5rem; color:#333; font-size:0.95rem; line-height:1.6; white-space:pre-wrap;">{{ $popup->content }}</div>
+            @endif
+            <div style="padding:0.75rem 1.2rem; text-align:right;">
+                <button
+                    @click="open = false; localStorage.setItem(key, '1')"
+                    style="background:{{ $themeColor }}; color:#fff; border:none; border-radius:0.5rem; padding:0.4rem 1rem; font-size:0.875rem; cursor:pointer;">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
+
 </div>

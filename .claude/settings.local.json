@@ -11,7 +11,9 @@
       "Bash(php -l app/Models/Minuman.php)",
       "Bash(php -l app/Models/Makanan.php)",
       "Bash(grep -n 'Media $media = null' app/Models/Makanan.php)",
-      "Bash(php -l app/Livewire/MinumanDetail.php)"
+      "Bash(php -l app/Livewire/MinumanDetail.php)",
+      "Bash(git push *)",
+      "Bash(xargs grep *)"
     ]
   }
 }

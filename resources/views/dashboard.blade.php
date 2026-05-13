@@ -50,6 +50,22 @@
                 </div>
             </a>
 
+            <!-- Popup Management Card -->
+            <a href="{{ route('dashboard.popups') }}" class="group block">
+                <div class="relative aspect-video overflow-hidden rounded-xl border border-neutral-200 bg-white p-6 shadow-sm transition-all duration-200 hover:border-orange-500 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800">
+                    <div class="flex h-full flex-col justify-between">
+                        <div>
+                            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-orange-100 text-orange-600 dark:bg-orange-900/50 dark:text-orange-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                </svg>
+                            </div>
+                            <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">Kelola Popup</h3>
+                        </div>
+                    </div>
+                </div>
+            </a>
+
             <!-- Menu Management Card -->
             <a href="{{ route('minuman.index') }}" class="group block">
                 <div class="relative aspect-video overflow-hidden rounded-xl border border-neutral-200 bg-white p-6 shadow-sm transition-all duration-200 hover:border-blue-500 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800">
@@ -67,25 +83,7 @@
             </a>
         </div>
         
-        <!-- Recent Activity Section -->
-        <div class="relative flex-1 overflow-hidden rounded-xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-700 dark:bg-neutral-800">
-            <h2 class="text-lg font-medium text-gray-900 dark:text-white">Aktivitas Terbaru</h2>
-            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Riwayat aktivitas terbaru akan muncul di sini.</p>
-            <!-- Placeholder for recent activity -->
-            <div class="mt-4 space-y-4">
-                <div class="flex items-start">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clip-rule="evenodd" />
-                        </svg>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-900 dark:text-white">Sistem telah diperbarui</p>
-                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Versi terbaru 2.0.0 telah berhasil diinstal</p>
-                        <p class="mt-1 text-xs text-gray-400">Beberapa menit yang lalu</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+        {{-- Statistics Dashboard --}}
+        <livewire:admin.dashboard-stats />
     </div>
 </x-layouts.app>
