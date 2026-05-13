@@ -13,7 +13,10 @@
       "Bash(grep -n 'Media $media = null' app/Models/Makanan.php)",
       "Bash(php -l app/Livewire/MinumanDetail.php)",
       "Bash(git push *)",
-      "Bash(xargs grep *)"
+      "Bash(xargs grep *)",
+      "Bash(npm run *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }
