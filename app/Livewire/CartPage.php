@@ -420,7 +420,7 @@ class CartPage extends Component
             'total_harga' => $finalTotal,
             'discount_code_id' => $discountCodeId,
             'discount_amount' => $discountAmount,
-            'status' => 'menunggu_konfirmasi',
+            'status' => 'diproses',
             'order_type' => $this->order_type,
             'nomor_pesanan' => 'ORD-' . now()->format('Ymd') . '-' . strtoupper(uniqid())
         ]);
@@ -501,6 +501,9 @@ class CartPage extends Component
         }
         $message .= "\nWaktu " . ($this->order_type === 'delivery' ? 'Pengantaran' : 'Pengambilan') . ": {$this->waktu_pengantaran}";
         $message .= "\nNomor Pesanan: " . $pesanan->nomor_pesanan;
+
+        $selesaiUrl = \Illuminate\Support\Facades\URL::signedRoute('order.selesai', ['pesanan' => $pesanan->id]);
+        $message .= "\n\n✅ *Tandai pesanan selesai:*\n" . $selesaiUrl;
     
         // Clear cart
         session()->forget('cart');

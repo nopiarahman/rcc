@@ -151,5 +151,16 @@ Route::middleware(['auth'])->group(function () {
 });
 
 
+// Order completion magic link (signed, no auth required — owner taps from WhatsApp)
+Route::get('/order/{pesanan}/selesai', function (\App\Models\Pesanan $pesanan) {
+    if (!in_array($pesanan->status, ['selesai', 'dibatalkan'])) {
+        $pesanan->update([
+            'status'        => 'selesai',
+            'waktu_selesai' => now(),
+        ]);
+    }
+    return view('order-selesai', ['pesanan' => $pesanan]);
+})->name('order.selesai')->middleware('signed');
+
 // Auth routes are loaded above and are accessible even when store is closed
 // No additional routes should be defined outside the middleware groups to ensure proper store closure handling
