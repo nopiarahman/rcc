@@ -1,4 +1,4 @@
-<div class="max-w-3xl mx-auto p-6">
+<div class="max-w-3xl mx-auto">
 
     {{-- Header --}}
     <div class="mb-6">
