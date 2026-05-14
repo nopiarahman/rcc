@@ -183,11 +183,24 @@
             <!-- Discount -->
             @if($discountAmount > 0)
                 <div class="d-flex justify-content-between mb-1 text-success">
-                    <span style="font-size: 0.85rem;">Discount {{ $applied_discount->code }}:</span>
+                    <span style="font-size: 0.85rem;">Diskon ({{ $applied_discount->code }}):</span>
                     <span style="font-size: 0.85rem;">-Rp{{ number_format($discountAmount, 0, ',', '.') }}</span>
                 </div>
             @endif
-            
+
+            <!-- Ongkir -->
+            @if($ongkirAmount > 0)
+                <div class="d-flex justify-content-between mb-1">
+                    <span style="font-size: 0.85rem;">Ongkir ({{ number_format($ongkirDistanceKm, 1) }} km):</span>
+                    <span style="font-size: 0.85rem; color: #e65100;">+Rp{{ number_format($ongkirAmount, 0, ',', '.') }}</span>
+                </div>
+            @elseif($order_type === 'delivery' && isset($web_settings) && $web_settings->ongkir_enabled && $ongkirAmount == 0 && $ongkir_distance_km > 0)
+                <div class="d-flex justify-content-between mb-1 text-success">
+                    <span style="font-size: 0.85rem;">Ongkir ({{ number_format($ongkir_distance_km, 1) }} km):</span>
+                    <span style="font-size: 0.85rem;">Gratis</span>
+                </div>
+            @endif
+
             <!-- Rounding -->
             @if($roundingAmount != 0)
                 <div class="d-flex justify-content-between mb-1">
@@ -259,6 +272,24 @@
             </div>
             @endif
     
+            @if($order_type === 'delivery' && isset($web_settings) && $web_settings->ongkir_enabled)
+            <div class="mb-2 p-2 rounded" style="background:#fff8e1; border:1px solid #ffe082; font-size:0.85rem;">
+                @if($ongkir > 0)
+                    <div class="d-flex justify-content-between">
+                        <span>Ongkos Kirim ({{ number_format($ongkir_distance_km, 1) }} km):</span>
+                        <span class="fw-bold" style="color:#e65100;">Rp{{ number_format($ongkir, 0, ',', '.') }}</span>
+                    </div>
+                @elseif($ongkir_distance_km > 0)
+                    <div class="d-flex justify-content-between">
+                        <span>Ongkos Kirim ({{ number_format($ongkir_distance_km, 1) }} km):</span>
+                        <span class="fw-bold text-success">Gratis</span>
+                    </div>
+                @else
+                    <span class="text-muted">Menghitung ongkir...</span>
+                @endif
+            </div>
+            @endif
+
             <div class="mb-3">
                 <label class="form-label">Waktu {{ $order_type === 'delivery' ? 'Pengantaran' : 'Pengambilan' }}</label>
                 <select class="form-select" id="waktu_select" wire:model.defer="waktu_pengantaran">
@@ -366,8 +397,10 @@
                 const distance = getDistanceFromLatLonInMeters(userLat, userLng, centerLat, centerLng);
                 
                 if (distance <= maxRadius) {
-                    // Within delivery radius
-                    successCallback();
+                    // Send coordinates to Livewire to calculate ongkir, then open modal
+                    @this.call('setCustomerLocation', userLat, userLng).then(function() {
+                        successCallback();
+                    });
                 } else {
                     alert(`Layanan ini hanya tersedia dalam radius ${maxRadius} meter dari lokasi toko.`);
                 }
@@ -503,9 +536,10 @@
             if (deliveryBtn) {
                 deliveryBtn.addEventListener('click', function(e) {
                     e.preventDefault();
+                    e.currentTarget.blur();
                     orderTypeModal.hide();
                     @this.set('order_type', 'delivery');
-                    
+
                     // For delivery, check location first
                     checkDeliveryLocation(function() {
                         checkoutModal.show();
@@ -516,6 +550,7 @@
             if (takeawayBtn) {
                 takeawayBtn.addEventListener('click', function(e) {
                     e.preventDefault();
+                    e.currentTarget.blur();
                     orderTypeModal.hide();
                     @this.set('order_type', 'takeaway');
                     checkoutModal.show();

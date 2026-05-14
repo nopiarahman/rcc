@@ -21,6 +21,9 @@ class WebSetting extends Model
         'closing_time',
         'is_temporarily_closed',
         'temporary_closure_message',
+        'ongkir_enabled',
+        'ongkir_per_km',
+        'ongkir_free_km',
     ];
 
     protected $with = ['themeColor'];
@@ -36,5 +39,8 @@ class WebSetting extends Model
         'opening_time' => 'datetime',
         'closing_time' => 'datetime',
         'is_temporarily_closed' => 'boolean',
+        'ongkir_enabled' => 'boolean',
+        'ongkir_per_km' => 'decimal:2',
+        'ongkir_free_km' => 'decimal:2',
     ];
 }

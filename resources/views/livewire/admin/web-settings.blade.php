@@ -179,6 +179,46 @@
             </div>
         </div>
 
+        {{-- Ongkos Kirim --}}
+        <div class="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-sm overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100 dark:border-neutral-700 flex items-center justify-between">
+                <div>
+                    <h2 class="font-semibold text-gray-800 dark:text-white text-sm">Ongkos Kirim</h2>
+                    <p class="text-xs text-gray-500 mt-0.5">Biaya pengiriman otomatis berdasarkan jarak jalan (OSRM)</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" wire:model.live="ongkir_enabled" class="sr-only peer">
+                    <div class="w-10 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-neutral-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                </label>
+            </div>
+            <div class="p-5 space-y-4 @if(!$ongkir_enabled) opacity-50 pointer-events-none @endif">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tarif per KM (Rp)</label>
+                        <input type="number" wire:model="ongkir_per_km" min="0" step="500"
+                            class="w-full px-3 py-2 border border-gray-200 dark:border-neutral-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 dark:bg-neutral-700 dark:text-white"
+                            placeholder="2000">
+                        @error('ongkir_per_km') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        <p class="text-xs text-gray-400 mt-1">Contoh: 2000 = Rp 2.000/km</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Gratis Ongkir sampai (KM)</label>
+                        <input type="number" wire:model="ongkir_free_km" min="0" step="0.1"
+                            class="w-full px-3 py-2 border border-gray-200 dark:border-neutral-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 dark:bg-neutral-700 dark:text-white"
+                            placeholder="0">
+                        @error('ongkir_free_km') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        <p class="text-xs text-gray-400 mt-1">Isi 0 jika tidak ada gratis ongkir</p>
+                    </div>
+                </div>
+                <div class="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-100 dark:border-amber-800">
+                    <p class="text-xs text-amber-700 dark:text-amber-300">
+                        <span class="font-semibold">Contoh:</span> Tarif Rp 2.000/km, gratis 1 km → jarak 3 km = Rp 4.000 ongkir.
+                        Jarak dihitung berdasarkan rute jalan nyata (bukan garis lurus).
+                    </p>
+                </div>
+            </div>
+        </div>
+
         {{-- Tema Warna --}}
         <div class="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-sm overflow-hidden">
             <div class="px-5 py-4 border-b border-gray-100 dark:border-neutral-700">

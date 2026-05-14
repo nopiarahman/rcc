@@ -1,0 +1,27 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('web_settings', function (Blueprint $table) {
+            $table->boolean('ongkir_enabled')->default(false)->after('delivery_radius');
+            $table->decimal('ongkir_per_km', 10, 2)->default(0)->after('ongkir_enabled');
+            $table->decimal('ongkir_free_km', 10, 2)->default(0)->after('ongkir_per_km');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('web_settings', function (Blueprint $table) {
+            $table->dropColumn(['ongkir_enabled', 'ongkir_per_km', 'ongkir_free_km']);
+        });
+    }
+};

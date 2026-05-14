@@ -34,6 +34,9 @@ class WebSettings extends Component
     public $closing_time;
     public $is_temporarily_closed = false;
     public $temporary_closure_message;
+    public $ongkir_enabled = false;
+    public $ongkir_per_km = 0;
+    public $ongkir_free_km = 0;
 
     protected $listeners = ['refreshComponent' => '$refresh'];
 
@@ -65,6 +68,9 @@ class WebSettings extends Component
         $this->closing_time = $this->settings->closing_time ? $this->settings->closing_time->format('H:i') : '22:00';
         $this->is_temporarily_closed = $this->settings->is_temporarily_closed ?? false;
         $this->temporary_closure_message = $this->settings->temporary_closure_message;
+        $this->ongkir_enabled = $this->settings->ongkir_enabled ?? false;
+        $this->ongkir_per_km = $this->settings->ongkir_per_km ?? 0;
+        $this->ongkir_free_km = $this->settings->ongkir_free_km ?? 0;
 
         $this->site_name = $this->settings->site_name;
         $this->tagline = $this->settings->tagline;
@@ -98,6 +104,9 @@ class WebSettings extends Component
             'closing_time' => 'required|date_format:H:i|after:opening_time',
             'is_temporarily_closed' => 'boolean',
             'temporary_closure_message' => 'nullable|string|max:500',
+            'ongkir_enabled' => 'boolean',
+            'ongkir_per_km' => 'required_if:ongkir_enabled,true|numeric|min:0',
+            'ongkir_free_km' => 'nullable|numeric|min:0',
         ];
     }
 
@@ -124,6 +133,9 @@ class WebSettings extends Component
             'closing_time' => $this->closing_time,
             'is_temporarily_closed' => $this->is_temporarily_closed,
             'temporary_closure_message' => $this->temporary_closure_message,
+            'ongkir_enabled' => $this->ongkir_enabled,
+            'ongkir_per_km' => $this->ongkir_per_km,
+            'ongkir_free_km' => $this->ongkir_free_km,
         ];
 
         if ($this->logo) {

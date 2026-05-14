@@ -11,6 +11,7 @@ use App\Models\Topping;
 use App\Models\WebSetting;
 use App\Models\DiscountCode;
 use App\Models\DiscountCodeUsage;
+use App\Services\OsrmService;
 
 class CartPage extends Component
 {
@@ -27,6 +28,10 @@ class CartPage extends Component
     public $applied_discount = null;
     public $discount_amount = 0;
     public $discount_error = '';
+    public $customer_lat = null;
+    public $customer_lng = null;
+    public $ongkir = 0;
+    public $ongkir_distance_km = 0;
 
     public function mount()
     {
@@ -211,6 +216,45 @@ class CartPage extends Component
         $this->showForm = true;
         $this->dispatch('show-checkout-modal');
     }
+
+    public function setCustomerLocation(float $lat, float $lng): void
+    {
+        $this->customer_lat = $lat;
+        $this->customer_lng = $lng;
+        $this->calculateOngkir();
+    }
+
+    protected function calculateOngkir(): void
+    {
+        $settings = $this->web_settings ?: WebSetting::first();
+
+        if (!$settings->ongkir_enabled || $this->order_type !== 'delivery' || !$this->customer_lat) {
+            $this->ongkir = 0;
+            $this->ongkir_distance_km = 0;
+            return;
+        }
+
+        $osrm = new OsrmService();
+        $distanceKm = $osrm->getDistanceKm(
+            (float) $settings->latitude,
+            (float) $settings->longitude,
+            $this->customer_lat,
+            $this->customer_lng
+        );
+
+        if ($distanceKm === null) {
+            $this->ongkir = 0;
+            $this->ongkir_distance_km = 0;
+            return;
+        }
+
+        $this->ongkir_distance_km = $distanceKm;
+        $this->ongkir = $osrm->calculateOngkir(
+            $distanceKm,
+            (float) $settings->ongkir_per_km,
+            (float) $settings->ongkir_free_km
+        );
+    }
     public function render()
     {
         // Preload semua data sekaligus untuk menghindari N+1 queries
@@ -304,14 +348,21 @@ class CartPage extends Component
         
         // Get web settings for order mode
         $webSettings = $this->web_settings ?: WebSetting::first();
-    
+
+        // Add ongkir to total for display
+        $ongkirAmount = ($this->order_type === 'delivery') ? (int) $this->ongkir : 0;
+        $totalWithOngkir = $totalAfterDiscount + $ongkirAmount;
+        $roundedTotal = floor($totalWithOngkir / 1000) * 1000;
+
         return view('livewire.cart-page', [
             'cartItems' => $detailedCart,
-            'total' => $roundedTotal, // Use rounded total as the main total
-            'originalTotal' => $total, // Keep original total for reference
-            'totalAfterDiscount' => $totalAfterDiscount, // Total after discount but before rounding
-            'discountAmount' => $discountAmount, // Discount amount applied
-            'roundingAmount' => $roundingAmount, // The amount rounded (can be positive or negative)
+            'total' => $roundedTotal,
+            'originalTotal' => $total,
+            'totalAfterDiscount' => $totalAfterDiscount,
+            'discountAmount' => $discountAmount,
+            'roundingAmount' => $roundedTotal - $totalWithOngkir,
+            'ongkirAmount' => $ongkirAmount,
+            'ongkirDistanceKm' => $this->ongkir_distance_km,
             'orderMode' => $webSettings->order_mode,
             'web_settings' => $webSettings
         ])->layout('layouts.public');
@@ -406,8 +457,12 @@ class CartPage extends Component
         }
         
         $totalAfterDiscount = $cartTotal - $discountAmount;
-        $finalTotal = floor($totalAfterDiscount / 1000) * 1000;
-        
+
+        // Add ongkir for delivery orders
+        $ongkirAmount = ($this->order_type === 'delivery') ? (int) $this->ongkir : 0;
+        $totalWithOngkir = $totalAfterDiscount + $ongkirAmount;
+        $finalTotal = floor($totalWithOngkir / 1000) * 1000;
+
         // Create the order
         $pesanan = \App\Models\Pesanan::create([
             'user_id' => auth()->id(),
@@ -418,6 +473,7 @@ class CartPage extends Component
             'catatan' => $this->catatan ?? null,
             'total' => (int) $finalTotal,
             'total_harga' => $finalTotal,
+            'ongkir' => $ongkirAmount,
             'discount_code_id' => $discountCodeId,
             'discount_amount' => $discountAmount,
             'status' => 'diproses',
@@ -488,11 +544,15 @@ class CartPage extends Component
         }
     
         $message .= "\nSubtotal: Rp " . number_format($cartTotal, 0, ',', '.');
-        
+
         if ($discountAmount > 0) {
-            $message .= "\nDiscount ({$this->applied_discount->code}): -Rp " . number_format($discountAmount, 0, ',', '.');
+            $message .= "\nDiskon ({$this->applied_discount->code}): -Rp " . number_format($discountAmount, 0, ',', '.');
         }
-        
+
+        if ($ongkirAmount > 0) {
+            $message .= "\nOngkir (" . number_format($this->ongkir_distance_km, 1) . " km): +Rp " . number_format($ongkirAmount, 0, ',', '.');
+        }
+
         $message .= "\nTotal: Rp " . number_format($finalTotal, 0, ',', '.');
         $message .= "\n\nNama: {$this->nama_pemesan}";
         $message .= "\nJenis Pesanan: " . ($this->order_type === 'delivery' ? 'Antar ke Alamat' : 'Ambil Sendiri');

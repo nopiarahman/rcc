@@ -21,6 +21,7 @@ class Pesanan extends Model
         'total_harga',
         'discount_code_id',
         'discount_amount',
+        'ongkir',
         'status',
         'order_type',
     ];
@@ -29,6 +30,7 @@ class Pesanan extends Model
         'total' => 'integer',
         'total_harga' => 'decimal:2',
         'discount_amount' => 'decimal:2',
+        'ongkir' => 'decimal:2',
     ];
 
     protected static function boot()
