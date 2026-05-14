@@ -32,6 +32,9 @@ class CartPage extends Component
     public $customer_lng = null;
     public $ongkir = 0;
     public $ongkir_distance_km = 0;
+    public $haversine_distance_km = 0;
+    public $distance_method = '';
+    public $location_error = '';
 
     public function mount()
     {
@@ -42,10 +45,13 @@ class CartPage extends Component
         // Load web settings
         $this->web_settings = WebSetting::first();
         
-        // Set default order type based on web settings
-        if ($this->web_settings->order_mode != 'both') {
-            $this->order_type = $this->web_settings->order_mode;
+        // Set order type based on web settings
+        if ($this->web_settings->order_mode === 'takeaway') {
+            $this->order_type = 'takeaway';
+        } elseif ($this->web_settings->order_mode === 'delivery') {
+            $this->order_type = 'delivery';
         }
+        // 'both' → null, user picks on cart page
     }
     
     protected function syncCartFromLocalStorage()
@@ -175,82 +181,98 @@ class CartPage extends Component
             $this->updateTotal();
         }
     }
-    public function checkout()
-    {
-        // If order mode is 'both', show order type selection modal first
-        if ($this->web_settings->order_mode === 'both') {
-            $this->dispatch('show-order-type-modal');
-        } else {
-            // If order mode is specific (delivery or takeaway), proceed directly to checkout form
-            $this->order_type = $this->web_settings->order_mode;
-            $this->proceedToCheckout();
-        }
-    }
-    
-    protected function proceedToCheckout()
-    {
-        // For delivery orders, we need to check location first
-        if ($this->order_type === 'delivery') {
-            $this->dispatch('check-location');
-            // The actual checkout will be triggered by a location-check-passed event
-        } else {
-            // For takeaway, no location check needed
-            $this->showCheckoutForm();
-        }
-    }
-    
-    public function locationCheckPassed()
-    {
-        // This will be called by the JavaScript when location check passes
-        $this->showCheckoutForm();
-    }
-    
-    public function setOrderType($type)
+    public function selectOrderType(string $type): void
     {
         $this->order_type = $type;
-        $this->proceedToCheckout();
+        $this->location_error = '';
+        $this->resetValidation();
+
+        $this->customer_lat = null;
+        $this->customer_lng = null;
+        $this->ongkir = 0;
+        $this->ongkir_distance_km = 0;
+        $this->haversine_distance_km = 0;
+        $this->distance_method = '';
     }
-    
-    public function showCheckoutForm()
+
+    public function checkout(): void
     {
-        $this->showForm = true;
+        if (!$this->order_type) {
+            $this->addError('order_type', 'Pilih jenis pesanan terlebih dahulu.');
+            return;
+        }
+        if ($this->order_type === 'delivery' && empty(trim($this->alamat_pengantaran))) {
+            $this->addError('alamat_pengantaran', 'Isi alamat pengantaran terlebih dahulu.');
+            return;
+        }
+        $this->dispatch('show-checkout-modal');
+    }
+
+    public function showCheckoutForm(): void
+    {
         $this->dispatch('show-checkout-modal');
     }
 
     public function setCustomerLocation(float $lat, float $lng): void
     {
+        $this->location_error = '';
         $this->customer_lat = $lat;
         $this->customer_lng = $lng;
         $this->calculateOngkir();
     }
 
+    public function setLocationFailed(string $message): void
+    {
+        $this->location_error = $message;
+        $this->customer_lat = null;
+        $this->customer_lng = null;
+    }
+
+    protected function haversineKm(float $lat1, float $lng1, float $lat2, float $lng2): float
+    {
+        $R = 6371;
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLng = deg2rad($lng2 - $lng1);
+        $a = sin($dLat / 2) ** 2 +
+             cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLng / 2) ** 2;
+        return round($R * 2 * atan2(sqrt($a), sqrt(1 - $a)), 2);
+    }
+
     protected function calculateOngkir(): void
     {
-        $settings = $this->web_settings ?: WebSetting::first();
-
-        if (!$settings->ongkir_enabled || $this->order_type !== 'delivery' || !$this->customer_lat) {
-            $this->ongkir = 0;
-            $this->ongkir_distance_km = 0;
+        if (!$this->customer_lat) {
             return;
         }
 
-        $osrm = new OsrmService();
-        $distanceKm = $osrm->getDistanceKm(
-            (float) $settings->latitude,
-            (float) $settings->longitude,
-            $this->customer_lat,
-            $this->customer_lng
+        $settings = $this->web_settings ?: WebSetting::first();
+        $storeLat = (float) $settings->latitude;
+        $storeLng = (float) $settings->longitude;
+
+        // Always compute haversine (debug comparison + fallback)
+        $this->haversine_distance_km = $this->haversineKm(
+            $storeLat, $storeLng, $this->customer_lat, $this->customer_lng
         );
 
-        if ($distanceKm === null) {
+        // Try OSRM first for road distance; haversine fallback on failure
+        $osrm = new OsrmService();
+        $osrmDistance = $osrm->getDistanceKm($storeLat, $storeLng, $this->customer_lat, $this->customer_lng);
+
+        if ($osrmDistance !== null) {
+            $this->ongkir_distance_km = $osrmDistance;
+            $this->distance_method = 'osrm';
+        } else {
+            $this->ongkir_distance_km = $this->haversine_distance_km;
+            $this->distance_method = 'haversine';
+        }
+
+        // Ongkir fee only applies when enabled and order is delivery
+        if (!$settings->ongkir_enabled || $this->order_type !== 'delivery') {
             $this->ongkir = 0;
-            $this->ongkir_distance_km = 0;
             return;
         }
 
-        $this->ongkir_distance_km = $distanceKm;
         $this->ongkir = $osrm->calculateOngkir(
-            $distanceKm,
+            $this->ongkir_distance_km,
             (float) $settings->ongkir_per_km,
             (float) $settings->ongkir_free_km
         );
@@ -356,13 +378,15 @@ class CartPage extends Component
 
         return view('livewire.cart-page', [
             'cartItems' => $detailedCart,
-            'total' => $roundedTotal,
+            'grandTotal' => $roundedTotal,
             'originalTotal' => $total,
             'totalAfterDiscount' => $totalAfterDiscount,
             'discountAmount' => $discountAmount,
             'roundingAmount' => $roundedTotal - $totalWithOngkir,
             'ongkirAmount' => $ongkirAmount,
             'ongkirDistanceKm' => $this->ongkir_distance_km,
+            'haversineDistanceKm' => $this->haversine_distance_km,
+            'distanceMethod' => $this->distance_method,
             'orderMode' => $webSettings->order_mode,
             'web_settings' => $webSettings
         ])->layout('layouts.public');
@@ -559,27 +583,25 @@ class CartPage extends Component
         if ($this->order_type === 'delivery') {
             $message .= "\nAlamat: {$this->alamat_pengantaran}";
         }
-        $message .= "\nWaktu " . ($this->order_type === 'delivery' ? 'Pengantaran' : 'Pengambilan') . ": {$this->waktu_pengantaran}";
+        $waktuLabel = $this->order_type === 'delivery' ? 'Pengantaran' : 'Pengambilan';
+        $message .= "\nWaktu {$waktuLabel}: " . ($this->waktu_pengantaran ?: '-');
         $message .= "\nNomor Pesanan: " . $pesanan->nomor_pesanan;
 
-        $selesaiUrl = \Illuminate\Support\Facades\URL::signedRoute('order.selesai', ['pesanan' => $pesanan->id]);
-        $message .= "\n\n✅ *Tandai pesanan selesai:*\n" . $selesaiUrl;
-    
         // Clear cart
         session()->forget('cart');
         $this->dispatch('cartUpdated');
         $this->dispatch('clearLocalCart');
-        
+
         // Clear discount code
         $this->clearDiscountCode();
-        
-        // Redirect to WhatsApp
+
         $waRaw = WebSetting::first()->whatsapp_number ?? '';
         $wa = preg_replace('/[^0-9]/', '', $waRaw);
         if (empty($wa)) {
             session()->flash('error', 'Nomor WhatsApp belum dikonfigurasi.');
             return;
         }
-        return redirect()->away("https://wa.me/{$wa}?text=" . urlencode($message));
+
+        return redirect()->away('https://wa.me/' . $wa . '?text=' . rawurlencode($message));
     }
 }

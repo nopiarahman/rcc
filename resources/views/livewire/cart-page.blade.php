@@ -143,166 +143,253 @@
     
     {{-- Footer --}}
     <div class="footer bg-white p-3 shadow-lg mb-5">
-        {{-- Discount Code Section --}}
-        <div class="card mb-3">
-            <div class="card-body">
-                <h6 class="card-title mb-3" style="font-size: 0.9rem;">Discount Code</h6>
-                
-                @if($applied_discount)
-                    <div class="alert alert-success d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>{{ $applied_discount->code }}</strong> applied
-                            <div class="small">{{ $applied_discount->name }} - {{ $applied_discount->formatted_discount }}</div>
-                        </div>
-                        <button wire:click="clearDiscountCode" class="btn btn-sm btn-outline-danger">Remove</button>
+
+        {{-- Pilih Jenis Pesanan --}}
+        @if($orderMode === 'both')
+        <div class="mb-3">
+            <p class="text-muted mb-2" style="font-size:0.8rem; font-weight:600; text-transform:uppercase; letter-spacing:.04em;">Jenis Pesanan</p>
+            <div class="d-flex gap-2">
+                <button wire:click="selectOrderType('delivery')"
+                    class="btn flex-fill py-2 d-flex flex-column align-items-center gap-1 {{ $order_type === 'delivery' ? 'btn-theme' : 'btn-outline-theme' }}"
+                    style="font-size:0.82rem; border-radius:12px;">
+                    <i class="bi bi-truck" style="font-size:1.2rem;"></i>
+                    <span class="fw-semibold">Antar ke Alamat</span>
+                </button>
+                <button wire:click="selectOrderType('takeaway')"
+                    class="btn flex-fill py-2 d-flex flex-column align-items-center gap-1 {{ $order_type === 'takeaway' ? 'btn-theme' : 'btn-outline-theme' }}"
+                    style="font-size:0.82rem; border-radius:12px;">
+                    <i class="bi bi-bag" style="font-size:1.2rem;"></i>
+                    <span class="fw-semibold">Ambil Sendiri</span>
+                </button>
+            </div>
+            @error('order_type')
+                <div class="text-danger small mt-1">{{ $message }}</div>
+            @enderror
+        </div>
+        @endif
+
+        {{-- Delivery: Alamat + Info Ongkir --}}
+        @if($order_type === 'delivery')
+        @php
+            $locationSettings = json_encode([
+                'lat'    => (float) $web_settings->latitude,
+                'lng'    => (float) $web_settings->longitude,
+                'radius' => (int) $web_settings->delivery_radius,
+            ]);
+        @endphp
+        <div class="mb-3" x-data x-init="
+            if (!navigator.geolocation) {
+                $wire.call('setLocationFailed', 'Browser tidak mendukung fitur lokasi.');
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(
+                function(pos) {
+                    var lat = pos.coords.latitude;
+                    var lng = pos.coords.longitude;
+                    var s = {{ $locationSettings }};
+                    var dist = haversineMeters(lat, lng, s.lat, s.lng);
+                    if (dist <= s.radius) {
+                        $wire.call('setCustomerLocation', lat, lng);
+                    } else {
+                        $wire.call('selectOrderType', 'takeaway');
+                        alert('Maaf, pengiriman hanya tersedia dalam radius ' + s.radius + ' meter dari toko.');
+                    }
+                },
+                function(err) {
+                    var msg = 'Lokasi tidak dapat dideteksi.';
+                    if (err.code === 1) msg = 'Izin lokasi ditolak — aktifkan lokasi di browser.';
+                    else if (err.code === 3) msg = 'Deteksi lokasi timeout — coba lagi.';
+                    $wire.call('setLocationFailed', msg);
+                },
+                { timeout: 15000, maximumAge: 60000, enableHighAccuracy: false }
+            );
+        ">
+            <label class="text-muted mb-1 d-block" style="font-size:0.8rem; font-weight:600; text-transform:uppercase; letter-spacing:.04em;">Alamat Pengantaran</label>
+            <textarea wire:model.blur="alamat_pengantaran" rows="2"
+                class="form-control mb-2" style="font-size:0.85rem; border-radius:10px;"
+                placeholder="Tulis alamat lengkap..."></textarea>
+            @error('alamat_pengantaran')
+                <div class="text-danger small mb-1">{{ $message }}</div>
+            @enderror
+
+            {{-- Info Jarak & Ongkir --}}
+            @if($ongkir_distance_km > 0)
+                <div class="rounded-3 p-2" style="background:#f0fdf4; border:1px solid #bbf7d0;">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="d-flex align-items-center gap-1" style="font-size:0.82rem; color:#166534;">
+                            <i class="bi bi-geo-alt-fill"></i> Jarak ke toko
+                        </span>
+                        <span class="fw-semibold" style="font-size:0.82rem; color:#166534;">
+                            {{ number_format($ongkir_distance_km, 2) }} km
+                        </span>
                     </div>
-                @else
-                    <div class="input-group">
-                        <input type="text"
-                               class="form-control"
-                               wire:model.live="discount_code"
-                               placeholder="Enter discount code"
-                               wire:keydown.enter="applyDiscountCode">
-                        <button wire:click="applyDiscountCode" class="btn btn-theme" type="button">Apply</button>
+                    @if(isset($web_settings) && $web_settings->ongkir_enabled)
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="d-flex align-items-center gap-1" style="font-size:0.82rem; color:#166534;">
+                            <i class="bi bi-truck"></i> Ongkos kirim
+                        </span>
+                        <span class="fw-bold" style="font-size:0.82rem; color:{{ $ongkir > 0 ? '#e65100' : '#166534' }};">
+                            {{ $ongkir > 0 ? 'Rp'.number_format($ongkir, 0, ',', '.') : 'Gratis' }}
+                        </span>
                     </div>
-                    
-                    @if($discount_error)
-                        <div class="text-danger small mt-2">{{ $discount_error }}</div>
                     @endif
-                @endif
-            </div>
+                </div>
+            @elseif($customer_lat)
+                <div class="rounded-3 p-2" style="background:#f0fdf4; border:1px solid #bbf7d0; font-size:0.82rem; color:#166534;">
+                    <i class="bi bi-check-circle-fill me-1"></i> Lokasi terdeteksi — dalam jangkauan pengiriman
+                </div>
+            @elseif($location_error)
+                <div class="rounded-3 p-2" style="background:#fff1f2; border:1px solid #fecdd3; font-size:0.82rem; color:#9f1239;">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ $location_error }}
+                    <button wire:click="selectOrderType('delivery')" class="btn btn-sm btn-link p-0 ms-2" style="font-size:0.8rem; color:#9f1239; text-decoration:underline;">
+                        Coba lagi
+                    </button>
+                </div>
+            @else
+                <div class="rounded-3 p-2 text-center" style="background:#fff7ed; border:1px solid #fed7aa; font-size:0.82rem; color:#9a3412;">
+                    <span class="spinner-border spinner-border-sm me-1" style="width:.75rem;height:.75rem;"></span>
+                    Mendeteksi lokasi...
+                </div>
+            @endif
         </div>
-        
-        <div class="text-center mb-2">
-            <!-- Subtotal -->
-            <div class="d-flex justify-content-between mb-1">
-                <span style="font-size: 0.85rem;">Subtotal:</span>
-                <span style="font-size: 0.85rem;">Rp{{ number_format($originalTotal, 0, ',', '.') }}</span>
-            </div>
-            
-            <!-- Discount -->
-            @if($discountAmount > 0)
-                <div class="d-flex justify-content-between mb-1 text-success">
-                    <span style="font-size: 0.85rem;">Diskon ({{ $applied_discount->code }}):</span>
-                    <span style="font-size: 0.85rem;">-Rp{{ number_format($discountAmount, 0, ',', '.') }}</span>
-                </div>
-            @endif
+        @endif
 
-            <!-- Ongkir -->
-            @if($ongkirAmount > 0)
-                <div class="d-flex justify-content-between mb-1">
-                    <span style="font-size: 0.85rem;">Ongkir ({{ number_format($ongkirDistanceKm, 1) }} km):</span>
-                    <span style="font-size: 0.85rem; color: #e65100;">+Rp{{ number_format($ongkirAmount, 0, ',', '.') }}</span>
-                </div>
-            @elseif($order_type === 'delivery' && isset($web_settings) && $web_settings->ongkir_enabled && $ongkirAmount == 0 && $ongkir_distance_km > 0)
-                <div class="d-flex justify-content-between mb-1 text-success">
-                    <span style="font-size: 0.85rem;">Ongkir ({{ number_format($ongkir_distance_km, 1) }} km):</span>
-                    <span style="font-size: 0.85rem;">Gratis</span>
-                </div>
-            @endif
-
-            <!-- Rounding -->
-            @if($roundingAmount != 0)
-                <div class="d-flex justify-content-between mb-1">
-                    <span class="text-muted small" style="font-size: 0.75rem;">Pembulatan:</span>
-                    <span class="{{ $roundingAmount > 0 ? 'text-success' : 'text-danger' }}" style="font-size: 0.75rem;">
-                        {{ $roundingAmount > 0 ? '+' : '' }}Rp{{ number_format(abs($roundingAmount), 0, ',', '.') }}
-                    </span>
-                </div>
-            @endif
-            
-            <!-- Total -->
-            <div class="d-flex justify-content-between fw-bold">
-                <span style="font-size: 0.9rem;">Total:</span>
-                <span style="font-size: 0.9rem;">Rp{{ number_format($total, 0, ',', '.') }}</span>
-            </div>
-            
-            <p class="text-muted small mb-2 mt-2" style="font-size: 0.75rem;">Pastikan pesanan anda benar, siapkan uang pas jika memungkinkan, Jazakallahu khairan</p>
-        </div>
-        <button id="checkoutBtn" type="button" class="btn btn-theme w-100 mb-2">
-            Checkout
-        </button>
-    </div>
-
-    <!-- Modal Pilih Jenis Pesanan -->
-    <div wire:ignore.self class="modal fade" id="orderTypeModal" tabindex="-1" aria-labelledby="orderTypeModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold" id="orderTypeModalLabel">Pilih Jenis Pesanan</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="d-grid gap-3">
-                        <button id="delivery-btn" class="btn btn-lg btn-outline-theme d-flex flex-column align-items-center py-3">
-                            <i class="bi bi-truck fs-1 mb-2"></i>
-                            <span class="fw-bold">Antar ke Alamat</span>
-                            <small class="text-muted">Pesanan diantar ke lokasi Anda</small>
-                        </button>
-                        
-                        <button id="takeaway-btn" class="btn btn-lg btn-outline-theme d-flex flex-column align-items-center py-3">
-                            <i class="bi bi-bag fs-1 mb-2"></i>
-                            <span class="fw-bold">Ambil Sendiri</span>
-                            <small class="text-muted">Anda mengambil pesanan di toko</small>
-                        </button>
+        {{-- Kode Diskon --}}
+        <div class="mb-3">
+            <p class="text-muted mb-2" style="font-size:0.8rem; font-weight:600; text-transform:uppercase; letter-spacing:.04em;">Kode Diskon</p>
+            @if($applied_discount)
+                <div class="d-flex align-items-center justify-content-between p-2 rounded-3" style="background:#f0fdf4; border:1px solid #bbf7d0;">
+                    <div>
+                        <span class="fw-bold" style="font-size:0.85rem; color:#166534;">{{ $applied_discount->code }}</span>
+                        <span class="text-muted ms-1" style="font-size:0.8rem;">— {{ $applied_discount->formatted_discount }}</span>
                     </div>
+                    <button wire:click="clearDiscountCode" class="btn btn-sm btn-link text-danger p-0 ms-2" style="font-size:0.8rem;">Hapus</button>
                 </div>
+            @else
+                <div class="input-group input-group-sm">
+                    <input type="text" class="form-control" wire:model.live="discount_code"
+                        placeholder="Masukkan kode diskon" wire:keydown.enter="applyDiscountCode"
+                        style="border-radius:10px 0 0 10px;">
+                    <button wire:click="applyDiscountCode" class="btn btn-theme" type="button"
+                        style="border-radius:0 10px 10px 0; font-size:0.82rem;">Pakai</button>
+                </div>
+                @if($discount_error)
+                    <div class="text-danger small mt-1">{{ $discount_error }}</div>
+                @endif
+            @endif
+        </div>
+
+        {{-- Ringkasan Harga --}}
+        <div class="py-2 border-top border-bottom mb-3">
+            <div class="d-flex justify-content-between mb-1">
+                <span class="text-muted" style="font-size:0.85rem;">Subtotal</span>
+                <span style="font-size:0.85rem;">Rp{{ number_format($originalTotal, 0, ',', '.') }}</span>
+            </div>
+            @if($discountAmount > 0)
+            <div class="d-flex justify-content-between mb-1">
+                <span style="font-size:0.85rem; color:#166534;">Diskon ({{ $applied_discount->code }})</span>
+                <span style="font-size:0.85rem; color:#166534;">-Rp{{ number_format($discountAmount, 0, ',', '.') }}</span>
+            </div>
+            @endif
+            @if($order_type === 'delivery' && isset($web_settings) && $web_settings->ongkir_enabled)
+            <div class="d-flex justify-content-between mb-1">
+                <span style="font-size:0.85rem;">
+                    Ongkir
+                    @if($ongkir_distance_km > 0)
+                        <span class="text-muted" style="font-size:0.78rem;">({{ number_format($ongkir_distance_km, 1) }} km)</span>
+                    @endif
+                </span>
+                <span style="font-size:0.85rem; color:{{ $ongkirAmount > 0 ? '#e65100' : '#166534' }};">
+                    @if($ongkir_distance_km > 0)
+                        {{ $ongkirAmount > 0 ? '+Rp'.number_format($ongkirAmount, 0, ',', '.') : 'Gratis' }}
+                    @else
+                        <span class="text-muted">—</span>
+                    @endif
+                </span>
+            </div>
+            @endif
+            @if($roundingAmount != 0)
+            <div class="d-flex justify-content-between mb-1">
+                <span class="text-muted" style="font-size:0.78rem;">Pembulatan</span>
+                <span class="{{ $roundingAmount > 0 ? 'text-success' : 'text-danger' }}" style="font-size:0.78rem;">
+                    {{ $roundingAmount > 0 ? '+' : '' }}Rp{{ number_format(abs($roundingAmount), 0, ',', '.') }}
+                </span>
+            </div>
+            @endif
+            <div class="d-flex justify-content-between fw-bold mt-1">
+                <span>Total</span>
+                <span style="color:{{ $themeColor }};">Rp{{ number_format($grandTotal, 0, ',', '.') }}</span>
             </div>
         </div>
+
+        <p class="text-muted text-center mb-2" style="font-size:0.75rem;">Pastikan pesanan benar. Jazakallahu khairan 🙏</p>
+
+        <button wire:click="checkout" type="button" class="btn btn-theme w-100" style="border-radius:12px; padding:.65rem;">
+            <span wire:loading.remove wire:target="checkout">Lanjut ke Konfirmasi →</span>
+            <span wire:loading wire:target="checkout">
+                <span class="spinner-border spinner-border-sm me-1"></span> Memproses...
+            </span>
+        </button>
     </div>
 
     <!-- Modal Konfirmasi Pesanan -->
     <div wire:ignore.self class="modal fade" id="checkoutModal" tabindex="-1" aria-labelledby="checkoutModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
-            <h5 class="modal-title fw-bold" id="checkoutModalLabel">Konfirmasi Pesanan</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+            <div class="modal-header border-0 pb-0">
+                <div>
+                    <h5 class="modal-title fw-bold mb-0" id="checkoutModalLabel">Konfirmasi Pesanan</h5>
+                    <small class="text-muted">
+                        {{ $order_type === 'delivery' ? 'Antar ke alamat' : 'Ambil sendiri di toko' }}
+                    </small>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
             </div>
-            <div class="modal-body">
-            <div class="mb-2">
-                <label class="form-label">Nama Pemesan</label>
-                <input type="text" class="form-control" wire:model.defer="nama_pemesan">
-            </div>
-    
-            @if($order_type === 'delivery')
-            <div class="mb-2">
-                <label class="form-label">Alamat Pengantaran</label>
-                <textarea class="form-control" wire:model.defer="alamat_pengantaran"></textarea>
-            </div>
-            @endif
-    
-            @if($order_type === 'delivery' && isset($web_settings) && $web_settings->ongkir_enabled)
-            <div class="mb-2 p-2 rounded" style="background:#fff8e1; border:1px solid #ffe082; font-size:0.85rem;">
-                @if($ongkir > 0)
-                    <div class="d-flex justify-content-between">
-                        <span>Ongkos Kirim ({{ number_format($ongkir_distance_km, 1) }} km):</span>
-                        <span class="fw-bold" style="color:#e65100;">Rp{{ number_format($ongkir, 0, ',', '.') }}</span>
-                    </div>
-                @elseif($ongkir_distance_km > 0)
-                    <div class="d-flex justify-content-between">
-                        <span>Ongkos Kirim ({{ number_format($ongkir_distance_km, 1) }} km):</span>
-                        <span class="fw-bold text-success">Gratis</span>
-                    </div>
-                @else
-                    <span class="text-muted">Menghitung ongkir...</span>
-                @endif
-            </div>
-            @endif
+            <div class="modal-body pt-2">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold" style="font-size:0.85rem;">Nama Pemesan <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" wire:model.defer="nama_pemesan" placeholder="Nama Anda">
+                    @error('nama_pemesan') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                </div>
 
-            <div class="mb-3">
-                <label class="form-label">Waktu {{ $order_type === 'delivery' ? 'Pengantaran' : 'Pengambilan' }}</label>
-                <select class="form-select" id="waktu_select" wire:model.defer="waktu_pengantaran">
-                    <option value="">-- Pilih Waktu --</option>
-                </select>
-                <div class="form-text text-muted" style="font-size:0.78rem;">Waktu mulai dari 30 menit sejak sekarang</div>
+                @if($order_type === 'delivery' && $alamat_pengantaran)
+                <div class="mb-3 p-2 rounded-3" style="background:#f8fafc; border:1px solid #e2e8f0; font-size:0.82rem;">
+                    <div class="text-muted mb-0.5" style="font-size:0.75rem; font-weight:600;">ALAMAT PENGANTARAN</div>
+                    <div>{{ $alamat_pengantaran }}</div>
+                    @if($ongkir_distance_km > 0)
+                    <div class="mt-1 text-muted">
+                        <i class="bi bi-geo-alt-fill me-1"></i>{{ number_format($ongkir_distance_km, 1) }} km dari toko
+                        @if(isset($web_settings) && $web_settings->ongkir_enabled)
+                        — Ongkir: <strong style="color:{{ $ongkirAmount > 0 ? '#e65100' : '#166534' }}">{{ $ongkirAmount > 0 ? 'Rp'.number_format($ongkirAmount, 0, ',', '.') : 'Gratis' }}</strong>
+                        @endif
+                    </div>
+                    @endif
+                </div>
+                @endif
+
+                <div class="mb-2">
+                    <label class="form-label fw-semibold" style="font-size:0.85rem;">
+                        Waktu {{ $order_type === 'delivery' ? 'Pengantaran' : 'Pengambilan' }} <span class="text-danger">*</span>
+                    </label>
+                    <div wire:ignore>
+                        <select class="form-select" id="waktu_select"
+                            onchange="var h=document.getElementById('waktu_input_hidden');h.value=this.value;h.dispatchEvent(new Event('input'));">
+                            <option value="">-- Pilih Waktu --</option>
+                        </select>
+                    </div>
+                    <input type="hidden" id="waktu_input_hidden" wire:model.defer="waktu_pengantaran">
+                    <div class="form-text text-muted" style="font-size:0.75rem;">Minimal 30 menit dari sekarang</div>
+                    @error('waktu_pengantaran') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                </div>
             </div>
-            </div>
-            <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-            <button wire:click="konfirmasiCheckout" class="btn btn-theme">
-                Kirim ke WhatsApp
-            </button>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                <button wire:click="konfirmasiCheckout" class="btn btn-theme px-4">
+                    <span wire:loading.remove wire:target="konfirmasiCheckout">Kirim ke WhatsApp</span>
+                    <span wire:loading wire:target="konfirmasiCheckout">
+                        <span class="spinner-border spinner-border-sm me-1"></span> Memproses...
+                    </span>
+                </button>
             </div>
         </div>
         </div>
@@ -342,109 +429,41 @@
                 });
             };
             document.head.appendChild(script);
+
         });
     </script>
 @endpush
 
 <script>
-    // Global location settings
     window.locationSettings = @json(\App\Models\WebSetting::first(['latitude', 'longitude', 'delivery_radius']));
-    
-    // Track initialization state to prevent duplicate handlers
-    window.checkoutInitialized = false;
 
-    // Haversine function to calculate distance
-    function getDistanceFromLatLonInMeters(lat1, lon1, lat2, lon2) {
-        const R = 6371e3; // Radius of earth in meters
+    function haversineMeters(lat1, lon1, lat2, lon2) {
+        const R = 6371e3;
         const dLat = (lat2 - lat1) * Math.PI / 180;
         const dLon = (lon2 - lon1) * Math.PI / 180;
-
-        const a =
-            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(lat1 * Math.PI / 180) *
-            Math.cos(lat2 * Math.PI / 180) *
-            Math.sin(dLon / 2) * Math.sin(dLon / 2);
-
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c;
+        const a = Math.sin(dLat/2)**2 +
+                  Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
-    
-    // Check delivery location function
-    function checkDeliveryLocation(successCallback) {
-        if (!navigator.geolocation) {
-            alert('Browser Anda tidak mendukung fitur lokasi.');
-            return;
-        }
-        
-        // Show loading indicator
-        const checkoutBtn = document.getElementById('checkoutBtn');
-        if (checkoutBtn) {
-            checkoutBtn.innerHTML = 'Memeriksa lokasi... <span class="spinner-border spinner-border-sm"></span>';
-        }
-        
-        navigator.geolocation.getCurrentPosition(
-            function(position) {
-                // Reset button text
-                if (checkoutBtn) checkoutBtn.textContent = 'Checkout';
-                
-                const userLat = position.coords.latitude;
-                const userLng = position.coords.longitude;
-                
-                const centerLat = parseFloat(window.locationSettings.latitude);
-                const centerLng = parseFloat(window.locationSettings.longitude);
-                const maxRadius = parseInt(window.locationSettings.delivery_radius);
-                
-                const distance = getDistanceFromLatLonInMeters(userLat, userLng, centerLat, centerLng);
-                
-                if (distance <= maxRadius) {
-                    // Send coordinates to Livewire to calculate ongkir, then open modal
-                    @this.call('setCustomerLocation', userLat, userLng).then(function() {
-                        successCallback();
-                    });
-                } else {
-                    alert(`Layanan ini hanya tersedia dalam radius ${maxRadius} meter dari lokasi toko.`);
-                }
-            },
-            function(error) {
-                // Reset button text
-                if (checkoutBtn) checkoutBtn.textContent = 'Checkout';
-                
-                if (error.code === error.PERMISSION_DENIED) {
-                    alert('Akses lokasi ditolak. Silakan izinkan lokasi di pengaturan browser.');
-                } else {
-                    alert('Tidak bisa mendeteksi lokasi. Pastikan GPS aktif dan coba lagi.');
-                }
-            }
-        );
-    }
-    
-    // Generate pilihan waktu 30-menit dari sekarang+30mnt
+
     function generateTimeSlots() {
         const select = document.getElementById('waktu_select');
         if (!select) return;
 
+        const closingTime = '{{ $web_settings->closing_time ? $web_settings->closing_time->format("H:i") : "22:00" }}';
+        const [closeHour, closeMin] = closingTime.split(':').map(Number);
+
         const now = new Date();
-
-        // Minimum: sekarang + 30 menit
         const min = new Date(now.getTime() + 30 * 60 * 1000);
-
-        // Bulatkan ke atas ke slot 30-menit terdekat
         const m = min.getMinutes();
-        if (m > 0 && m <= 30) {
-            min.setMinutes(30, 0, 0);
-        } else if (m > 30) {
-            min.setHours(min.getHours() + 1, 0, 0, 0);
-        } else {
-            min.setSeconds(0, 0);
-        }
+        if (m > 0 && m <= 30) min.setMinutes(30, 0, 0);
+        else if (m > 30) min.setHours(min.getHours() + 1, 0, 0, 0);
+        else min.setSeconds(0, 0);
 
-        // Batas akhir: 22:00 hari ini
         const end = new Date(now);
-        end.setHours(22, 0, 0, 0);
+        end.setHours(closeHour - 1, closeMin, 0, 0);
 
-        // Reset opsi
         select.innerHTML = '<option value="">-- Pilih Waktu --</option>';
-
         const cur = new Date(min);
         while (cur <= end) {
             const hh = String(cur.getHours()).padStart(2, '0');
@@ -453,8 +472,6 @@
             select.appendChild(new Option(label, label));
             cur.setMinutes(cur.getMinutes() + 30);
         }
-
-        // Jika tidak ada slot tersedia hari ini
         if (select.options.length === 1) {
             const o = new Option('Tidak ada jadwal tersedia hari ini', '');
             o.disabled = true;
@@ -462,116 +479,16 @@
         }
     }
 
-    // The main function to attach all event handlers
-    function initCartPage() {
-        // Skip if already initialized to prevent duplicate handlers
-        if (window.checkoutInitialized) return;
-        
-        try {
-            // Get required elements
-            const checkoutBtn = document.getElementById('checkoutBtn');
-            const deliveryBtn = document.getElementById('delivery-btn');
-            const takeawayBtn = document.getElementById('takeaway-btn');
-            const orderTypeModalEl = document.getElementById('orderTypeModal');
-            const checkoutModalEl = document.getElementById('checkoutModal');
-            
-            // Check if elements exist
-            if (!checkoutBtn || !orderTypeModalEl || !checkoutModalEl) return;
-            
-            // Initialize Bootstrap modals
-            const orderTypeModal = new bootstrap.Modal(orderTypeModalEl);
-            const checkoutModal = new bootstrap.Modal(checkoutModalEl);
-            
-            // Clean up modal artifacts when hidden
-            function cleanupModal() {
-                // Remove any lingering modal backdrops
-                const backdrops = document.querySelectorAll('.modal-backdrop');
-                backdrops.forEach(backdrop => backdrop.remove());
-                // Remove modal-open class from body
-                document.body.classList.remove('modal-open');
-                // Reset body padding if it was adjusted
-                document.body.style.paddingRight = '';
-            }
-            
-            // Add cleanup on hidden for modal
-            orderTypeModalEl.addEventListener('hidden.bs.modal', function () {
-                // Only clean up if no other modals are shown
-                if (document.querySelectorAll('.modal.show').length === 0) {
-                    setTimeout(() => {
-                        cleanupModal();
-                    }, 150);
-                }
-            });
-            
-            checkoutModalEl.addEventListener('hidden.bs.modal', function () {
-                setTimeout(() => {
-                    @this.set('order_type', null);
-                    cleanupModal();
-                }, 150);
-            });
-
-            // Generate slot waktu setiap kali modal checkout dibuka
-            checkoutModalEl.addEventListener('show.bs.modal', generateTimeSlots);
-            
-            // Add checkout button click handler
-            checkoutBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                
-                const orderMode = '{{ $orderMode }}';
-                
-                if (orderMode === 'both') {
-                    orderTypeModal.show();
-                } else if (orderMode === 'delivery') {
-                    // Check location for delivery
-                    checkDeliveryLocation(function() {
-                        checkoutModal.show();
-                    });
-                } else {
-                    // For takeaway, show checkout modal directly
-                    checkoutModal.show();
-                }
-            });
-            
-            // Add click handlers to order type buttons
-            if (deliveryBtn) {
-                deliveryBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.currentTarget.blur();
-                    orderTypeModal.hide();
-                    @this.set('order_type', 'delivery');
-
-                    // For delivery, check location first
-                    checkDeliveryLocation(function() {
-                        checkoutModal.show();
-                    });
-                });
-            }
-            
-            if (takeawayBtn) {
-                takeawayBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.currentTarget.blur();
-                    orderTypeModal.hide();
-                    @this.set('order_type', 'takeaway');
-                    checkoutModal.show();
-                });
-            }
-            
-            // Mark as initialized
-            window.checkoutInitialized = true;
-        } catch (error) {
-            // Silent error handling
-        }
-    }
-    
-    // Initialize on different events to ensure it works both on page load and navigation
-    document.addEventListener('DOMContentLoaded', initCartPage);
-    document.addEventListener('livewire:load', initCartPage);
-    
-    // Initialize when Livewire navigates to this page
-    document.addEventListener('livewire:navigated', function() {
-        window.checkoutInitialized = false; // Reset to allow re-initialization
-        initCartPage();
+    Livewire.on('show-checkout-modal', function () {
+        const el = document.getElementById('checkoutModal');
+        if (!el) return;
+        generateTimeSlots();
+        el.addEventListener('hidden.bs.modal', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.paddingRight = '';
+        }, { once: true });
+        bootstrap.Modal.getOrCreateInstance(el).show();
     });
 </script>
 
