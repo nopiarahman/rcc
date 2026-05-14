@@ -16,8 +16,10 @@ class WebSettings extends Component
     public $tagline;
     public $logo;
     public $favicon;
+    public $botolan_placeholder;
     public $current_logo;
     public $current_favicon;
+    public $current_botolan_placeholder;
     public $theme;
     public $selectedTheme;
     public $latitude;
@@ -76,6 +78,7 @@ class WebSettings extends Component
         $this->tagline = $this->settings->tagline;
         $this->current_logo = $this->settings->logo_path;
         $this->current_favicon = $this->settings->favicon_path;
+        $this->current_botolan_placeholder = $this->settings->botolan_placeholder_path;
         $this->theme = $this->settings->theme;
         $this->selectedTheme = $this->settings->theme;
         $this->latitude = $this->settings->latitude;
@@ -94,6 +97,7 @@ class WebSettings extends Component
             'tagline' => 'nullable|string|max:255',
             'logo' => 'nullable|image|max:2048',
             'favicon' => 'nullable|image|dimensions:min_width=32,min_height=32,max_width=192,max_height=192',
+            'botolan_placeholder' => 'nullable|image|max:2048',
             'theme' => 'required|string|exists:theme_colors,name',
             'latitude' => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
@@ -148,13 +152,21 @@ class WebSettings extends Component
         }
 
         if ($this->favicon) {
-            // Delete old favicon if exists
             if ($this->settings->favicon_path && Storage::disk('public')->exists($this->settings->favicon_path)) {
                 Storage::disk('public')->delete($this->settings->favicon_path);
             }
             $faviconPath = $this->favicon->store('settings/favicon', 'public');
             $data['favicon_path'] = $faviconPath;
             $this->current_favicon = $faviconPath;
+        }
+
+        if ($this->botolan_placeholder) {
+            if ($this->settings->botolan_placeholder_path && Storage::disk('public')->exists($this->settings->botolan_placeholder_path)) {
+                Storage::disk('public')->delete($this->settings->botolan_placeholder_path);
+            }
+            $placeholderPath = $this->botolan_placeholder->store('settings/botolan', 'public');
+            $data['botolan_placeholder_path'] = $placeholderPath;
+            $this->current_botolan_placeholder = $placeholderPath;
         }
 
         $this->settings->update($data);

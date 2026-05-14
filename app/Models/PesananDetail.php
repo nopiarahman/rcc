@@ -13,6 +13,11 @@ class PesananDetail extends Model
         'pesanan_id',
         'minuman_id',
         'nama_minuman',
+        'makanan_id',
+        'nama_makanan',
+        'botolan_produk_id',
+        'botolan_ukuran_id',
+        'nama_botolan',
         'harga',
         'qty',
         'size',
@@ -36,5 +41,15 @@ class PesananDetail extends Model
     public function minuman()
     {
         return $this->belongsTo(Minuman::class, 'minuman_id');
+    }
+
+    public function makanan()
+    {
+        return $this->belongsTo(Makanan::class, 'makanan_id');
+    }
+
+    public function botolanProduk()
+    {
+        return $this->belongsTo(\App\Models\BotolanProduk::class, 'botolan_produk_id');
     }
 }

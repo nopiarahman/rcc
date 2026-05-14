@@ -3,8 +3,8 @@
 namespace App\Livewire;
 
 use App\Models\Minuman;
+use App\Models\BotolanProduk;
 use Livewire\Component;
-
 use App\Models\Banner;
 use App\Models\Popup;
 
@@ -15,6 +15,7 @@ class MenuPage extends Component
     public $allKategoriMakanan = [];
     public $minumans = [];
     public $makanans = [];
+    public $botolans = [];
     public $banners = [];
     public $popup = null;
 
@@ -63,15 +64,22 @@ class MenuPage extends Component
         $this->makanans = \App\Models\Makanan::when($this->filterKategori, function ($query) {
             $query->where('kategori', $this->filterKategori);
         })->orderBy('nama', 'asc')->get();
+        $this->botolans = BotolanProduk::where('is_active', true)
+            ->with(['minuman', 'ukurans'])
+            ->whereHas('ukurans', fn($q) => $q->where('is_active', true))
+            ->get()
+            ->sortBy(fn($p) => $p->minuman?->nama)
+            ->values();
     }
 
     public function render()
     {
         $webSettings = \App\Models\WebSetting::first();
-        
+
         return view('livewire.menu-page', [
-            'minumans' => $this->minumans,
-            'makanans' => $this->makanans,
+            'minumans'    => $this->minumans,
+            'makanans'    => $this->makanans,
+            'botolans'    => $this->botolans,
             'web_settings' => $webSettings
         ])->layout('layouts.public');
     }

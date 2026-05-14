@@ -76,6 +76,7 @@ Route::middleware(['store.open'])->group(function () {
     Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
     Route::get('/minuman-detail-{id}', MinumanDetail::class)->name('minuman.detail');
     Route::get('/makanan-detail-{makanan}', \App\Livewire\MakananDetail::class)->name('makanan.detail');
+    Route::get('/pesan-botolan', \App\Livewire\BotolonPage::class)->name('botolan.page');
     Route::get('/keranjang', CartPage::class)->name('cart');
     Route::get('/pesanan', HistoryPage::class)->name('pesanan');
 
@@ -143,6 +144,11 @@ Route::middleware(['auth'])->group(function () {
     Volt::route('makanan/{makanan}/edit', 'makanan.edit')->name('makanan.edit');
     Route::get('makanan/bahan', \App\Livewire\Makanan\BahanCrud::class)->name('makanan.bahan-crud');
     Route::get('makanan/topping', \App\Livewire\Makanan\ToppingCrud::class)->name('makanan.topping-crud');
+
+    // Botolan routes
+    Route::get('botolan', \App\Livewire\Botolan\Index::class)->name('botolan.index');
+    Route::get('botolan/create', \App\Livewire\Botolan\Create::class)->name('botolan.create');
+    Route::get('botolan/{botolan}/edit', \App\Livewire\Botolan\Edit::class)->name('botolan.edit');
 
     Volt::route('minuman/sugar/create', 'sugar.create')->name('minuman.sugar.create');
     Volt::route('minuman/topping/create', 'topping.create')->name('minuman.topping.create');

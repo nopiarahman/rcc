@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Minuman;
+use App\Models\BotolanProduk;
 use Livewire\Component;
 use App\Helpers\DrinkPriceHelper;
 class DaftarMinuman extends Component
@@ -10,7 +11,8 @@ class DaftarMinuman extends Component
     public $filterKategori = '';
     public $allKategoris = [];
     public $minumans = [];
-    public $makanans = []; // Tambah property untuk makanan
+    public $makanans = [];
+    public $botolans = [];
 
     protected $listeners = ['gantiKategori'];
 
@@ -38,6 +40,12 @@ class DaftarMinuman extends Component
         $this->makanans = \App\Models\Makanan::when($this->filterKategori, function ($query) {
             $query->where('kategori', $this->filterKategori);
         })->orderBy('nama', 'asc')->get();
+        $this->botolans = BotolanProduk::where('is_active', true)
+            ->with(['minuman', 'ukurans'])
+            ->whereHas('ukurans', fn($q) => $q->where('is_active', true))
+            ->get()
+            ->sortBy(fn($p) => $p->minuman?->nama)
+            ->values();
     }
 
     public function render()
@@ -48,6 +56,7 @@ class DaftarMinuman extends Component
             'theme' => $webSettings ? $webSettings->theme : 'green',
             'web_settings' => $webSettings,
             'makanans' => $this->makanans,
+            'botolans' => $this->botolans,
         ]);
     }
 }

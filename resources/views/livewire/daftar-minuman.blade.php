@@ -214,4 +214,49 @@
     </div>
     @endif
 
-</div>              
+    @if($botolans->count())
+    {{-- CTA Botolan --}}
+    <div class="mt-4">
+        <h5 class="fw-bold mb-2 text-theme">Botolan</h5>
+        @php
+            $ctaFoto = $web_settings?->botolan_placeholder_path
+                ? asset('storage/' . $web_settings->botolan_placeholder_path)
+                : $botolans->first()?->getFirstMediaUrl('foto');
+        @endphp
+        <a wire:navigate href="{{ route('botolan.page') }}" class="text-decoration-none">
+            <div class="rounded-4 position-relative d-flex align-items-center"
+                 style="min-height:148px; background-color:{{ $themeColor }}; overflow:hidden;">
+
+                {{-- Dekorasi lingkaran latar --}}
+                <div style="position:absolute; right:-24px; top:-28px; width:160px; height:160px;
+                            border-radius:50%; background:rgba(255,255,255,0.1); pointer-events:none;"></div>
+                <div style="position:absolute; right:80px; bottom:-36px; width:110px; height:110px;
+                            border-radius:50%; background:rgba(255,255,255,0.06); pointer-events:none;"></div>
+
+                {{-- Foto botolan (PNG transparan) --}}
+                @if($ctaFoto)
+                    <img src="{{ $ctaFoto }}"
+                         style="position:absolute; right:0; top:50%; transform:translateY(-50%);
+                                height:140%; max-height:200px; width:44%;
+                                object-fit:contain; object-position:right center;
+                                filter:drop-shadow(-4px 4px 8px rgba(0,0,0,0.25));">
+                @endif
+
+                {{-- Teks CTA --}}
+                <div class="ps-4 pe-2 py-4 position-relative" style="z-index:2; max-width:60%;">
+                    <div class="fw-bold text-white lh-sm mb-1" style="font-size:1.05rem; letter-spacing:-0.01em;">
+                        Minuman Favorit<br>dalam Botol
+                    </div>
+                    <div class="text-white mb-3" style="font-size:0.72rem; opacity:0.8;">
+                        Tersedia berbagai ukuran
+                    </div>
+                    <span class="btn btn-light btn-sm rounded-3 fw-semibold px-3" style="font-size:0.78rem;">
+                        Pesan Sekarang <i class="bi bi-arrow-right ms-1"></i>
+                    </span>
+                </div>
+            </div>
+        </a>
+    </div>
+    @endif
+
+</div>

@@ -92,27 +92,30 @@
             <div class="card mb-2">
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center">
-                        @if($item['type']==="makanan")
-                        <img src="{{ $item['model']?->getFirstMediaUrl('gambar') ?? ($item['type'] === 'minuman' ? asset('default-drink.jpg') : asset('default-food.jpg')) }}"
+                        @php
+                            $imgUrl = match($item['type']) {
+                                'makanan' => $item['model']?->getFirstMediaUrl('gambar') ?: asset('default-food.jpg'),
+                                'botolan' => $item['model']?->getFirstMediaUrl('foto') ?: asset('default-drink.jpg'),
+                                default   => $item['model']?->getFirstMediaUrl('foto') ?: asset('default-drink.jpg'),
+                            };
+                        @endphp
+                        <img src="{{ $imgUrl }}"
                              class="rounded me-3"
                              alt="{{ $item['name'] }}"
                              width="60" height="60"
                              style="object-fit: cover; object-position: center;">
-                        @else
-                        <img src="{{ $item['model']?->getFirstMediaUrl('foto') ?? ($item['type'] === 'minuman' ? asset('default-drink.jpg') : asset('default-food.jpg')) }}"
-                             class="rounded me-3"
-                             alt="{{ $item['name'] }}"
-                             width="60" height="60"
-                             style="object-fit: cover; object-position: center;">
-                        @endif
                         <div class="text-muted" style="font-size: 9pt">
                             <h6 class="mb-1 fw-bold text-theme" style="font-size: 0.9rem;">{{ $item['name'] }}</h6>
                             <small>
                                 @if($item['type'] === 'minuman')
                                     @if($item['size'])Size: {{ $item['size'] }} |@endif
                                     @if($item['sugar'])Gula: {{ $item['sugar'] }} |@endif
+                                    @if($item['topping'] && $item['topping'] !== '-')Topping: {{ $item['topping'] }}@endif
+                                @elseif($item['type'] === 'botolan')
+                                    @if($item['ukuran']){{ $item['ukuran'] }}@endif
+                                @else
+                                    @if($item['topping'] && $item['topping'] !== '-')Topping: {{ $item['topping'] }}@endif
                                 @endif
-                                @if($item['topping'] !== '-')Topping: {{ $item['topping'] }}@endif
                             </small><br>
                             @if($item['has_discount'])
                                 <div class="d-flex align-items-center gap-1">

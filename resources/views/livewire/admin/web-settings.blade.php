@@ -70,6 +70,28 @@
             </div>
         </div>
 
+        {{-- Gambar Halaman Botolan --}}
+        <div class="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-sm overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100 dark:border-neutral-700">
+                <h2 class="font-semibold text-gray-800 dark:text-white text-sm">Gambar Halaman Botolan</h2>
+                <p class="text-xs text-gray-400 mt-0.5">Ditampilkan sebagai header sebelum pelanggan memilih minuman botolan</p>
+            </div>
+            <div class="p-5">
+                @if($current_botolan_placeholder)
+                    <img src="{{ asset('storage/' . $current_botolan_placeholder) }}"
+                         alt="Botolan Placeholder"
+                         class="h-32 w-full object-cover rounded-lg mb-3">
+                @endif
+                <input type="file" wire:model="botolan_placeholder" accept="image/*"
+                    class="block w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                @error('botolan_placeholder') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                @if($botolan_placeholder)
+                    <img src="{{ $botolan_placeholder->temporaryUrl() }}" class="mt-2 h-24 w-full object-cover rounded-lg">
+                @endif
+                <p class="text-xs text-gray-400 mt-1">JPG, PNG — maks. 2MB. Gunakan foto yang menarik seperti suasana toko atau produk botolan.</p>
+            </div>
+        </div>
+
         {{-- Lokasi & WhatsApp --}}
         <div class="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-sm overflow-hidden">
             <div class="px-5 py-4 border-b border-gray-100 dark:border-neutral-700">

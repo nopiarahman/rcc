@@ -24,6 +24,7 @@ class WebSetting extends Model
         'ongkir_enabled',
         'ongkir_per_km',
         'ongkir_free_km',
+        'botolan_placeholder_path',
     ];
 
     protected $with = ['themeColor'];
