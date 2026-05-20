@@ -1,23 +1,23 @@
-<div class="min-vh-100 d-flex align-items-center justify-content-center py-5">
+<div class="min-vh-100 d-flex align-items-center justify-content-center py-3 py-sm-5">
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-12 col-sm-10 col-md-6 col-lg-5 col-xl-4">
+            <div class="col-11 col-sm-10 col-md-6 col-lg-5 col-xl-4">
                 {{-- Logo / Header --}}
-                <div class="text-center mb-4">
+                <div class="text-center mb-3 mb-sm-4">
                     @php $ws = \App\Models\WebSetting::first(); @endphp
                     @if($ws?->logo_path)
-                        <img src="{{ asset('storage/' . $ws->logo_path) }}" alt="Logo" height="70" class="mb-3">
+                        <img src="{{ asset('storage/' . $ws->logo_path) }}" alt="Logo" height="52" class="mb-2 mb-sm-3">
                     @else
-                        <img src="{{ asset('images/logo-white.png') }}" alt="Logo" height="70" class="mb-3">
+                        <img src="{{ asset('images/logo-white.png') }}" alt="Logo" height="52" class="mb-2 mb-sm-3">
                     @endif
-                    <h4 class="text-white fw-bold mb-0">{{ $ws?->site_name ?? 'Raihaan Coffee Corner' }}</h4>
+                    <h5 class="text-white fw-bold mb-0">{{ $ws?->site_name ?? 'Raihaan Coffee Corner' }}</h5>
                     <p class="text-white-50 small mt-1">Masuk untuk lihat histori & vouchermu</p>
                 </div>
 
                 <div class="card border-0 shadow-lg" style="border-radius:20px;background:rgba(255,255,255,0.97);">
-                    <div class="card-body p-4">
+                    <div class="card-body p-3 p-sm-4">
                         <h5 class="fw-bold mb-1" style="color:#1a1a1a;">Masuk Akun</h5>
-                        <p class="text-muted small mb-4">Selamat datang kembali!</p>
+                        <p class="text-muted small mb-3">Selamat datang kembali!</p>
 
                         <form wire:submit="login" novalidate>
                             <div class="mb-3">
@@ -37,7 +37,7 @@
                                 </div>
                             </div>
 
-                            <div class="mb-4">
+                            <div class="mb-3">
                                 <label class="form-label fw-semibold small" style="color:#374151;">Password</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light border-end-0" style="border-radius:10px 0 0 10px;">

@@ -18,29 +18,29 @@
     @endphp
     <style>
         .mobile-nav {
-            padding: 4px 0;
+            padding: 6px 0;
             background-color: {{ $cardBgColor }};
             border-top: 1px solid {{ $mutedTextColor }}20;
         }
         .mobile-nav .nav-item {
-            padding: 6px 0;
+            padding: 8px 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             color: {{ $themeTextColor }};
         }
         .mobile-nav .nav-item.active {
             color: {{ $themeColor }};
         }
         .mobile-nav .material-symbols-outlined {
-            font-size: 20px;
+            font-size: 26px;
             line-height: 1;
-            margin-bottom: 2px;
+            margin-bottom: 3px;
         }
         .mobile-nav .small {
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             line-height: 1;
             margin: 0;
         }
@@ -48,8 +48,8 @@
             background-color: {{ $themeColor }} !important;
             color: white;
             font-weight: 600;
-            font-size: 0.6rem;
-            right: 35%;
+            font-size: 0.65rem;
+            right: 30%;
         }
     </style>
 
@@ -73,7 +73,7 @@
         <a href="{{ route('customer.account') }}" wire:navigate
            class="nav-link nav-item flex-fill text-center {{ request()->routeIs('customer.account') ? 'active' : '' }}">
             <span class="d-inline-flex align-items-center justify-content-center rounded-circle fw-bold text-white"
-                  style="width:22px;height:22px;font-size:0.6rem;
+                  style="width:28px;height:28px;font-size:0.7rem;
                          background:{{ request()->routeIs('customer.account') ? $themeColor : ($themeColors['accent'] ?? '#4caf50') }};">
                 {{ auth('customer')->user()->initials() }}
             </span>

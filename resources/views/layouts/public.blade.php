@@ -24,29 +24,6 @@
     {{-- @fluxAppearance --}}
     @section('styles')
     <style>
-        .mobile-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background-color: #fff;
-            border-top: 1px solid #ccc;
-            z-index: 1030;
-        }
-        .mobile-nav .nav-item {
-            flex: 1;
-            text-align: center;
-            padding: 10px 0;
-            font-weight: 500;
-            color: #555;
-        }
-        .mobile-nav .nav-item:hover {
-            background-color: #f8f9fa;
-        }
-        .mobile-nav .nav-link {
-            color: inherit;
-            text-decoration: none;
-        }
         .fixed-img-height {
             height: 170px;
             object-fit: cover;
@@ -59,6 +36,13 @@
             @endif
             min-height: 100vh;
             transition: background-color 0.3s, background-image 0.3s;
+        }
+
+        /* Clearance for fixed mobile nav on small screens */
+        @media (max-width: 767.98px) {
+            body {
+                padding-bottom: 72px;
+            }
         }
         
         /* Theme color variables */
