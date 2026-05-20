@@ -64,6 +64,10 @@ new class extends Component
 
         $pesanan->save();
 
+        if ($status === 'selesai') {
+            \App\Models\Voucher::generateForOrder($pesanan);
+        }
+
         if ($this->detailPesanan?->id == $pesananId) {
             $this->lihatDetail($pesananId);
         }
@@ -82,8 +86,11 @@ new class extends Component
             return;
         }
 
-        Pesanan::whereIn('status', ['menunggu_konfirmasi', 'diproses', 'diantar', 'dikirim'])
-            ->update(['status' => 'selesai', 'waktu_selesai' => now()]);
+        $toUpdate = Pesanan::whereIn('status', ['menunggu_konfirmasi', 'diproses', 'diantar', 'dikirim'])->get();
+        foreach ($toUpdate as $p) {
+            $p->update(['status' => 'selesai', 'waktu_selesai' => now()]);
+            \App\Models\Voucher::generateForOrder($p);
+        }
 
         $this->detailPesanan = null;
         $this->resetPage('pendingPage');

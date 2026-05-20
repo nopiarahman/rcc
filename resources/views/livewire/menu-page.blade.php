@@ -117,14 +117,18 @@
             @php
                 $jam = date('G');
                 if ($jam >= 0 && $jam < 11) {
-                    $ucapan = 'Selamat pagi!';
+                    $salam = 'Selamat pagi';
                 } elseif ($jam >= 11 && $jam < 15) {
-                    $ucapan = 'Selamat siang!';
+                    $salam = 'Selamat siang';
                 } elseif ($jam >= 15 && $jam < 18) {
-                    $ucapan = 'Selamat sore!';
+                    $salam = 'Selamat sore';
                 } else {
-                    $ucapan = 'Selamat malam!';
+                    $salam = 'Selamat malam';
                 }
+                $customerLoggedIn = Auth::guard('customer')->user();
+                $ucapan = $customerLoggedIn
+                    ? $salam . ', ' . $customerLoggedIn->nama . '!'
+                    : $salam . '!';
             @endphp
             <div class="fw-bold text-theme-primary">{{ $ucapan }}</div>
             <small class="text-muted-theme">{{ $webSettings->tagline ?? 'Kopi ala cafe sampai ke pintu rumahmu' }}</small>

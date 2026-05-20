@@ -61,7 +61,7 @@
         <a href="{{ route('cart') }}" wire:navigate class="nav-link nav-item flex-fill text-center position-relative {{ request()->routeIs('cart') ? 'active' : '' }}">
             <i class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 48;">
                 shopping_bag
-            </i> 
+            </i>
             @if ($totalItems > 0)
                 <span class="position-absolute top-0 badge rounded-pill">
                     {{ $totalItems }}
@@ -69,11 +69,22 @@
             @endif
             <span class="small">Keranjang</span>
         </a>
-        <a href="{{ route('pesanan') }}" wire:navigate class="nav-link nav-item flex-fill text-center {{ request()->routeIs('pesanan') ? 'active' : '' }}">
-            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 48">
-                receipt_long
+        @if(auth('customer')->check())
+        <a href="{{ route('customer.account') }}" wire:navigate
+           class="nav-link nav-item flex-fill text-center {{ request()->routeIs('customer.account') ? 'active' : '' }}">
+            <span class="d-inline-flex align-items-center justify-content-center rounded-circle fw-bold text-white"
+                  style="width:22px;height:22px;font-size:0.6rem;
+                         background:{{ request()->routeIs('customer.account') ? $themeColor : ($themeColors['accent'] ?? '#4caf50') }};">
+                {{ auth('customer')->user()->initials() }}
             </span>
-            <span class="small">Pesanan</span>
+            <span class="small">Akun</span>
         </a>
+        @else
+        <a href="{{ route('customer.login') }}" wire:navigate
+           class="nav-link nav-item flex-fill text-center {{ request()->routeIs('customer.login', 'customer.register') ? 'active' : '' }}">
+            <i class="fas fa-user-circle" style="font-size:20px;"></i>
+            <span class="small">Akun</span>
+        </a>
+        @endif
     </nav>
 </div>

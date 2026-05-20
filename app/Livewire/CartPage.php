@@ -13,7 +13,10 @@ use App\Models\Topping;
 use App\Models\WebSetting;
 use App\Models\DiscountCode;
 use App\Models\DiscountCodeUsage;
+use App\Models\Voucher;
+use App\Models\VoucherPromoRule;
 use App\Services\OsrmService;
+use Illuminate\Support\Facades\Auth;
 
 class CartPage extends Component
 {
@@ -30,6 +33,9 @@ class CartPage extends Component
     public $applied_discount = null;
     public $discount_amount = 0;
     public $discount_error = '';
+    public ?int $applied_voucher_id = null;
+    public $voucher_amount = 0;
+    public $voucher_error = '';
     public $customer_lat = null;
     public $customer_lng = null;
     public $ongkir = 0;
@@ -54,8 +60,43 @@ class CartPage extends Component
             $this->order_type = 'delivery';
         }
         // 'both' → null, user picks on cart page
+
+        // Pre-fill customer name if logged in
+        if (Auth::guard('customer')->check() && empty($this->nama_pemesan)) {
+            $this->nama_pemesan = Auth::guard('customer')->user()->nama;
+        }
+
+        $this->autoApplyBestVoucher();
+    }
+
+    protected function autoApplyBestVoucher(): void
+    {
+        $customer = Auth::guard('customer')->user();
+        if (!$customer || $this->applied_voucher_id) return;
+
+        $cartTotal = collect($this->cart)->sum(fn($i) => $i['qty'] * $i['price']);
+        if ($cartTotal <= 0) return;
+
+        $best = Voucher::where('customer_id', $customer->id)
+            ->where('is_used', false)
+            ->where(fn($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()))
+            ->where(fn($q) => $q->where('min_purchase', 0)->orWhere('min_purchase', '<=', $cartTotal))
+            ->get()
+            ->map(fn($v) => ['voucher' => $v, 'saving' => $v->calculateDiscount($cartTotal)])
+            ->sortByDesc('saving')
+            ->first();
+
+        if ($best) {
+            $this->applied_voucher_id = $best['voucher']->id;
+            $this->updateTotal();
+        }
     }
     
+    protected function getAppliedVoucher(): ?Voucher
+    {
+        return $this->applied_voucher_id ? Voucher::find($this->applied_voucher_id) : null;
+    }
+
     protected function syncCartFromLocalStorage()
     {
         // Sinkronkan dari Local Storage ke Session
@@ -66,17 +107,57 @@ class CartPage extends Component
         $originalTotal = collect($this->cart)->sum(function ($item) {
             return $item['qty'] * $item['price'];
         });
-        
-        // Apply discount if valid
+
         $this->discount_amount = 0;
         if ($this->applied_discount) {
             $this->discount_amount = $this->applied_discount->calculateDiscount($originalTotal);
         }
-        
-        $totalAfterDiscount = $originalTotal - $this->discount_amount;
-        
-        // Round down to nearest 1000
+
+        $this->voucher_amount = 0;
+        $appliedVoucher = $this->getAppliedVoucher();
+        if ($appliedVoucher) {
+            if ($originalTotal < $appliedVoucher->min_purchase) {
+                $this->applied_voucher_id = null;
+            } else {
+                $this->voucher_amount = $appliedVoucher->calculateDiscount($originalTotal);
+            }
+        }
+
+        $totalAfterDiscount = $originalTotal - $this->discount_amount - $this->voucher_amount;
         $this->total = floor($totalAfterDiscount / 1000) * 1000;
+    }
+
+    public function applyVoucher(int $voucherId): void
+    {
+        $this->voucher_error = '';
+        $customer = Auth::guard('customer')->user();
+        if (!$customer) return;
+
+        $voucher = Voucher::where('id', $voucherId)
+            ->where('customer_id', $customer->id)
+            ->first();
+
+        if (!$voucher || !$voucher->isValid()) {
+            $this->voucher_error = 'Voucher tidak valid.';
+            return;
+        }
+
+        $cartTotal = collect($this->cart)->sum(fn($i) => $i['qty'] * $i['price']);
+        if ($cartTotal < $voucher->min_purchase) {
+            $this->voucher_error = 'Min. belanja Rp ' . number_format($voucher->min_purchase, 0, ',', '.') . ' untuk voucher ini.';
+            return;
+        }
+
+        $this->applied_voucher_id = $voucher->id;
+        $this->updateTotal();
+    }
+
+    public function clearVoucher(): void
+    {
+        $this->applied_voucher_id = null;
+        $this->voucher_amount = 0;
+        $this->voucher_error = '';
+        $this->updateTotal();
     }
     public function increaseQty($key)
     {
@@ -371,13 +452,15 @@ class CartPage extends Component
         if ($this->applied_discount) {
             $discountAmount = $this->applied_discount->calculateDiscount($total);
         }
-        
-        $totalAfterDiscount = $total - $discountAmount;
-        
-        // Calculate rounded total (down to nearest 1000)
-        $roundedTotal = floor($totalAfterDiscount / 1000) * 1000;
-        $roundingAmount = $roundedTotal - $totalAfterDiscount;
-        
+
+        $appliedVoucher = $this->getAppliedVoucher();
+        $voucherAmount = 0;
+        if ($appliedVoucher) {
+            $voucherAmount = $appliedVoucher->calculateDiscount($total);
+        }
+
+        $totalAfterDiscount = $total - $discountAmount - $voucherAmount;
+
         // Get web settings for order mode
         $webSettings = $this->web_settings ?: WebSetting::first();
 
@@ -386,19 +469,31 @@ class CartPage extends Component
         $totalWithOngkir = $totalAfterDiscount + $ongkirAmount;
         $roundedTotal = floor($totalWithOngkir / 1000) * 1000;
 
+        // Customer vouchers for selector
+        $customer = Auth::guard('customer')->user();
+        $customerVouchers = $customer
+            ? Voucher::where('customer_id', $customer->id)->where('is_used', false)
+                ->where(fn($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()))
+                ->get()
+            : collect();
+
         return view('livewire.cart-page', [
             'cartItems' => $detailedCart,
             'grandTotal' => $roundedTotal,
             'originalTotal' => $total,
             'totalAfterDiscount' => $totalAfterDiscount,
             'discountAmount' => $discountAmount,
+            'voucherAmount' => $voucherAmount,
+            'applied_voucher' => $appliedVoucher,
             'roundingAmount' => $roundedTotal - $totalWithOngkir,
             'ongkirAmount' => $ongkirAmount,
             'ongkirDistanceKm' => $this->ongkir_distance_km,
             'haversineDistanceKm' => $this->haversine_distance_km,
             'distanceMethod' => $this->distance_method,
             'orderMode' => $webSettings->order_mode,
-            'web_settings' => $webSettings
+            'web_settings' => $webSettings,
+            'customerVouchers' => $customerVouchers,
+            'customer' => $customer,
         ])->layout('layouts.public');
     }
     public function konfirmasiCheckout()
@@ -502,16 +597,28 @@ class CartPage extends Component
             $this->applied_discount->apply();
         }
         
-        $totalAfterDiscount = $cartTotal - $discountAmount;
+        // Voucher discount
+        $checkoutVoucher = $this->getAppliedVoucher();
+        $voucherAmount = 0;
+        $voucherId = null;
+        if ($checkoutVoucher) {
+            $voucherAmount = $checkoutVoucher->calculateDiscount($cartTotal - $discountAmount);
+            $voucherId = $checkoutVoucher->id;
+        }
+
+        $totalAfterDiscount = $cartTotal - $discountAmount - $voucherAmount;
 
         // Add ongkir for delivery orders
         $ongkirAmount = ($this->order_type === 'delivery') ? (int) $this->ongkir : 0;
         $totalWithOngkir = $totalAfterDiscount + $ongkirAmount;
         $finalTotal = floor($totalWithOngkir / 1000) * 1000;
 
+        $customer = Auth::guard('customer')->user();
+
         // Create the order
         $pesanan = \App\Models\Pesanan::create([
             'user_id' => auth()->id(),
+            'customer_id' => $customer?->id,
             'session_id' => $sessionId,
             'nama_pemesan' => $this->nama_pemesan,
             'alamat_pengantaran' => $this->order_type === 'delivery' ? $this->alamat_pengantaran : 'Takeaway',
@@ -522,6 +629,8 @@ class CartPage extends Component
             'ongkir' => $ongkirAmount,
             'discount_code_id' => $discountCodeId,
             'discount_amount' => $discountAmount,
+            'voucher_id' => $voucherId,
+            'voucher_amount' => $voucherAmount,
             'status' => 'diproses',
             'order_type' => $this->order_type,
             'nomor_pesanan' => 'ORD-' . now()->format('Ymd') . '-' . strtoupper(uniqid())
@@ -536,7 +645,12 @@ class CartPage extends Component
                 'original_total' => $cartTotal,
             ]);
         }
-        
+
+        // Mark voucher as used
+        if ($checkoutVoucher && $voucherId) {
+            $checkoutVoucher->markAsUsed($pesanan->id);
+        }
+
         // Create order details
         foreach ($cartItems as $item) {
             $detailData = [
@@ -599,6 +713,10 @@ class CartPage extends Component
 
         if ($discountAmount > 0) {
             $message .= "\nDiskon ({$this->applied_discount->code}): -Rp " . number_format($discountAmount, 0, ',', '.');
+        }
+
+        if ($voucherAmount > 0 && $checkoutVoucher) {
+            $message .= "\nVoucher ({$checkoutVoucher->code}): -Rp " . number_format($voucherAmount, 0, ',', '.');
         }
 
         if ($ongkirAmount > 0) {

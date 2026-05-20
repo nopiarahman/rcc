@@ -20,6 +20,7 @@
                     <flux:navlist.item icon="rocket-launch" :href="route('pesanan.index')" :current="request()->routeIs('pesanan.*')" wire:navigate>{{ __('Pesanan') }}</flux:navlist.item>
                     <flux:navlist.item icon="currency-dollar" :href="route('dashboard.discounts')" :current="request()->routeIs('dashboard.discounts')" wire:navigate>{{ __('Product Discounts') }}</flux:navlist.item>
                     <flux:navlist.item icon="receipt-percent" :href="route('dashboard.discount-codes')" :current="request()->routeIs('dashboard.discount-codes')" wire:navigate>{{ __('Discount Codes') }}</flux:navlist.item>
+                    <flux:navlist.item icon="gift" :href="route('dashboard.voucher-promo-rules')" :current="request()->routeIs('dashboard.voucher-promo-rules')" wire:navigate>{{ __('Promo Voucher') }}</flux:navlist.item>
                 </flux:navlist.group>
             </flux:navlist>
             <flux:separator />

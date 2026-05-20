@@ -19,9 +19,21 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a wire:navigate class="nav-link {{ request()->routeIs('pesanan') ? 'active text-success fw-semibold' : '' }}" href="{{ route('pesanan') }}">
-                       <i class="fas fa-history me-1"></i> Riwayat Pesanan
-                    </a>
+                    @if(auth('customer')->check())
+                        <a wire:navigate class="nav-link d-flex align-items-center gap-1 {{ request()->routeIs('customer.account') ? 'active text-success fw-semibold' : '' }}"
+                           href="{{ route('customer.account') }}">
+                            <span class="d-inline-flex align-items-center justify-content-center rounded-circle fw-bold text-white"
+                                  style="width:28px;height:28px;font-size:0.7rem;background:var(--button-bg-color,#006a3e);">
+                                {{ auth('customer')->user()->initials() }}
+                            </span>
+                            <span>{{ auth('customer')->user()->nama }}</span>
+                        </a>
+                    @else
+                        <a wire:navigate class="nav-link {{ request()->routeIs('customer.login', 'customer.register') ? 'active text-success fw-semibold' : '' }}"
+                           href="{{ route('customer.login') }}">
+                            <i class="fas fa-user-circle me-1"></i> Akun
+                        </a>
+                    @endif
                 </li>
             </ul>
         </div>

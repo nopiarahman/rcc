@@ -257,9 +257,53 @@
         </div>
         @endif
 
+        {{-- Voucher Pelanggan --}}
+        @if(isset($customer) && $customer)
+        <div class="mb-3">
+            <p class="text-muted mb-2" style="font-size:0.8rem; font-weight:600; text-transform:uppercase; letter-spacing:.04em;">
+                <i class="fas fa-ticket-alt me-1"></i>Voucher Saya
+            </p>
+            @if($applied_voucher)
+                <div class="d-flex align-items-center justify-content-between p-2 rounded-3" style="background:#f0fdf4; border:1px solid #bbf7d0;">
+                    <div>
+                        <span class="fw-bold" style="font-size:0.85rem; color:#166534;">{{ $applied_voucher->code }}</span>
+                        <span class="text-muted ms-1" style="font-size:0.8rem;">— {{ $applied_voucher->formatted_discount }}</span>
+                    </div>
+                    <button wire:click="clearVoucher" class="btn btn-sm btn-link text-danger p-0 ms-2" style="font-size:0.8rem;">Hapus</button>
+                </div>
+            @elseif($customerVouchers->isNotEmpty())
+                <div class="d-flex flex-column gap-1">
+                    @foreach($customerVouchers as $v)
+                    @php $eligible = $originalTotal >= $v->min_purchase; @endphp
+                    <button wire:click="applyVoucher({{ $v->id }})"
+                            class="btn btn-sm text-start d-flex align-items-center justify-content-between w-100"
+                            style="border:1px {{ $eligible ? 'solid #bbf7d0;background:#f0fdf4' : 'dashed #dee2e6;background:#f9f9f9;opacity:.6' }};border-radius:8px;padding:8px 12px;"
+                            {{ $eligible ? '' : 'disabled' }}>
+                        <span>
+                            <span class="fw-bold" style="color:#166534;font-size:0.85rem;">{{ $v->formatted_discount }}</span>
+                            @if($v->min_purchase > 0)
+                            <span class="text-muted" style="font-size:0.75rem;"> · Min Rp{{ number_format($v->min_purchase, 0, ',', '.') }}</span>
+                            @endif
+                        </span>
+                        <span style="font-family:monospace;font-size:0.78rem;color:#6b7280;">{{ $v->code }}</span>
+                    </button>
+                    @endforeach
+                </div>
+                @if($voucher_error)
+                    <div class="text-danger small mt-1">{{ $voucher_error }}</div>
+                @endif
+            @else
+                <div class="text-muted" style="font-size:0.82rem;">
+                    <i class="fas fa-info-circle me-1"></i>Tidak ada voucher tersedia.
+                    <a href="{{ route('customer.account') }}" wire:navigate style="color:var(--button-bg-color);">Lihat voucher</a>
+                </div>
+            @endif
+        </div>
+        @endif
+
         {{-- Kode Diskon --}}
         <div class="mb-3">
-            <p class="text-muted mb-2" style="font-size:0.8rem; font-weight:600; text-transform:uppercase; letter-spacing:.04em;">Kode Diskon</p>
+            <p class="text-muted mb-2" style="font-size:0.8rem; font-weight:600; text-transform:uppercase; letter-spacing:.04em;">Kode Promo</p>
             @if($applied_discount)
                 <div class="d-flex align-items-center justify-content-between p-2 rounded-3" style="background:#f0fdf4; border:1px solid #bbf7d0;">
                     <div>
@@ -271,7 +315,7 @@
             @else
                 <div class="input-group input-group-sm">
                     <input type="text" class="form-control" wire:model.live="discount_code"
-                        placeholder="Masukkan kode diskon" wire:keydown.enter="applyDiscountCode"
+                        placeholder="Masukkan kode promo" wire:keydown.enter="applyDiscountCode"
                         style="border-radius:10px 0 0 10px;">
                     <button wire:click="applyDiscountCode" class="btn btn-theme" type="button"
                         style="border-radius:0 10px 10px 0; font-size:0.82rem;">Pakai</button>
@@ -292,6 +336,12 @@
             <div class="d-flex justify-content-between mb-1">
                 <span style="font-size:0.85rem; color:#166534;">Diskon ({{ $applied_discount->code }})</span>
                 <span style="font-size:0.85rem; color:#166534;">-Rp{{ number_format($discountAmount, 0, ',', '.') }}</span>
+            </div>
+            @endif
+            @if(isset($voucherAmount) && $voucherAmount > 0)
+            <div class="d-flex justify-content-between mb-1">
+                <span style="font-size:0.85rem; color:#166534;"><i class="fas fa-ticket-alt me-1"></i>Voucher ({{ $applied_voucher->code }})</span>
+                <span style="font-size:0.85rem; color:#166534;">-Rp{{ number_format($voucherAmount, 0, ',', '.') }}</span>
             </div>
             @endif
             @if($order_type === 'delivery' && isset($web_settings) && $web_settings->ongkir_enabled)
@@ -381,7 +431,12 @@
                         </select>
                     </div>
                     <input type="hidden" id="waktu_input_hidden" wire:model.defer="waktu_pengantaran">
-                    <div class="form-text text-muted" style="font-size:0.75rem;">Minimal 30 menit dari sekarang</div>
+                    <div class="form-text text-muted" style="font-size:0.75rem;">
+                        Minimal {{ collect($cart)->sum('qty') > 5 ? '1 jam' : '30 menit' }} dari sekarang
+                        @if(collect($cart)->sum('qty') > 5)
+                            <span class="text-warning">(pesanan banyak — butuh waktu lebih)</span>
+                        @endif
+                    </div>
                     @error('waktu_pengantaran') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                 </div>
             </div>
@@ -456,18 +511,26 @@
         const closingTime = '{{ $web_settings->closing_time ? $web_settings->closing_time->format("H:i") : "22:00" }}';
         const [closeHour, closeMin] = closingTime.split(':').map(Number);
 
+        const totalQty = {{ collect($cart)->sum('qty') }};
+        const isLargeOrder = totalQty > 5;
+
         const now = new Date();
-        const min = new Date(now.getTime() + 30 * 60 * 1000);
-        const m = min.getMinutes();
-        if (m > 0 && m <= 30) min.setMinutes(30, 0, 0);
-        else if (m > 30) min.setHours(min.getHours() + 1, 0, 0, 0);
-        else min.setSeconds(0, 0);
+
+        // Bulatkan waktu sekarang ke atas ke kelipatan 10 menit terdekat
+        const nowTotalMin = now.getHours() * 60 + now.getMinutes();
+        const roundedMin = Math.ceil(nowTotalMin / 10) * 10;
+
+        // Slot pertama: +60 menit jika pesanan > 5 item, +30 menit jika tidak
+        const firstSlotMin = roundedMin + (isLargeOrder ? 60 : 30);
+
+        const firstSlot = new Date(now);
+        firstSlot.setHours(Math.floor(firstSlotMin / 60), firstSlotMin % 60, 0, 0);
 
         const end = new Date(now);
         end.setHours(closeHour - 1, closeMin, 0, 0);
 
         select.innerHTML = '<option value="">-- Pilih Waktu --</option>';
-        const cur = new Date(min);
+        const cur = new Date(firstSlot);
         while (cur <= end) {
             const hh = String(cur.getHours()).padStart(2, '0');
             const mm = String(cur.getMinutes()).padStart(2, '0');

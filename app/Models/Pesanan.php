@@ -12,6 +12,7 @@ class Pesanan extends Model
     protected $fillable = [
         'nomor_pesanan',
         'user_id',
+        'customer_id',
         'session_id',
         'nama_pemesan',
         'alamat_pengantaran',
@@ -21,6 +22,8 @@ class Pesanan extends Model
         'total_harga',
         'discount_code_id',
         'discount_amount',
+        'voucher_id',
+        'voucher_amount',
         'ongkir',
         'status',
         'order_type',
@@ -56,6 +59,16 @@ class Pesanan extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo(\App\Models\Customer::class);
+    }
+
+    public function voucher()
+    {
+        return $this->belongsTo(\App\Models\Voucher::class);
     }
 
     /**

@@ -21,7 +21,16 @@
       "Bash(grep -n '$total' resources/views/livewire/cart-page.blade.php)",
       "Bash(grep -E \"\\\\.php$\")",
       "Bash(cd /d e:\\\\rcc\\\\rcc)",
-      "Bash(del \"app\\\\Models\\\\Botolan.php\" \"app\\\\Models\\\\BotolonUkuran.php\" \"app\\\\Livewire\\\\BotolonDetail.php\" \"resources\\\\views\\\\livewire\\\\botolan-detail.blade.php\")"
+      "Bash(del \"app\\\\Models\\\\Botolan.php\" \"app\\\\Models\\\\BotolonUkuran.php\" \"app\\\\Livewire\\\\BotolonDetail.php\" \"resources\\\\views\\\\livewire\\\\botolan-detail.blade.php\")",
+      "Bash(php -l app/Livewire/CustomerAccount.php)",
+      "Bash(php -l app/Models/Customer.php)",
+      "Bash(php -l app/Models/Voucher.php)",
+      "Bash(php -l app/Livewire/CustomerAuth/Login.php)",
+      "Bash(php -l app/Livewire/CustomerAuth/Register.php)",
+      "Bash(php -l app/Livewire/Admin/VoucherPromoRuleManager.php)",
+      "Bash(php -l app/Models/VoucherPromoRule.php)",
+      "Bash(php -l e:/rcc/rcc/app/Livewire/CartPage.php)",
+      "Bash(php -l e:/rcc/rcc/app/Models/Voucher.php)"
     ]
   }
 }

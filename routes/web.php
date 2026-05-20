@@ -58,6 +58,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
 });
 
+// Customer-facing routes (always accessible regardless of store hours)
+Route::middleware(['web'])->group(function () {
+    Route::get('/akun/masuk', \App\Livewire\CustomerAuth\Login::class)->name('customer.login');
+    Route::get('/akun/daftar', \App\Livewire\CustomerAuth\Register::class)->name('customer.register');
+    Route::get('/akun', \App\Livewire\CustomerAccount::class)->name('customer.account');
+    Route::post('/akun/keluar', function () {
+        \Illuminate\Support\Facades\Auth::guard('customer')->logout();
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
+        return redirect()->route('home');
+    })->name('customer.logout');
+});
+
 // Apply store open check to all routes except auth and maintenance
 Route::middleware(['store.open'])->group(function () {
     // Route untuk sinkronisasi keranjang dari Local Storage ke Session
@@ -123,6 +136,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('dashboard.discount-codes');
     Route::get('/dashboard/popups', \App\Livewire\Admin\PopupManagement::class)
         ->name('dashboard.popups');
+    Route::get('/dashboard/voucher-promo-rules', \App\Livewire\Admin\VoucherPromoRuleManager::class)
+        ->name('dashboard.voucher-promo-rules');
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
@@ -164,6 +179,7 @@ Route::get('/order/{pesanan}/selesai', function (\App\Models\Pesanan $pesanan) {
             'status'        => 'selesai',
             'waktu_selesai' => now(),
         ]);
+        \App\Models\Voucher::generateForOrder($pesanan);
     }
     return view('order-selesai', ['pesanan' => $pesanan]);
 })->name('order.selesai')->middleware('signed');

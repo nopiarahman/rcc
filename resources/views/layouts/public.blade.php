@@ -164,7 +164,7 @@
 </head>
 <body>
     <x-web-nav />
-    <div class="gradient pb-n3">
+    <div class="{{ ($whiteBackground ?? false) ? 'bg-white min-vh-100' : 'gradient pb-n3' }}">
         {{ $slot }}
     </div>
     
