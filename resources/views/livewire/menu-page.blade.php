@@ -139,7 +139,7 @@
     </div>
     
     {{-- Hero Section --}}
-<div class="container px-0 mb-3">
+<div class="container px-0 mb-3" style="margin-left:-1rem; margin-right:-1rem; width:auto;">
     <div class="position-relative">
         <div id="heroCarousel" class="carousel slide rounded-4 overflow-hidden shadow-lg" data-bs-ride="carousel" data-bs-interval="2000">
             {{-- Indicators --}}
@@ -168,7 +168,7 @@
             ? asset('storage/' . $web_settings->botolan_placeholder_path)
             : $botolans->first()?->getFirstMediaUrl('foto');
     @endphp
-    <div class="mb-3">
+    <div class="mb-3" style="margin-left:-1rem; margin-right:-1rem;">
         <a href="{{ route('botolan.page') }}" class="text-decoration-none">
             <div class="rounded-4 position-relative d-flex align-items-center"
                  style="min-height:148px; background-color:#ffffff; overflow:hidden; border: 1px solid #f0f0f0;">
