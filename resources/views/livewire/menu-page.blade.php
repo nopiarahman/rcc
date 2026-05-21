@@ -6,7 +6,7 @@
         $buttonTextColor = '#ffffff';
         $cardBgColor = '#ffffff';
         $mutedTextColor = '#6b7280';
-        
+
         // Get theme colors from database if web settings are available
         if (isset($web_settings) && $web_settings->themeColor) {
             $themeColor = $web_settings->themeColor->button_bg_color;
@@ -15,23 +15,29 @@
             $cardBgColor = $web_settings->themeColor->card_bg_color;
             $mutedTextColor = $web_settings->themeColor->muted_text_color;
         }
+
+        // Hitung luminance secondary_color (warna atas gradient = background header)
+        $bgHex = ltrim(
+            (isset($web_settings) && $web_settings->themeColor)
+                ? $web_settings->themeColor->secondary_color
+                : '#006a3e',
+            '#'
+        );
+        $r = hexdec(substr($bgHex, 0, 2)) / 255;
+        $g = hexdec(substr($bgHex, 2, 2)) / 255;
+        $b = hexdec(substr($bgHex, 4, 2)) / 255;
+        $bgLuminance = 0.2126 * $r + 0.7152 * $g + 0.0722 * $b;
+        $isDarkBg = $bgLuminance < 0.4;
+        $headerTextColor  = $isDarkBg ? '#ffffff' : '#1a1a1a';
+        $headerMutedColor = $isDarkBg ? 'rgba(255,255,255,0.75)' : '#6b7280';
     @endphp
     <style>
-    @if(isset($web_settings->themeColor) && $web_settings->themeColor->name == 'green')
         .text-theme-primary {
-            color: #ffffff !important;
+            color: {{ $headerTextColor }} !important;
         }
         .text-muted-theme {
-            color: #ffffff !important;
+            color: {{ $headerMutedColor }} !important;
         }
-    @else
-        .text-theme-primary {
-            color: {{ $themeTextColor }} !important;
-        }
-        .text-muted-theme {
-            color: {{ $mutedTextColor }} !important;
-        }
-    @endif
     
         /* Theme-specific text color */
         .text-theme {
@@ -87,9 +93,9 @@
             height: 40px;
         }
         .logo-container .logo-text {
-            font-size: 1rem; /* Ukuran teks */
+            font-size: 1rem;
             font-weight: bold;
-            color: #333; /* Warna teks */
+            color: {{ $headerTextColor }};
         }
         @keyframes fadeSlideUp {
                 0% {

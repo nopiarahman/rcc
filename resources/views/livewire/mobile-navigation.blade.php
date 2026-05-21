@@ -72,17 +72,13 @@
         @if(auth('customer')->check())
         <a href="{{ route('customer.account') }}" wire:navigate
            class="nav-link nav-item flex-fill text-center {{ request()->routeIs('customer.account') ? 'active' : '' }}">
-            <span class="d-inline-flex align-items-center justify-content-center rounded-circle fw-bold text-white"
-                  style="width:28px;height:28px;font-size:0.7rem;
-                         background:{{ request()->routeIs('customer.account') ? $themeColor : ($themeColors['accent'] ?? '#4caf50') }};">
-                {{ auth('customer')->user()->initials() }}
-            </span>
+            <i style="font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 48;" class="material-symbols-outlined">person</i>
             <span class="small">Akun</span>
         </a>
         @else
         <a href="{{ route('customer.login') }}" wire:navigate
            class="nav-link nav-item flex-fill text-center {{ request()->routeIs('customer.login', 'customer.register') ? 'active' : '' }}">
-            <i class="fas fa-user-circle" style="font-size:20px;"></i>
+            <i style="font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 48;" class="material-symbols-outlined">person</i>
             <span class="small">Akun</span>
         </a>
         @endif
