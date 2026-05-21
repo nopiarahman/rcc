@@ -113,7 +113,7 @@ class Minuman extends Model implements HasMedia
     {
         $this->addMediaCollection('foto')
             ->singleFile()
-            ->registerMediaConversions(function (?Media $media = null) {
+            ->registerMediaConversions(function ($media = null) {
                 $this->addMediaConversion('thumb')
                     ->width(150)
                     ->height(150);
