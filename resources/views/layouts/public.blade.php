@@ -154,6 +154,11 @@
     
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('livewire:navigated', () => {
+            window.scrollTo(0, 0);
+        });
+    </script>
     @stack('scripts')
     <x-mobile-nav />
     
