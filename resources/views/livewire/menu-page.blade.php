@@ -161,6 +161,47 @@
     </div>
 </div>
     
+    {{-- Banner Botolan --}}
+    @if($botolans->count() > 0)
+    @php
+        $ctaFoto = isset($web_settings) && $web_settings?->botolan_placeholder_path
+            ? asset('storage/' . $web_settings->botolan_placeholder_path)
+            : $botolans->first()?->getFirstMediaUrl('foto');
+    @endphp
+    <div class="mb-3">
+        <a href="{{ route('botolan.page') }}" class="text-decoration-none">
+            <div class="rounded-4 position-relative d-flex align-items-center"
+                 style="min-height:148px; background-color:#ffffff; overflow:hidden; border: 1px solid #f0f0f0;">
+
+                <div style="position:absolute; right:-24px; top:-28px; width:160px; height:160px;
+                            border-radius:50%; background:{{ $themeColor }}1a; pointer-events:none;"></div>
+                <div style="position:absolute; right:80px; bottom:-36px; width:110px; height:110px;
+                            border-radius:50%; background:{{ $themeColor }}0f; pointer-events:none;"></div>
+
+                @if($ctaFoto)
+                    <img src="{{ $ctaFoto }}"
+                         style="position:absolute; right:0; top:50%; transform:translateY(-50%);
+                                height:140%; max-height:200px; width:44%;
+                                object-fit:contain; object-position:right center;
+                                filter:drop-shadow(-4px 4px 8px rgba(0,0,0,0.25));">
+                @endif
+
+                <div class="ps-4 pe-2 py-4 position-relative" style="z-index:2; max-width:60%;">
+                    <div class="fw-bold lh-sm mb-1" style="font-size:1.05rem; letter-spacing:-0.01em; color:{{ $themeColor }};">
+                        Minuman Favorit<br>dalam Botol
+                    </div>
+                    <div class="mb-3" style="font-size:0.72rem; color:#6b7280;">
+                        Tersedia berbagai ukuran
+                    </div>
+                    <span class="btn btn-sm rounded-3 fw-semibold px-3" style="font-size:0.78rem; background-color:{{ $themeColor }}; color:#fff;">
+                        Pesan Sekarang <i class="bi bi-arrow-right ms-1"></i>
+                    </span>
+                </div>
+            </div>
+        </a>
+    </div>
+    @endif
+
     <div class="card" style="padding: 2rem;margin:-2rem;border-radius:2rem 2rem 0 0;margin-top:1rem;margin-bottom:1rem">
         <livewire:daftar-minuman :kategoris="$allKategoris" />
     </div>

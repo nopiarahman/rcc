@@ -117,7 +117,10 @@
             <select wire:model.live="selectedProdukId" class="form-select select-minuman">
                 <option value="">— Pilih minuman —</option>
                 @foreach($availableProduks as $produk)
-                    <option value="{{ $produk->id }}">{{ $produk->minuman?->nama }}</option>
+                    @php $habis = $produk->minuman?->is_habis; @endphp
+                    <option value="{{ $produk->id }}" {{ $habis ? 'disabled' : '' }}>
+                        {{ $produk->minuman?->nama }}{{ $habis ? ' (Habis)' : '' }}
+                    </option>
                 @endforeach
             </select>
         </div>

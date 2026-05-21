@@ -65,7 +65,7 @@ class MenuPage extends Component
             $query->where('kategori', $this->filterKategori);
         })->orderBy('nama', 'asc')->get();
         $this->botolans = BotolanProduk::where('is_active', true)
-            ->with(['minuman', 'ukurans'])
+            ->with(['minuman', 'ukurans', 'media'])
             ->whereHas('ukurans', fn($q) => $q->where('is_active', true))
             ->get()
             ->sortBy(fn($p) => $p->minuman?->nama)
@@ -75,11 +75,13 @@ class MenuPage extends Component
     public function render()
     {
         $webSettings = \App\Models\WebSetting::first();
+        $banners = Banner::where('status', true)->orderBy('order')->get();
 
         return view('livewire.menu-page', [
             'minumans'    => $this->minumans,
             'makanans'    => $this->makanans,
             'botolans'    => $this->botolans,
+            'banners'     => $banners,
             'web_settings' => $webSettings
         ])->layout('layouts.public');
     }

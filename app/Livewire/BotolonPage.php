@@ -16,7 +16,10 @@ class BotolonPage extends Component
     {
         $produkId = request()->integer('produk');
         if ($produkId) {
-            $exists = BotolanProduk::where('id', $produkId)->where('is_active', true)->exists();
+            $exists = BotolanProduk::where('id', $produkId)
+                ->where('is_active', true)
+                ->whereHas('minuman', fn($q) => $q->where('is_habis', false))
+                ->exists();
             if ($exists) {
                 $this->selectedProdukId = $produkId;
             }
@@ -40,6 +43,13 @@ class BotolonPage extends Component
 
         if (!$produk || !$ukuran) {
             session()->flash('error', 'Produk tidak ditemukan.');
+            return;
+        }
+
+        if ($produk->minuman?->is_habis) {
+            session()->flash('error', 'Maaf, minuman ini sedang habis.');
+            $this->selectedProdukId = null;
+            $this->selectedUkuranId = null;
             return;
         }
 
