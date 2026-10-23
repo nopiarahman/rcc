@@ -34,7 +34,10 @@ return new class extends Migration
                 // Update status column if it exists
                 if (Schema::hasColumn('pesanans', 'status')) {
                     // Convert existing status values to new format
-                    \DB::statement("ALTER TABLE pesanans MODIFY COLUMN status ENUM('pending', 'diproses', 'selesai', 'menunggu_konfirmasi', 'dikirim', 'dibatalkan') DEFAULT 'menunggu_konfirmasi'");
+                    // MODIFY hanya ada di MySQL; di SQLite (test) enum diubah oleh migrasi modify_status_enum
+                    if (\DB::getDriverName() === 'mysql') {
+                        \DB::statement("ALTER TABLE pesanans MODIFY COLUMN status ENUM('pending', 'diproses', 'selesai', 'menunggu_konfirmasi', 'dikirim', 'dibatalkan') DEFAULT 'menunggu_konfirmasi'");
+                    }
                     \DB::statement("UPDATE pesanans SET status = 'menunggu_konfirmasi' WHERE status = 'pending'");
                 }
                 
@@ -83,7 +86,9 @@ return new class extends Migration
                 
                 // Revert status enum if column exists
                 if (Schema::hasColumn('pesanans', 'status')) {
-                    \DB::statement("ALTER TABLE pesanans MODIFY COLUMN status ENUM('pending', 'diproses', 'selesai') DEFAULT 'pending'");
+                    if (\DB::getDriverName() === 'mysql') {
+                        \DB::statement("ALTER TABLE pesanans MODIFY COLUMN status ENUM('pending', 'diproses', 'selesai') DEFAULT 'pending'");
+                    }
                     \DB::statement("UPDATE pesanans SET status = 'pending' WHERE status = 'menunggu_konfirmasi'");
                 }
                 
