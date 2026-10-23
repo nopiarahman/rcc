@@ -41,7 +41,15 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+/**
+ * Toko dianggap buka 24 jam (jam buka = jam tutup), agar test halaman toko
+ * tidak bergantung pada jam saat test dijalankan (default 08:00–22:00 WIB).
+ */
+function bukaToko24Jam(): void
 {
-    // ..
+    \App\Models\WebSetting::current()->update([
+        'opening_time' => '00:00:00',
+        'closing_time' => '00:00:00',
+        'is_temporarily_closed' => false,
+    ]);
 }

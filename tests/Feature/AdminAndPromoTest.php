@@ -35,6 +35,7 @@ test('deskripsi teks biasa tetap di-escape dan baris barunya dipertahankan', fun
 });
 
 test('halaman detail minuman tidak menjalankan script dari deskripsi', function () {
+    bukaToko24Jam();
     $minuman = Minuman::create(['nama' => 'Kopi', 'base_price' => 10000, 'deskripsi' => '<p>Enak</p><script>alert("xss")</script>']);
 
     $this->get(route('minuman.detail', $minuman->id))
