@@ -3,7 +3,10 @@
 namespace App\Livewire\CustomerAuth;
 
 use Livewire\Component;
+use App\Models\Customer;
+use App\Models\Pesanan;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
 
 class Login extends Component
 {
@@ -19,34 +22,39 @@ class Login extends Component
     public function login()
     {
         $this->validate([
-            'no_hp' => 'required|string',
+            'no_hp' => 'required|string|max:20',
             'password' => 'required|string',
         ]);
 
-        $noHp = preg_replace('/[^0-9]/', '', $this->no_hp);
-        if (str_starts_with($noHp, '0')) {
-            $noHp = '62' . substr($noHp, 1);
+        $noHp = Customer::normalizePhone($this->no_hp);
+
+        // Maksimal 5 percobaan per menit per nomor HP + IP, sama seperti login admin
+        $throttleKey = 'customer-login:' . $noHp . '|' . request()->ip();
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $this->addError('no_hp', 'Terlalu banyak percobaan masuk. Coba lagi dalam ' . RateLimiter::availableIn($throttleKey) . ' detik.');
+            return;
         }
 
         if (Auth::guard('customer')->attempt(['no_hp' => $noHp, 'password' => $this->password], $this->remember)) {
+            RateLimiter::clear($throttleKey);
             $customer = Auth::guard('customer')->user();
 
-            // Link session orders to this customer account
-            $sessionId = session()->getId();
-            \App\Models\Pesanan::where('session_id', $sessionId)
-                ->whereNull('customer_id')
+            // Hubungkan pesanan tamu (sesi ini & cookie riwayat) ke akun customer
+            Pesanan::whereNull('customer_id')
+                ->where(fn ($q) => $q->where('session_id', session()->getId())->orWhereIn('id', Pesanan::visitorOrderIds()))
                 ->update(['customer_id' => $customer->id]);
 
             session()->regenerate();
             return redirect()->route('customer.account');
         }
 
+        RateLimiter::hit($throttleKey);
         $this->addError('no_hp', 'Nomor HP atau password salah.');
     }
 
     public function render()
     {
         return view('livewire.customer-auth.login')
-            ->layout('layouts.public');
+            ->layout('layouts.public')->title('Masuk');
     }
 }
