@@ -30,6 +30,20 @@ class Customer extends Authenticatable
             });
     }
 
+    /**
+     * Normalize a phone number to the stored 62xxx format (same as customer register/login).
+     */
+    public static function normalizePhone(string $noHp): string
+    {
+        $noHp = preg_replace('/[^0-9]/', '', $noHp);
+
+        if (str_starts_with($noHp, '0')) {
+            $noHp = '62' . substr($noHp, 1);
+        }
+
+        return $noHp;
+    }
+
     public function initials(): string
     {
         return collect(explode(' ', $this->nama))

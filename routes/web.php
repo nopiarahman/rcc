@@ -140,6 +140,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('dashboard.voucher-promo-rules');
     Route::get('/dashboard/customers', \App\Livewire\Admin\CustomerManager::class)
         ->name('dashboard.customers');
+    Route::get('/dashboard/users', \App\Livewire\Admin\UserManagement::class)
+        ->name('dashboard.users');
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');

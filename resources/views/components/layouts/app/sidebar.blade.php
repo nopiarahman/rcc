@@ -21,7 +21,13 @@
                     <flux:navlist.item icon="currency-dollar" :href="route('dashboard.discounts')" :current="request()->routeIs('dashboard.discounts')" wire:navigate>{{ __('Product Discounts') }}</flux:navlist.item>
                     <flux:navlist.item icon="receipt-percent" :href="route('dashboard.discount-codes')" :current="request()->routeIs('dashboard.discount-codes')" wire:navigate>{{ __('Discount Codes') }}</flux:navlist.item>
                     <flux:navlist.item icon="gift" :href="route('dashboard.voucher-promo-rules')" :current="request()->routeIs('dashboard.voucher-promo-rules')" wire:navigate>{{ __('Promo Voucher') }}</flux:navlist.item>
+                </flux:navlist.group>
+            </flux:navlist>
+            <flux:separator />
+            <flux:navlist variant="outline">
+                <flux:navlist.group :heading="__('Pengguna')" class="grid">
                     <flux:navlist.item icon="users" :href="route('dashboard.customers')" :current="request()->routeIs('dashboard.customers')" wire:navigate>{{ __('Data Customer') }}</flux:navlist.item>
+                    <flux:navlist.item icon="shield-check" :href="route('dashboard.users')" :current="request()->routeIs('dashboard.users')" wire:navigate>{{ __('Data Admin') }}</flux:navlist.item>
                 </flux:navlist.group>
             </flux:navlist>
             <flux:separator />

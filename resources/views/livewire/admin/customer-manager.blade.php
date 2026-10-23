@@ -1,11 +1,24 @@
 <div class="max-w-6xl mx-auto p-6">
 
+    {{-- Flash --}}
+    @if(session('success'))
+    <div class="mb-4 rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-green-800 text-sm flex items-center gap-2">
+        <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+        {{ session('success') }}
+    </div>
+    @endif
+
     {{-- Header --}}
     <div class="flex items-center justify-between mb-6">
         <div>
             <h1 class="text-xl font-bold text-gray-900 dark:text-white">Data Customer</h1>
-            <p class="text-sm text-gray-500 mt-0.5">Daftar user terdaftar beserta riwayat pemesanan</p>
+            <p class="text-sm text-gray-500 mt-0.5">Kelola akun customer beserta riwayat pemesanannya</p>
         </div>
+        <button wire:click="openCreate"
+                class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Tambah Customer
+        </button>
     </div>
 
     {{-- Summary Cards --}}
@@ -74,6 +87,11 @@
                         <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $customer->nama }}</h2>
                         <p class="text-sm text-gray-500">{{ $customer->no_hp }}</p>
                         <p class="text-xs text-gray-400 mt-0.5">Terdaftar {{ $customer->created_at->diffForHumans() }} &middot; {{ $customer->created_at->isoFormat('D MMMM YYYY') }}</p>
+                        <div class="mt-2">
+                            <flux:button size="sm" wire:click="openEdit({{ $customer->id }})" icon="pencil-square">
+                                Edit / Reset Password
+                            </flux:button>
+                        </div>
                     </div>
                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-center shrink-0">
                         <div class="bg-gray-50 dark:bg-neutral-700 rounded-lg px-4 py-2">
@@ -218,9 +236,19 @@
                                 {{ $cust->created_at->isoFormat('D MMM YYYY') }}
                             </td>
                             <td class="px-4 py-3 text-right">
-                                <flux:button size="sm" wire:click="viewDetail({{ $cust->id }})" icon="eye">
-                                    Lihat
-                                </flux:button>
+                                <div class="flex justify-end gap-1.5">
+                                    <flux:button size="sm" wire:click="viewDetail({{ $cust->id }})" icon="eye">
+                                        Lihat
+                                    </flux:button>
+                                    <flux:button size="sm" wire:click="openEdit({{ $cust->id }})" icon="pencil-square">
+                                        Edit
+                                    </flux:button>
+                                    <flux:button size="sm" variant="danger" icon="trash"
+                                                 wire:click="delete({{ $cust->id }})"
+                                                 wire:confirm="Hapus customer {{ $cust->nama }}? Riwayat pesanan tetap tersimpan, tetapi voucher miliknya ikut terhapus.">
+                                        Hapus
+                                    </flux:button>
+                                </div>
                             </td>
                         </tr>
                     @empty
@@ -239,6 +267,75 @@
                 </div>
             @endif
         </div>
+    @endif
+
+    {{-- Form Modal --}}
+    @if($showForm)
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.5)">
+        <div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-2xl w-full max-w-lg">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-zinc-700">
+                <h3 class="font-bold text-gray-900 dark:text-white">
+                    {{ $editingId ? 'Edit Customer' : 'Tambah Customer' }}
+                </h3>
+                <button wire:click="closeForm" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <form wire:submit="save">
+                <div class="px-6 py-4 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nama</label>
+                        <input type="text" wire:model="nama"
+                               class="w-full rounded-lg border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-gray-900 dark:text-white px-3 py-2 text-sm @error('nama') border-red-400 @enderror"
+                               placeholder="Nama customer">
+                        @error('nama')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nomor HP</label>
+                        <input type="tel" wire:model="no_hp"
+                               class="w-full rounded-lg border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-gray-900 dark:text-white px-3 py-2 text-sm @error('no_hp') border-red-400 @enderror"
+                               placeholder="08xxxxxxxxxx">
+                        <p class="text-xs text-gray-400 mt-1">Nomor ini dipakai customer untuk login. Awalan 0 otomatis disimpan sebagai 62.</p>
+                        @error('no_hp')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                {{ $editingId ? 'Password Baru' : 'Password' }}
+                            </label>
+                            <input type="password" wire:model="password" autocomplete="new-password"
+                                   class="w-full rounded-lg border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-gray-900 dark:text-white px-3 py-2 text-sm @error('password') border-red-400 @enderror"
+                                   placeholder="Minimal 6 karakter">
+                            @error('password')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Konfirmasi Password</label>
+                            <input type="password" wire:model="password_confirmation" autocomplete="new-password"
+                                   class="w-full rounded-lg border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-gray-900 dark:text-white px-3 py-2 text-sm"
+                                   placeholder="Ulangi password">
+                        </div>
+                    </div>
+                    @if($editingId)
+                        <p class="text-xs text-gray-400 -mt-2">Kosongkan password jika tidak ingin mengubahnya.</p>
+                    @endif
+                </div>
+                <div class="px-6 py-4 border-t border-gray-100 dark:border-zinc-700 flex gap-3 justify-end">
+                    <button type="button" wire:click="closeForm"
+                            class="px-4 py-2 rounded-lg border border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-gray-300 text-sm hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit"
+                            class="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-semibold transition-colors"
+                            wire:loading.attr="disabled" wire:target="save">
+                        <span wire:loading.remove wire:target="save">{{ $editingId ? 'Simpan Perubahan' : 'Tambah Customer' }}</span>
+                        <span wire:loading wire:target="save">Menyimpan...</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
     @endif
 
 </div>
