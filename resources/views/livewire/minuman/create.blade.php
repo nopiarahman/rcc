@@ -197,6 +197,7 @@
                     <option value="{{ $size->id }}">{{ $size->name }}</option>
                 @endforeach
             </select>
+            @error('defaultSize') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
         </div>
 
         <div class="mb-4">
@@ -207,6 +208,7 @@
                     <option value="{{ $sugar->id }}">{{ $sugar->level }}</option>
                 @endforeach
             </select>
+            @error('defaultSugar') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
         </div>
 
         <div class="mb-4">
@@ -217,6 +219,7 @@
                     <option value="{{ $topping->id }}">{{ $topping->nama }}</option>
                 @endforeach
             </select>
+            @error('defaultTopping') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
         </div>
 
         <hr class="mt-4 mb-4">
@@ -345,6 +348,21 @@ new class extends Component
             'tag' => 'nullable|string',
             'short_description' => 'nullable|string',
         ]);
+
+        // Default harus termasuk opsi yang dicentang; kalau tidak, harga di menu & keranjang akan berbeda
+        $aktif = fn ($list) => collect($list)->filter(fn ($d) => $d['aktif'] ?? false)->keys()->map(fn ($id) => (string) $id);
+        foreach ([
+            'defaultSize' => [$this->selectedSizes, 'Ukuran'],
+            'defaultSugar' => [$this->selectedSugars, 'Level gula'],
+            'defaultTopping' => [$this->selectedToppings, 'Topping'],
+        ] as $field => [$list, $label]) {
+            if (! $aktif($list)->contains((string) $this->{$field})) {
+                $this->addError($field, "{$label} default harus dicentang sebagai pilihan yang tersedia.");
+            }
+        }
+        if ($this->getErrorBag()->isNotEmpty()) {
+            return;
+        }
 
         $minuman = Minuman::create([
             'nama' => $this->nama,

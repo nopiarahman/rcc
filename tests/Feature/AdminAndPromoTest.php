@@ -131,3 +131,25 @@ test('jumlah query daftar menu tidak bertambah seiring jumlah produk', function 
 
     expect($hitungQuery())->toBe($sedikit);
 });
+
+// UI1 — admin tidak bisa memilih default yang tidak dicentang
+test('form minuman menolak ukuran default yang tidak dicentang sebagai pilihan', function () {
+    $this->actingAs(User::factory()->create());
+    $medium = \App\Models\Size::create(['name' => 'Medium', 'price' => 3000]);
+    $normal = \App\Models\Sugar::create(['level' => 'Normal', 'price' => 0]);
+    $tanpa = \App\Models\Topping::create(['nama' => 'Tanpa Topping', 'kategori' => 'minuman', 'default_price' => 0]);
+
+    Volt::test('minuman.create')
+        ->set('nama', 'Kopi Baru')
+        ->set('base_price', 15000)
+        ->set('defaultSize', $medium->id)
+        ->set('defaultSugar', $normal->id)
+        ->set('defaultTopping', $tanpa->id)
+        ->set("selectedSugars.{$normal->id}.aktif", true)
+        ->set("selectedToppings.{$tanpa->id}.aktif", true)
+        ->call('simpan')
+        ->assertHasErrors('defaultSize')
+        ->assertHasNoErrors(['defaultSugar', 'defaultTopping']);
+
+    expect(Minuman::where('nama', 'Kopi Baru')->exists())->toBeFalse();
+});
