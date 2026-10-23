@@ -190,6 +190,13 @@
                 </flux:field>
             </div>
 
+            <flux:field>
+                <flux:label>Maks. per Pelanggan</flux:label>
+                <flux:input type="number" wire:model="max_per_customer" min="1" placeholder="Kosong = tanpa batas" />
+                <flux:description>Jika diisi, kode hanya bisa dipakai pelanggan yang sudah masuk ke akunnya.</flux:description>
+                @error('max_per_customer') <flux:error>{{ $message }}</flux:error> @enderror
+            </flux:field>
+
             <div class="grid grid-cols-2 gap-3">
                 <flux:field>
                     <flux:label>Tanggal Mulai</flux:label>

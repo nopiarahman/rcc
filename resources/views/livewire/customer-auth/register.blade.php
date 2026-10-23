@@ -23,12 +23,12 @@
                         <form wire:submit="register" novalidate>
                             {{-- Nama --}}
                             <div class="mb-3">
-                                <label class="form-label fw-semibold small" style="color:#374151;">Nama Lengkap</label>
+                                <label for="akun-nama" class="form-label fw-semibold small" style="color:#374151;">Nama Lengkap</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light border-end-0" style="border-radius:10px 0 0 10px;">
                                         <i class="fas fa-user text-muted"></i>
                                     </span>
-                                    <input type="text" wire:model="nama"
+                                    <input id="akun-nama" type="text" wire:model="nama"
                                            class="form-control border-start-0 ps-0 @error('nama') is-invalid @enderror"
                                            placeholder="Nama kamu"
                                            style="border-radius:0 10px 10px 0;">
@@ -40,12 +40,12 @@
 
                             {{-- No HP --}}
                             <div class="mb-3">
-                                <label class="form-label fw-semibold small" style="color:#374151;">Nomor HP</label>
+                                <label for="akun-no-hp" class="form-label fw-semibold small" style="color:#374151;">Nomor HP</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light border-end-0" style="border-radius:10px 0 0 10px;">
                                         <i class="fas fa-phone text-muted"></i>
                                     </span>
-                                    <input type="tel" wire:model="no_hp"
+                                    <input id="akun-no-hp" type="tel" wire:model="no_hp"
                                            class="form-control border-start-0 ps-0 @error('no_hp') is-invalid @enderror"
                                            placeholder="08xx-xxxx-xxxx"
                                            style="border-radius:0 10px 10px 0;">
@@ -58,12 +58,12 @@
 
                             {{-- Password --}}
                             <div class="mb-3">
-                                <label class="form-label fw-semibold small" style="color:#374151;">Password</label>
+                                <label for="akun-password" class="form-label fw-semibold small" style="color:#374151;">Password</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light border-end-0" style="border-radius:10px 0 0 10px;">
                                         <i class="fas fa-lock text-muted"></i>
                                     </span>
-                                    <input type="password" wire:model="password"
+                                    <input id="akun-password" type="password" wire:model="password"
                                            class="form-control border-start-0 ps-0 @error('password') is-invalid @enderror"
                                            placeholder="Min. 6 karakter"
                                            style="border-radius:0 10px 10px 0;">
@@ -75,12 +75,12 @@
 
                             {{-- Konfirmasi Password --}}
                             <div class="mb-3">
-                                <label class="form-label fw-semibold small" style="color:#374151;">Konfirmasi Password</label>
+                                <label for="akun-password-confirmation" class="form-label fw-semibold small" style="color:#374151;">Konfirmasi Password</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light border-end-0" style="border-radius:10px 0 0 10px;">
                                         <i class="fas fa-lock text-muted"></i>
                                     </span>
-                                    <input type="password" wire:model="password_confirmation"
+                                    <input id="akun-password-confirmation" type="password" wire:model="password_confirmation"
                                            class="form-control border-start-0 ps-0"
                                            placeholder="Ulangi password"
                                            style="border-radius:0 10px 10px 0;">

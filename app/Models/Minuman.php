@@ -75,6 +75,15 @@ class Minuman extends Model implements HasMedia
     public function activeDiscount()
     {
         $now = now();
+
+        // Pakai relasi yang sudah di-eager-load (halaman menu) agar tidak query per produk
+        if ($this->relationLoaded('discounts')) {
+            return $this->discounts
+                ->filter(fn ($d) => $d->is_active && $d->start_date <= $now && $d->end_date >= $now)
+                ->sortByDesc('discount_amount')
+                ->first();
+        }
+
         return $this->discounts()
             ->where('is_active', true)
             ->where('start_date', '<=', $now)

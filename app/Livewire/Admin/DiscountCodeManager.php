@@ -19,6 +19,7 @@ class DiscountCodeManager extends Component
     public $discount_type = 'percentage';
     public $minimum_purchase = 0;
     public $max_redeem;
+    public $max_per_customer;
     public $start_date;
     public $end_date;
     public $is_active = true;
@@ -41,10 +42,11 @@ class DiscountCodeManager extends Component
             'code' => 'required|string|max:20|unique:discount_codes,code' . ($this->editMode ? ',' . $this->discountCodeId : ''),
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'discount_amount' => 'required|numeric|min:0',
+            'discount_amount' => 'required|numeric|min:0' . ($this->discount_type === 'percentage' ? '|max:100' : ''),
             'discount_type' => 'required|in:percentage,fixed',
             'minimum_purchase' => 'required|numeric|min:0',
             'max_redeem' => 'nullable|integer|min:1',
+            'max_per_customer' => 'nullable|integer|min:1',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'is_active' => 'boolean',
@@ -108,7 +110,7 @@ class DiscountCodeManager extends Component
     {
         $this->reset([
             'code', 'name', 'description', 'discount_amount', 'minimum_purchase',
-            'max_redeem', 'editMode', 'discountCodeId'
+            'max_redeem', 'max_per_customer', 'editMode', 'discountCodeId'
         ]);
         
         $this->discount_type = 'percentage';
@@ -137,6 +139,7 @@ class DiscountCodeManager extends Component
                 'discount_type' => $this->discount_type,
                 'minimum_purchase' => $this->minimum_purchase,
                 'max_redeem' => $this->max_redeem,
+                'max_per_customer' => $this->max_per_customer ?: null,
                 'start_date' => $this->start_date,
                 'end_date' => $this->end_date,
                 'is_active' => $this->is_active,
@@ -176,6 +179,7 @@ class DiscountCodeManager extends Component
         $this->discount_type = $discountCode->discount_type;
         $this->minimum_purchase = $discountCode->minimum_purchase;
         $this->max_redeem = $discountCode->max_redeem;
+        $this->max_per_customer = $discountCode->max_per_customer;
         $this->start_date = $discountCode->start_date->format('Y-m-d\TH:i');
         $this->end_date = $discountCode->end_date->format('Y-m-d\TH:i');
         $this->is_active = $discountCode->is_active;

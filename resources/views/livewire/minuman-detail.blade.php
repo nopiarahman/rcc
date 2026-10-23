@@ -250,7 +250,7 @@
             <div class="mb-4">
                 <h6 class="fw-bold text-theme">Keterangan</h6>
                 <div class="text-muted" style="font-size: 0.9rem;">
-                    {!! $minuman->deskripsi !!}
+                    {!! \App\Support\HtmlSanitizer::clean($minuman->deskripsi) !!}
                 </div>
             </div>
             <div class="d-flex justify-content-center align-items-center">

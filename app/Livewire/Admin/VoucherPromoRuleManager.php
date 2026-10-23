@@ -24,7 +24,8 @@ class VoucherPromoRuleManager extends Component
             'description' => 'required|string|max:255',
             'min_purchase_amount' => 'required|numeric|min:1000',
             'voucher_discount_type' => 'required|in:fixed,percentage',
-            'voucher_discount_value' => 'required|numeric|min:1',
+            // Persen tidak boleh lebih dari 100 agar total pesanan tidak bisa negatif
+            'voucher_discount_value' => 'required|numeric|min:1' . ($this->voucher_discount_type === 'percentage' ? '|max:100' : ''),
             'voucher_min_purchase' => 'nullable|numeric|min:0',
             'voucher_validity_days' => 'required|integer|min:1|max:365',
         ];
@@ -36,6 +37,7 @@ class VoucherPromoRuleManager extends Component
         'min_purchase_amount.min' => 'Minimal pembelian harus Rp 1.000.',
         'voucher_discount_value.required' => 'Nilai diskon wajib diisi.',
         'voucher_discount_value.min' => 'Nilai diskon minimal 1.',
+        'voucher_discount_value.max' => 'Diskon persen maksimal 100%.',
         'voucher_validity_days.required' => 'Masa berlaku wajib diisi.',
     ];
 

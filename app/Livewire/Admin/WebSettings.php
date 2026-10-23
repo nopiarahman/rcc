@@ -57,7 +57,7 @@ class WebSettings extends Component
             'latitude' => -1.66651,
             'longitude' => 103.65238,
             'delivery_radius' => 600,
-            'order_mode' => 'dine_in',
+            'order_mode' => 'both',
             'whatsapp_number' => '6281234567890',
             'opening_time' => '08:00:00',
             'closing_time' => '22:00:00',
@@ -105,7 +105,8 @@ class WebSettings extends Component
             'order_mode' => 'required|in:both,delivery,takeaway',
             'whatsapp_number' => 'required|string|max:20',
             'opening_time' => 'required|date_format:H:i',
-            'closing_time' => 'required|date_format:H:i|after:opening_time',
+            // Boleh lebih kecil dari jam buka (lewat tengah malam, mis. 18:00–02:00); sama = buka 24 jam
+            'closing_time' => 'required|date_format:H:i',
             'is_temporarily_closed' => 'boolean',
             'temporary_closure_message' => 'nullable|string|max:500',
             'ongkir_enabled' => 'boolean',
@@ -143,12 +144,11 @@ class WebSettings extends Component
         ];
 
         if ($this->logo) {
-            // Delete old logo if exists
-            if ($this->settings->logo_path) {
-                Storage::delete('public/' . $this->settings->logo_path);
+            // Disk 'public' (storage/app/public) agar bisa diakses lewat /storage; disk default 'local' bersifat privat
+            if ($this->settings->logo_path && Storage::disk('public')->exists($this->settings->logo_path)) {
+                Storage::disk('public')->delete($this->settings->logo_path);
             }
-            $path = $this->logo->store('public/logos');
-            $data['logo_path'] = str_replace('public/', '', $path);
+            $data['logo_path'] = $this->logo->store('logos', 'public');
         }
 
         if ($this->favicon) {

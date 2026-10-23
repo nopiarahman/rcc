@@ -24,15 +24,15 @@
             </div>
             <div class="p-5 space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nama Website</label>
-                    <input type="text" wire:model="site_name"
+                    <label for="ws-site_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nama Website</label>
+                    <input id="ws-site_name" type="text" wire:model="site_name"
                         class="w-full px-3 py-2 border border-gray-200 dark:border-neutral-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-neutral-700 dark:text-white"
                         placeholder="Nama toko / website">
                     @error('site_name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tagline</label>
-                    <input type="text" wire:model="tagline"
+                    <label for="ws-tagline" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tagline</label>
+                    <input id="ws-tagline" type="text" wire:model="tagline"
                         class="w-full px-3 py-2 border border-gray-200 dark:border-neutral-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-neutral-700 dark:text-white"
                         placeholder="Slogan singkat toko">
                     @error('tagline') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
@@ -48,7 +48,7 @@
             </div>
             <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Logo</label>
+                    <label for="ws-latitude" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Logo</label>
                     @if($current_logo)
                         <img src="{{ asset('storage/' . $current_logo) }}" alt="Logo" class="h-12 w-auto mb-3 rounded">
                     @endif
@@ -101,30 +101,30 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Latitude</label>
-                        <input type="number" step="0.00000001" wire:model="latitude"
+                        <input id="ws-latitude" type="number" step="0.00000001" wire:model="latitude"
                             class="w-full px-3 py-2 border border-gray-200 dark:border-neutral-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 dark:bg-neutral-700 dark:text-white"
                             placeholder="-1.66651">
                         @error('latitude') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Longitude</label>
-                        <input type="number" step="0.00000001" wire:model="longitude"
+                        <label for="ws-longitude" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Longitude</label>
+                        <input id="ws-longitude" type="number" step="0.00000001" wire:model="longitude"
                             class="w-full px-3 py-2 border border-gray-200 dark:border-neutral-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 dark:bg-neutral-700 dark:text-white"
                             placeholder="103.65238">
                         @error('longitude') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Radius Pengiriman (meter)</label>
-                    <input type="number" wire:model="delivery_radius" min="100"
+                    <label for="ws-delivery_radius" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Radius Pengiriman (meter)</label>
+                    <input id="ws-delivery_radius" type="number" wire:model="delivery_radius" min="100"
                         class="w-full px-3 py-2 border border-gray-200 dark:border-neutral-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 dark:bg-neutral-700 dark:text-white"
                         placeholder="600">
                     @error('delivery_radius') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     <p class="text-xs text-gray-400 mt-1">Jarak maksimal pengiriman (minimal 100m)</p>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nomor WhatsApp</label>
-                    <input type="text" wire:model="whatsapp_number"
+                    <label for="ws-whatsapp_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nomor WhatsApp</label>
+                    <input id="ws-whatsapp_number" type="text" wire:model="whatsapp_number"
                         class="w-full px-3 py-2 border border-gray-200 dark:border-neutral-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 dark:bg-neutral-700 dark:text-white"
                         placeholder="6281234567890">
                     @error('whatsapp_number') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
@@ -146,20 +146,21 @@
             <div class="p-5 space-y-4">
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Jam Buka</label>
-                        <input type="time" wire:model="opening_time"
+                        <label for="ws-opening_time" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Jam Buka</label>
+                        <input id="ws-opening_time" type="time" wire:model="opening_time"
                             class="w-full px-3 py-2 border border-gray-200 dark:border-neutral-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 dark:bg-neutral-700 dark:text-white">
                         @error('opening_time') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Jam Tutup</label>
-                        <input type="time" wire:model="closing_time"
+                        <label for="ws-closing_time" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Jam Tutup</label>
+                        <input id="ws-closing_time" type="time" wire:model="closing_time"
                             class="w-full px-3 py-2 border border-gray-200 dark:border-neutral-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 dark:bg-neutral-700 dark:text-white">
                         @error('closing_time') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
                 </div>
+                <p class="text-xs text-gray-400 -mt-2">Jam tutup boleh lewat tengah malam (mis. 18:00–02:00). Jam buka = jam tutup berarti buka 24 jam.</p>
                 <div class="p-4 border border-gray-200 dark:border-neutral-600 rounded-lg space-y-3">
-                    <label class="flex items-center gap-3 cursor-pointer">
+                    <label for="ws-temporary_closure_message" class="flex items-center gap-3 cursor-pointer">
                         <input type="checkbox" wire:model="is_temporarily_closed" class="rounded text-red-500 w-4 h-4">
                         <div>
                             <div class="text-sm font-medium text-gray-800 dark:text-white">Tutup Sementara</div>
@@ -168,7 +169,7 @@
                     </label>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pesan untuk Pelanggan</label>
-                        <textarea wire:model="temporary_closure_message" rows="2"
+                        <textarea id="ws-temporary_closure_message" wire:model="temporary_closure_message" rows="2"
                             class="w-full px-3 py-2 border border-gray-200 dark:border-neutral-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 dark:bg-neutral-700 dark:text-white"
                             placeholder="Contoh: Tutup untuk renovasi, dibuka kembali 1 Juli 2025"></textarea>
                         @error('temporary_closure_message') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
@@ -184,7 +185,7 @@
             </div>
             <div class="p-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
                 @foreach(['both' => ['label' => 'Delivery & Takeaway', 'icon' => '🛵🏪', 'desc' => 'Pelanggan bisa pilih keduanya'], 'delivery' => ['label' => 'Hanya Delivery', 'icon' => '🛵', 'desc' => 'Wajib antar ke alamat'], 'takeaway' => ['label' => 'Hanya Takeaway', 'icon' => '🏪', 'desc' => 'Wajib ambil sendiri']] as $value => $opt)
-                    <label class="relative cursor-pointer">
+                    <label for="ws-ongkir_per_km" class="relative cursor-pointer">
                         <input type="radio" wire:model.live="order_mode" value="{{ $value }}" class="peer sr-only">
                         <div class="p-4 border-2 rounded-xl transition peer-checked:border-blue-500 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/20 border-gray-200 dark:border-neutral-600 hover:border-gray-300">
                             <div class="text-2xl mb-1">{{ $opt['icon'] }}</div>
@@ -217,15 +218,15 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tarif per KM (Rp)</label>
-                        <input type="number" wire:model="ongkir_per_km" min="0" step="500"
+                        <input id="ws-ongkir_per_km" type="number" wire:model="ongkir_per_km" min="0" step="500"
                             class="w-full px-3 py-2 border border-gray-200 dark:border-neutral-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 dark:bg-neutral-700 dark:text-white"
                             placeholder="2000">
                         @error('ongkir_per_km') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                         <p class="text-xs text-gray-400 mt-1">Contoh: 2000 = Rp 2.000/km</p>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Gratis Ongkir sampai (KM)</label>
-                        <input type="number" wire:model="ongkir_free_km" min="0" step="0.1"
+                        <label for="ws-ongkir_free_km" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Gratis Ongkir sampai (KM)</label>
+                        <input id="ws-ongkir_free_km" type="number" wire:model="ongkir_free_km" min="0" step="0.1"
                             class="w-full px-3 py-2 border border-gray-200 dark:border-neutral-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 dark:bg-neutral-700 dark:text-white"
                             placeholder="0">
                         @error('ongkir_free_km') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
@@ -281,12 +282,13 @@
             </div>
         </div>
 
-        {{-- Save Button --}}
-        <div class="flex justify-end">
+        {{-- Save Button: menempel di bawah layar agar tidak perlu scroll ke akhir form yang panjang --}}
+        <div class="sticky bottom-0 z-10 flex items-center justify-end gap-3 py-3 bg-white/90 dark:bg-zinc-800/90 backdrop-blur border-t border-gray-200 dark:border-neutral-700">
+            <span class="text-xs text-gray-400 hidden sm:inline">Perubahan baru berlaku setelah disimpan</span>
             <button type="submit"
                 wire:loading.attr="disabled"
                 wire:target="save"
-                class="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-semibold rounded-xl transition shadow-sm">
+                class="flex items-center gap-2 px-6 py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white text-sm font-semibold rounded-xl transition shadow-sm">
                 <span wire:loading.remove wire:target="save">Simpan Pengaturan</span>
                 <span wire:loading wire:target="save" class="flex items-center gap-2">
                     <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

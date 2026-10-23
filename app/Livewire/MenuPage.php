@@ -10,18 +10,13 @@ use App\Models\Popup;
 
 class MenuPage extends Component
 {
-    public $filterKategori = '';
     public $allKategoris = [];
     public $allKategoriMakanan = [];
-    public $minumans = [];
-    public $makanans = [];
-    public $botolans = [];
-    public $banners = [];
     public $popup = null;
 
     public function mount()
     {
-        $this->muatData();
+        // Daftar produk dimuat oleh komponen DaftarMinuman; di sini hanya kategori, banner, botolan & popup
         $this->allKategoris = Minuman::distinct()
             ->pluck('kategori')
             ->filter()
@@ -34,9 +29,6 @@ class MenuPage extends Component
             ->sort()
             ->values()
             ->toArray();
-        $this->banners = Banner::where('status', true)
-            ->orderBy('order')
-            ->get();
         $today = now()->toDateString();
         $this->popup = Popup::where('is_active', true)
             ->where(function ($q) use ($today) {
@@ -50,39 +42,21 @@ class MenuPage extends Component
             ->first();
     }
 
-    public function gantiKategori($kategori)
+    public function render()
     {
-        $this->filterKategori = $kategori;
-        $this->muatData();
-    }
-
-    public function muatData()
-    {
-        $this->minumans = Minuman::when($this->filterKategori, function ($query) {
-            $query->where('kategori', $this->filterKategori);
-        })->orderBy('nama', 'asc')->get();
-        $this->makanans = \App\Models\Makanan::when($this->filterKategori, function ($query) {
-            $query->where('kategori', $this->filterKategori);
-        })->orderBy('nama', 'asc')->get();
-        $this->botolans = BotolanProduk::where('is_active', true)
+        $webSettings = \App\Models\WebSetting::current();
+        $banners = Banner::with('media')->where('status', true)->orderBy('order')->get();
+        $botolans = BotolanProduk::where('is_active', true)
             ->with(['minuman', 'ukurans', 'media'])
             ->whereHas('ukurans', fn($q) => $q->where('is_active', true))
             ->get()
             ->sortBy(fn($p) => $p->minuman?->nama)
             ->values();
-    }
-
-    public function render()
-    {
-        $webSettings = \App\Models\WebSetting::current();
-        $banners = Banner::where('status', true)->orderBy('order')->get();
 
         return view('livewire.menu-page', [
-            'minumans'    => $this->minumans,
-            'makanans'    => $this->makanans,
-            'botolans'    => $this->botolans,
+            'botolans'    => $botolans,
             'banners'     => $banners,
             'web_settings' => $webSettings
-        ])->layout('layouts.public');
+        ])->layout('layouts.public')->title('Menu');
     }
 }

@@ -2,6 +2,8 @@
 
 use Livewire\Volt\Component;
 use App\Models\Pesanan;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\WithPagination;
 use Carbon\Carbon;
 
@@ -9,10 +11,13 @@ new class extends Component
 {
     use WithPagination;
 
-    public $detailPesanan = null;
+    // Simpan ID saja; data detail dibangun ulang tiap render agar tidak hilang saat wire:poll
+    public ?int $detailPesananId = null;
     public $search = '';
     public $startDate = '';
     public $endDate = '';
+
+    #[Locked]
     public $perPage = 20;
 
     protected $queryString = [
@@ -29,10 +34,28 @@ new class extends Component
 
     public function lihatDetail($id)
     {
-        $pesanan = Pesanan::with('details')->findOrFail($id);
-        $pesanan->parsed_items = $pesanan->details->map(fn($d) => [
-            'nama'    => $d->nama_minuman ?? $d->nama_makanan ?? '-',
-            'tipe'    => $d->nama_minuman ? 'minuman' : 'makanan',
+        $this->detailPesananId = Pesanan::findOrFail($id)->id;
+    }
+
+    public function tutupDetail()
+    {
+        $this->detailPesananId = null;
+    }
+
+    #[Computed]
+    public function detailPesanan(): ?Pesanan
+    {
+        return $this->detailPesananId
+            ? Pesanan::with(['details', 'discountCode', 'voucher'])->find($this->detailPesananId)
+            : null;
+    }
+
+    #[Computed]
+    public function detailItems(): array
+    {
+        return $this->detailPesanan?->details->map(fn($d) => [
+            'nama'    => $d->nama_minuman ?: ($d->nama_makanan ?: ($d->nama_botolan ?: '-')),
+            'tipe'    => $d->nama_minuman ? 'minuman' : ($d->nama_botolan ? 'botolan' : 'makanan'),
             'qty'     => $d->qty,
             'harga'   => $d->harga,
             'subtotal'=> $d->subtotal,
@@ -40,17 +63,16 @@ new class extends Component
             'gula'    => $d->gula,
             'topping' => $d->topping,
             'catatan' => $d->catatan,
-        ])->toArray();
-        $this->detailPesanan = $pesanan;
-    }
-
-    public function tutupDetail()
-    {
-        $this->detailPesanan = null;
+        ])->toArray() ?? [];
     }
 
     public function updateStatus($pesananId, $status)
     {
+        if (! in_array($status, Pesanan::STATUSES, true)) {
+            $this->dispatch('toast', message: 'Status tidak dikenal', type: 'error');
+            return;
+        }
+
         $pesanan = Pesanan::findOrFail($pesananId);
         $pesanan->status = $status;
 
@@ -68,9 +90,7 @@ new class extends Component
             \App\Models\Voucher::generateForOrder($pesanan);
         }
 
-        if ($this->detailPesanan?->id == $pesananId) {
-            $this->lihatDetail($pesananId);
-        }
+        unset($this->detailPesanan, $this->detailItems);
 
         $this->resetPage('pendingPage');
         $this->resetPage('selesaiPage');
@@ -92,7 +112,7 @@ new class extends Component
             \App\Models\Voucher::generateForOrder($p);
         }
 
-        $this->detailPesanan = null;
+        $this->detailPesananId = null;
         $this->resetPage('pendingPage');
         $this->resetPage('selesaiPage');
         $this->dispatch('toast', message: "{$count} pesanan ditandai selesai", type: 'success');
@@ -119,7 +139,8 @@ new class extends Component
     {
         return $this->getFilteredOrders()
             ->whereIn('status', ['menunggu_konfirmasi', 'diproses', 'diantar', 'dikirim'])
-            ->orderByRaw("FIELD(status, 'menunggu_konfirmasi', 'diproses', 'diantar', 'dikirim')")
+            // CASE (bukan FIELD) agar jalan di MySQL maupun SQLite (test)
+            ->orderByRaw("CASE status WHEN 'menunggu_konfirmasi' THEN 1 WHEN 'diproses' THEN 2 WHEN 'diantar' THEN 3 WHEN 'dikirim' THEN 4 ELSE 5 END")
             ->orderBy('created_at', 'asc')
             ->paginate($this->perPage, ['*'], 'pendingPage');
     }
@@ -404,9 +425,9 @@ new class extends Component
     </div>
 
     {{-- ===== MODAL DETAIL ===== --}}
-    @if($detailPesanan)
+    @if($this->detailPesanan)
         @php
-            $dp = $detailPesanan;
+            $dp = $this->detailPesanan;
             $statusMeta = match($dp->status) {
                 'menunggu_konfirmasi' => ['label' => 'Menunggu',  'bg' => 'bg-yellow-100', 'text' => 'text-yellow-800'],
                 'diproses'            => ['label' => 'Diproses',  'bg' => 'bg-blue-100',   'text' => 'text-blue-800'],
@@ -479,7 +500,7 @@ new class extends Component
                 <div>
                     <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Item Pesanan</h4>
                     <div class="space-y-2">
-                        @foreach($dp->parsed_items ?? [] as $item)
+                        @foreach($this->detailItems as $item)
                             <div class="bg-gray-50 dark:bg-neutral-800 rounded-lg px-3 py-2.5">
                                 <div class="flex justify-between text-sm">
                                     <span class="font-medium text-gray-800 dark:text-white">{{ $item['nama'] }}</span>
@@ -502,14 +523,26 @@ new class extends Component
 
                 {{-- Total --}}
                 <div class="border-t border-gray-100 dark:border-neutral-700 pt-3 space-y-1.5 text-sm">
+                    <div class="flex justify-between text-gray-500">
+                        <span>Subtotal</span>
+                        <span>Rp {{ number_format($dp->details->sum('subtotal'), 0, ',', '.') }}</span>
+                    </div>
                     @if($dp->discount_amount > 0)
-                        <div class="flex justify-between text-gray-500">
-                            <span>Subtotal</span>
-                            <span>Rp {{ number_format($dp->total_harga + $dp->discount_amount, 0, ',', '.') }}</span>
-                        </div>
                         <div class="flex justify-between text-green-600">
-                            <span>Diskon</span>
+                            <span>Diskon{{ $dp->discountCode ? ' (' . $dp->discountCode->code . ')' : '' }}</span>
                             <span>−Rp {{ number_format($dp->discount_amount, 0, ',', '.') }}</span>
+                        </div>
+                    @endif
+                    @if($dp->voucher_amount > 0)
+                        <div class="flex justify-between text-green-600">
+                            <span>Voucher{{ $dp->voucher ? ' (' . $dp->voucher->code . ')' : '' }}</span>
+                            <span>−Rp {{ number_format($dp->voucher_amount, 0, ',', '.') }}</span>
+                        </div>
+                    @endif
+                    @if($dp->ongkir > 0)
+                        <div class="flex justify-between text-gray-500">
+                            <span>Ongkir</span>
+                            <span>+Rp {{ number_format($dp->ongkir, 0, ',', '.') }}</span>
                         </div>
                     @endif
                     <div class="flex justify-between font-bold text-gray-900 dark:text-white text-base">

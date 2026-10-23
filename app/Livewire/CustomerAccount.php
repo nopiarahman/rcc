@@ -62,13 +62,21 @@ class CustomerAccount extends Component
     {
         $customer = Auth::guard('customer')->user();
 
+        // Sesi habis di tengah jalan: arahkan ke halaman masuk alih-alih error
+        if (! $customer) {
+            $this->redirectRoute('customer.login', navigate: true);
+
+            return '<div></div>';
+        }
+
         $orders = Pesanan::with('details')
             ->where('customer_id', $customer->id)
             ->latest()
             ->paginate(10);
 
+        // CASE (bukan ISNULL) agar jalan di MySQL maupun SQLite (test)
         $vouchers = Voucher::where('customer_id', $customer->id)
-            ->orderByRaw('is_used ASC, ISNULL(expires_at) ASC, expires_at ASC, created_at DESC')
+            ->orderByRaw('is_used ASC, CASE WHEN expires_at IS NULL THEN 1 ELSE 0 END ASC, expires_at ASC, created_at DESC')
             ->get();
 
         $activeVouchers = $vouchers->filter(fn($v) => $v->isValid());
@@ -80,6 +88,6 @@ class CustomerAccount extends Component
             'activeVouchers' => $activeVouchers,
             'usedVouchers' => $usedVouchers,
             'web_settings' => WebSetting::current(),
-        ])->layout('layouts.public', ['whiteBackground' => true]);
+        ])->layout('layouts.public', ['whiteBackground' => true])->title('Akun Saya');
     }
 }

@@ -109,6 +109,6 @@ new class extends Component {
             </div>
         </form>
 
-        <livewire:settings.delete-user-form />
+        {{-- Hapus akun admin dilakukan lewat halaman Data Admin (ada pengaman: tidak bisa menghapus diri sendiri / admin terakhir) --}}
     </x-settings.layout>
 </section>

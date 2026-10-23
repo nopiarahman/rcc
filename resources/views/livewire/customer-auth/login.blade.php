@@ -21,12 +21,12 @@
 
                         <form wire:submit="login" novalidate>
                             <div class="mb-3">
-                                <label class="form-label fw-semibold small" style="color:#374151;">Nomor HP</label>
+                                <label for="akun-no-hp" class="form-label fw-semibold small" style="color:#374151;">Nomor HP</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light border-end-0" style="border-radius:10px 0 0 10px;">
                                         <i class="fas fa-phone text-muted"></i>
                                     </span>
-                                    <input type="tel" wire:model="no_hp"
+                                    <input id="akun-no-hp" type="tel" wire:model="no_hp"
                                            class="form-control border-start-0 ps-0 @error('no_hp') is-invalid @enderror"
                                            placeholder="08xx-xxxx-xxxx"
                                            style="border-radius:0 10px 10px 0;"
@@ -38,12 +38,12 @@
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label fw-semibold small" style="color:#374151;">Password</label>
+                                <label for="akun-password" class="form-label fw-semibold small" style="color:#374151;">Password</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light border-end-0" style="border-radius:10px 0 0 10px;">
                                         <i class="fas fa-lock text-muted"></i>
                                     </span>
-                                    <input type="password" wire:model="password"
+                                    <input id="akun-password" type="password" wire:model="password"
                                            class="form-control border-start-0 ps-0"
                                            placeholder="Password kamu"
                                            style="border-radius:0 10px 10px 0;">
@@ -65,6 +65,15 @@
                             <a href="{{ route('customer.register') }}" wire:navigate class="small fw-semibold ms-1"
                                style="color:var(--button-bg-color);text-decoration:none;">Daftar Gratis</a>
                         </div>
+
+                        {{-- Belum ada reset mandiri (butuh OTP WhatsApp); admin bisa mereset lewat halaman Data Customer --}}
+                        @php $waToko = preg_replace('/[^0-9]/', '', (string) $ws->whatsapp_number); @endphp
+                        @if($waToko)
+                            <div class="text-center mt-2">
+                                <a href="https://wa.me/{{ $waToko }}?text={{ rawurlencode('Halo, saya lupa password akun saya. Nomor HP akun: ') }}"
+                                   target="_blank" rel="noopener" class="small text-muted">Lupa password? Hubungi kami via WhatsApp</a>
+                            </div>
+                        @endif
                     </div>
                 </div>
 

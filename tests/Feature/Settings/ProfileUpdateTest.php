@@ -45,33 +45,21 @@ test('email verification status is unchanged when email address is unchanged', f
     expect($user->refresh()->email_verified_at)->not->toBeNull();
 });
 
-test('user can delete their account', function () {
-    $user = User::factory()->create();
+// S8 — admin tidak lagi bisa menghapus akunnya sendiri dari halaman profil
+test('halaman profil tidak menampilkan tombol hapus akun', function () {
+    $this->actingAs(User::factory()->create());
 
-    $this->actingAs($user);
-
-    $response = Volt::test('settings.delete-user-form')
-        ->set('password', 'password')
-        ->call('deleteUser');
-
-    $response
-        ->assertHasNoErrors()
-        ->assertRedirect('/');
-
-    expect($user->fresh())->toBeNull();
-    expect(auth()->check())->toBeFalse();
+    $this->get('/settings/profile')->assertOk()->assertDontSee('Delete account');
 });
 
-test('correct password must be provided to delete account', function () {
-    $user = User::factory()->create();
+test('menghapus akun admin tidak ikut menghapus pesanan yang pernah dibuatnya', function () {
+    $admin = User::factory()->create();
+    $pesanan = \App\Models\Pesanan::create([
+        'user_id' => $admin->id, 'nama_pemesan' => 'Walk-in', 'alamat_pengantaran' => 'Takeaway',
+        'total' => 10000, 'total_harga' => 10000,
+    ]);
 
-    $this->actingAs($user);
+    $admin->delete();
 
-    $response = Volt::test('settings.delete-user-form')
-        ->set('password', 'wrong-password')
-        ->call('deleteUser');
-
-    $response->assertHasErrors(['password']);
-
-    expect($user->fresh())->not->toBeNull();
+    expect($pesanan->fresh())->not->toBeNull()->and($pesanan->fresh()->user_id)->toBeNull();
 });

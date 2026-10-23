@@ -50,15 +50,18 @@ class Voucher extends Model
         return !$this->is_used && !$this->isExpired();
     }
 
-    public function calculateDiscount(int $cartTotal): float
+    public function calculateDiscount(int|float $cartTotal): float
     {
+        $cartTotal = max(0, (float) $cartTotal);
+
+        // Potongan tidak pernah melebihi total belanja (juga untuk voucher persen)
         if ($this->discount_type === 'percentage') {
-            return round($cartTotal * ($this->discount_value / 100));
+            return min(round($cartTotal * (min((float) $this->discount_value, 100) / 100)), $cartTotal);
         }
         return min((float) $this->discount_value, $cartTotal);
     }
 
-    public function canBeApplied(int $cartTotal): bool
+    public function canBeApplied(int|float $cartTotal): bool
     {
         return $this->isValid() && $cartTotal >= $this->min_purchase;
     }
@@ -92,10 +95,10 @@ class Voucher extends Model
     {
         if (!$pesanan->customer_id) return;
 
-        // Total kumulatif semua order selesai milik customer ini
-        $totalSpend = \App\Models\Pesanan::where('customer_id', $pesanan->customer_id)
+        // Total kumulatif belanja (tanpa ongkir) semua order selesai milik customer ini
+        $totalSpend = (int) \App\Models\Pesanan::where('customer_id', $pesanan->customer_id)
             ->where('status', 'selesai')
-            ->sum('total');
+            ->sum(\Illuminate\Support\Facades\DB::raw('total - COALESCE(ongkir, 0)'));
 
         $rules = \App\Models\VoucherPromoRule::where('is_active', true)->get();
 
