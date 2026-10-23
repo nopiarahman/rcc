@@ -28,7 +28,12 @@
     <div class="grid md:grid-cols-3 gap-4">
         {{-- Revenue Bar Chart --}}
         <div class="md:col-span-2 rounded-xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-700 dark:bg-neutral-800">
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Omzet 7 Hari Terakhir</h3>
+            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">
+                Omzet 7 Hari Terakhir
+                @if(collect($chartRevenue)->sum() == 0)
+                    <span class="ml-2 text-xs font-normal text-gray-400">· Belum ada omzet</span>
+                @endif
+            </h3>
             <div wire:ignore>
                 <canvas id="revenueChart" height="120"></canvas>
             </div>
@@ -167,7 +172,10 @@
                 scales: {
                     y: {
                         beginAtZero: true,
+                        // Saat belum ada omzet, sumbu tetap Rp0–Rp100rb (tidak menampilkan Rp0,1 … Rp1)
+                        suggestedMax: Math.max.apply(null, revenue.concat([0])) > 0 ? undefined : 100000,
                         ticks: {
+                            precision: 0,
                             callback: function(v) {
                                 if (v >= 1000000) return 'Rp ' + (v/1000000).toFixed(1) + 'jt';
                                 if (v >= 1000) return 'Rp ' + (v/1000).toFixed(0) + 'rb';

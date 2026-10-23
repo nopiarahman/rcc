@@ -15,7 +15,7 @@
         .btn-theme:disabled { opacity: 0.5; }
         .text-theme { color: {{ $themeColor }} !important; }
         .ukuran-btn.active { background-color: {{ $themeColor }} !important; color: {{ $buttonTextColor }} !important; border-color: {{ $themeColor }} !important; }
-        .content-wrapper { margin-top: -2rem; z-index: 2; position: relative; background: white; border-radius: 1.5rem 1.5rem 0 0; box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.1); padding-bottom: 5rem; }
+        .content-wrapper { margin-top: -2rem; z-index: 2; position: relative; background: white; border-radius: 1.5rem 1.5rem 0 0; box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.1); padding-bottom: 5rem; min-height: 70vh; /* lembar putih sampai bawah layar, tidak menyisakan blok hijau */ }
         .select-minuman { border-radius: 12px !important; font-size: 0.9rem; border-color: #e5e7eb !important; }
         .select-minuman:focus { border-color: {{ $themeColor }} !important; box-shadow: 0 0 0 0.2rem {{ $themeColor }}33 !important; }
     </style>
@@ -172,5 +172,4 @@
         </div>
     </div>
 
-    <x-mobile-nav />
 </div>

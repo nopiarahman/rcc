@@ -18,9 +18,9 @@
                 + Tambah Minuman
             </flux:button>
         </div>
-        <div class="overflow-x-auto bg-white rounded-xl shadow-lg">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50 text-left text-sm font-semibold text-gray-700">
+        <div class="overflow-x-auto bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-sm">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
+                <thead class="bg-gray-50 dark:bg-neutral-900 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">
                     <tr>
                         <th class="px-4 py-3">Nama</th>
                         <th class="px-4 py-3">HPP</th>
@@ -29,9 +29,9 @@
                         <th class="px-4 py-3">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 text-sm text-gray-800">
+                <tbody class="divide-y divide-gray-100 dark:divide-neutral-700 text-sm text-gray-800 dark:text-gray-200">
                     @forelse ($minumans as $minuman)
-                        <tr wire:key="minuman-{{ $minuman->id }}" class="{{ $minuman->is_habis ? 'bg-red-50' : '' }}">
+                        <tr wire:key="minuman-{{ $minuman->id }}" class="{{ $minuman->is_habis ? 'bg-red-50 dark:bg-red-900/20' : '' }}">
                             <td class="px-4 py-2 font-semibold">
                                 {{ $minuman->nama }}
                                 @if($minuman->is_habis)
@@ -113,10 +113,9 @@
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/10" >
         <div class="bg-white p-4 rounded shadow-lg max-w-md" @click.away="show = false">
             <h2 class="text-lg font-bold mb-2">Foto Minuman</h2>
-            <img :src="url" alt="Foto Minuman" class="w-full h-auto rounded" />
+            <img :src="url || false" alt="Foto Minuman" class="w-full h-auto rounded" />
             <button @click="show = false" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded">Tutup</button>
         </div>
     </div>
     @livewire('detail-hpp-modal')
-    @livewireScripts
 </div>

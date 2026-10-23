@@ -44,6 +44,16 @@ class Customer extends Authenticatable
         return $noHp;
     }
 
+    /**
+     * Nomor HP untuk ditampilkan, mis. 6282375207570 → 0823-7520-7570.
+     */
+    public function getFormattedPhoneAttribute(): string
+    {
+        $local = str_starts_with((string) $this->no_hp, '62') ? '0' . substr($this->no_hp, 2) : (string) $this->no_hp;
+
+        return preg_replace('/^(\d{4})(\d{4})(\d+)$/', '$1-$2-$3', $local);
+    }
+
     public function initials(): string
     {
         return collect(explode(' ', $this->nama))

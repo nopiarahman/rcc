@@ -68,13 +68,13 @@
         
         <button 
             wire:click="gantiKategori('')" 
-            class="btn rounded-4 btn-sm px-3 {{ $filterKategori == '' ? 'btn-theme' : 'btn-outline-secondary' }}">
+            style="min-height:40px" class="btn rounded-4 btn-sm px-3 {{ $filterKategori == '' ? 'btn-theme' : 'btn-outline-secondary' }}">
             Semua
         </button>
         @foreach($allKategoris as $kategori)
         <button 
             wire:click="gantiKategori('{{ $kategori }}')" 
-            class="btn rounded-4 btn-sm px-3 {{ $filterKategori == $kategori ? 'btn-theme' : 'btn-outline-secondary' }}">
+            style="min-height:40px" class="btn rounded-4 btn-sm px-3 {{ $filterKategori == $kategori ? 'btn-theme' : 'btn-outline-secondary' }}">
             {{ $kategori }}
         </button>
         @endforeach

@@ -20,3 +20,8 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# File sistem macOS & pengaturan lokal editor/AI
+.DS_Store
+._*
+.claude/settings.local.json

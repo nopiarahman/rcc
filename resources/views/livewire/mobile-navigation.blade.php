@@ -69,6 +69,11 @@
             @endif
             <span class="small">Keranjang</span>
         </a>
+        <a href="{{ route('pesanan') }}" wire:navigate
+           class="nav-link nav-item flex-fill text-center {{ request()->routeIs('pesanan', 'pesanan.berhasil') ? 'active' : '' }}">
+            <i style="font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 48;" class="material-symbols-outlined">receipt_long</i>
+            <span class="small">Pesanan</span>
+        </a>
         @if(auth('customer')->check())
         <a href="{{ route('customer.account') }}" wire:navigate
            class="nav-link nav-item flex-fill text-center {{ request()->routeIs('customer.account') ? 'active' : '' }}">

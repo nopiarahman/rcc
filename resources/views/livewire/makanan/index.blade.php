@@ -112,7 +112,7 @@
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/10" >
     <div class="bg-white p-4 rounded shadow-lg max-w-md" @click.away="show = false">
         <h2 class="text-lg font-bold mb-2">Foto Makanan</h2>
-        <img :src="url" alt="Foto Makanan" class="w-full h-auto rounded" />
+        <img :src="url || false" alt="Foto Makanan" class="w-full h-auto rounded" />
         <button @click="show = false" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded">Tutup</button>
     </div>
 </div>

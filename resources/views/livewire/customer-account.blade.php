@@ -96,7 +96,7 @@
                 <div class="acct-avatar">{{ $customer->initials() }}</div>
                 <div class="flex-grow-1">
                     <div class="fw-bold" style="font-size:1.05rem;line-height:1.3;color:#1a1a1a;">{{ $customer->nama }}</div>
-                    <div class="text-muted small">{{ $customer->no_hp }}</div>
+                    <div class="text-muted small">{{ $customer->formatted_phone }}</div>
                 </div>
                 <button wire:click="logout"
                         class="btn btn-sm"

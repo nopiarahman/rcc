@@ -18,6 +18,9 @@
     @endphp
     
     <style>
+        /* Harga & tombol beli menempel di bawah layar (di atas navigasi bawah pada HP) */
+        .buy-bar { position: sticky; bottom: 0; z-index: 20; background: #fff; padding: .75rem 1rem; margin: 1rem -1rem 0; box-shadow: 0 -8px 16px -12px rgba(0,0,0,.25); }
+        @media (max-width: 767.98px) { .buy-bar { bottom: 72px; } }
         /* Theme-specific text color */
         .text-theme {
             color: {{ $themeColor }} !important;
@@ -205,8 +208,11 @@
             <i class="fas fa-chevron-left"></i>
         </a>
         @if ($minuman->tag)
-            <div class="bg-warning text-white px-2 py-1 rounded-3 fw-bold ms-2">
-                {{$minuman->tag}}
+            {{-- Tag disimpan dipisah koma (mis. "kopi,susu"): tampilkan satu badge per tag --}}
+            <div class="d-flex flex-wrap gap-1 ms-2">
+                @foreach (array_filter(array_map('trim', explode(',', $minuman->tag))) as $tag)
+                    <span class="bg-warning text-white px-2 py-1 rounded-3 fw-bold">{{ $tag }}</span>
+                @endforeach
             </div>
         @endif
         @if (session()->has('message'))
@@ -218,7 +224,7 @@
     {{-- Gambar --}}
     <img 
         wire:ignore.self 
-        src="{{ $minuman->getFirstMediaUrl('foto') }}" 
+        src="{{ $minuman->getFirstMediaUrl('foto') ?: asset('images/no-image.png') }}" 
         alt="{{ $minuman->nama }}" 
         class="sticky-image" 
         style="cursor: pointer;" 
@@ -253,7 +259,8 @@
                     {!! \App\Support\HtmlSanitizer::clean($minuman->deskripsi) !!}
                 </div>
             </div>
-            <div class="d-flex justify-content-center align-items-center">
+            {{-- Harga & tombol beli menempel di bawah layar agar tidak perlu scroll melewati deskripsi --}}
+            <div class="d-flex justify-content-center align-items-center buy-bar">
                 <div class="text-center">
                     <div class="d-flex justify-content-center align-items-center mb-3">
                         @if ($minuman->activeDiscount())
@@ -495,7 +502,6 @@
             </div>
         </div>
     </div>
-    <x-mobile-nav/>
     
     <!-- Full Size Image Modal -->
     <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
@@ -506,7 +512,7 @@
                     <button type="button" class="btn-close position-absolute top-0 end-0 bg-white rounded-circle p-2 m-3 shadow-sm" style="z-index: 1050;" data-bs-dismiss="modal" aria-label="Close"></button>
                     
                     <img 
-                        src="{{ $minuman->getFirstMediaUrl('foto') }}" 
+                        src="{{ $minuman->getFirstMediaUrl('foto') ?: asset('images/no-image.png') }}" 
                         alt="{{ $minuman->nama }}" 
                         class="img-fluid rounded"
                     >

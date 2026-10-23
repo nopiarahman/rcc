@@ -69,6 +69,12 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a wire:navigate href="{{ route('pesanan') }}"
+                       class="nav-link {{ request()->routeIs('pesanan', 'pesanan.berhasil') ? 'active' : '' }}">
+                        Pesanan
+                    </a>
+                </li>
+                <li class="nav-item">
                     @if(auth('customer')->check())
                         <a wire:navigate href="{{ route('customer.account') }}"
                            class="nav-link nav-link-account d-flex align-items-center gap-2 {{ request()->routeIs('customer.account') ? 'active' : '' }}">

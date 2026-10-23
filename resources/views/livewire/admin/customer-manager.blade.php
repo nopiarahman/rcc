@@ -85,7 +85,7 @@
                     </div>
                     <div class="flex-1 min-w-0">
                         <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $customer->nama }}</h2>
-                        <p class="text-sm text-gray-500">{{ $customer->no_hp }}</p>
+                        <p class="text-sm text-gray-500">{{ $customer->formatted_phone }}</p>
                         <p class="text-xs text-gray-400 mt-0.5">Terdaftar {{ $customer->created_at->diffForHumans() }} &middot; {{ $customer->created_at->isoFormat('D MMMM YYYY') }}</p>
                         <div class="mt-2">
                             <flux:button size="sm" wire:click="openEdit({{ $customer->id }})" icon="pencil-square">
@@ -222,7 +222,7 @@
                                     <span class="font-medium text-gray-900 dark:text-white">{{ $cust->nama }}</span>
                                 </div>
                             </td>
-                            <td class="px-4 py-3 text-gray-500 hidden sm:table-cell">{{ $cust->no_hp }}</td>
+                            <td class="px-4 py-3 text-gray-500 hidden sm:table-cell">{{ $cust->formatted_phone }}</td>
                             <td class="px-4 py-3 text-center">
                                 <span class="inline-flex items-center justify-center min-w-[2rem] px-2 py-0.5 rounded-full text-xs font-semibold
                                     {{ $cust->pesanans_count > 0 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-gray-100 text-gray-500 dark:bg-neutral-700 dark:text-gray-400' }}">

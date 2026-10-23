@@ -82,6 +82,12 @@
             object-fit: cover;
             width: 100%;
         }
+        /* Area sentuh titik slider diperbesar (border transparan) agar mudah ditekan di HP */
+        .carousel-indicators [data-bs-target] {
+            border-top-width: 18px;
+            border-bottom-width: 18px;
+        }
+
         /* Styling untuk logo dan teks */
         .logo-container {
             display: flex;
@@ -113,8 +119,9 @@
     </style>
 
     {{-- Logo dan Teks --}}
-    <div class="logo-container mb-3">
-        <img src="{{ asset('storage/' . $webSettings->logo_path) }}" alt="{{ $webSettings->site_name }}" style="width: 30px; height:auto">
+    {{-- Di desktop nama toko & logo sudah ada di navbar atas, jadi hanya tampil di HP --}}
+    <div class="logo-container mb-3 d-md-none">
+        <img src="{{ $webSettings->logo_path ? asset('storage/' . $webSettings->logo_path) : asset('images/logo-white.png') }}" alt="{{ $webSettings->site_name }}" style="width: 30px; height:auto">
         <div class="logo-text text-theme-primary">{{ $webSettings->site_name }}</div>
     </div>
     {{-- Info Pengguna --}}
@@ -208,10 +215,9 @@
     </div>
     @endif
 
-    <div class="card" style="padding: 2rem;margin:-2rem;border-radius:2rem 2rem 0 0;margin-top:1rem;margin-bottom:1rem">
+    <div class="card" style="padding: 2rem;margin:-2rem;border-radius:2rem 2rem 0 0;margin-top:1rem;margin-bottom:-2rem;padding-bottom:5rem;min-height:60vh">
         <livewire:daftar-minuman :kategoris="$allKategoris" />
     </div>
-    <x-mobile-nav/>
 
     @if($popup)
     @php

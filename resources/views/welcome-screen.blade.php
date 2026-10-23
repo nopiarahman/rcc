@@ -237,10 +237,11 @@
             </div>
             
             <template x-if="slides.length === 0">
-                <div class="slide active" style="background: linear-gradient(135deg, #6f42c1, #4a1d96);">
+                {{-- Belum ada gambar welcome aktif: pakai warna tema toko (bukan warna tetap) --}}
+                <div class="slide active" style="background: {{ $buttonGradient }};">
                     <h1 style="color: white; text-align: center; margin-top: 2rem; font-size: 2rem;">{{ $webSettings->site_name }}</h1>
                     <p style="color: white; text-align: center; margin-top: 1rem;">{{ $webSettings->tagline ?? 'Minuman hangat langsung ke rumahmu 🍵' }}</p>
-                    <button class="btn-enter" @click="masuk">Masuk</button>
+                    <button class="btn-enter" @click="masuk" style="background: #fff; color: {{ $webSettings->themeColor->button_bg_color ?? '#006a3e' }};">Masuk</button>
                 </div>
             </template>
         </div>
