@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\BotolanProduk;
 use App\Models\BotolanUkuran;
 use App\Models\WebSetting;
+use App\Services\CartService;
 
 class BotolonPage extends Component
 {
@@ -38,8 +39,9 @@ class BotolonPage extends Component
             return;
         }
 
-        $produk = BotolanProduk::with(['minuman', 'ukurans'])->find($this->selectedProdukId);
-        $ukuran = BotolanUkuran::find($this->selectedUkuranId);
+        $produk = BotolanProduk::with(['minuman', 'ukurans'])->where('is_active', true)->find($this->selectedProdukId);
+        // Ukuran harus milik produk yang dipilih dan masih aktif
+        $ukuran = $produk?->ukurans->where('is_active', true)->firstWhere('id', $this->selectedUkuranId);
 
         if (!$produk || !$ukuran) {
             session()->flash('error', 'Produk tidak ditemukan.');
@@ -53,22 +55,13 @@ class BotolonPage extends Component
             return;
         }
 
-        $key  = 'botolan-' . $produk->id . '-' . $ukuran->id;
-        $cart = session()->get('cart', []);
-
-        if (isset($cart[$key])) {
-            $cart[$key]['qty']++;
-        } else {
-            $cart[$key] = [
-                'type'      => 'botolan',
-                'id'        => $produk->id,
-                'ukuran_id' => $ukuran->id,
-                'nama'      => $produk->minuman->nama . ' Botolan ' . $ukuran->label,
-                'price'     => $ukuran->harga,
-                'qty'       => 1,
-                'catatan'   => null,
-            ];
-        }
+        // Keranjang hanya menyimpan ID & pilihan; harga selalu dihitung ulang di server
+        $cart = CartService::add(session()->get('cart', []), [
+            'type' => 'botolan',
+            'id' => $produk->id,
+            'ukuran_id' => $ukuran->id,
+            'qty' => 1,
+        ]);
 
         session()->put('cart', $cart);
         $this->dispatch('cartUpdated');
@@ -89,14 +82,14 @@ class BotolonPage extends Component
             : null;
 
         $selectedUkuran = $this->selectedUkuranId
-            ? BotolanUkuran::with('media')->find($this->selectedUkuranId)
+            ? $selectedProduk?->ukurans->firstWhere('id', $this->selectedUkuranId)
             : null;
 
         return view('livewire.botolan-page', [
-            'web_settings'     => WebSetting::first(),
+            'web_settings'     => WebSetting::current(),
             'availableProduks' => $availableProduks,
             'selectedProduk'   => $selectedProduk,
             'selectedUkuran'   => $selectedUkuran,
-        ])->layout('layouts.public');
+        ])->layout('layouts.public')->title('Pesan Botolan');
     }
 }

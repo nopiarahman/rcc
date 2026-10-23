@@ -2,66 +2,71 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
-use App\Models\Minuman;
-use App\Models\Makanan;
-use App\Models\BotolanProduk;
-use App\Models\BotolanUkuran;
-use App\Models\Size;
-use App\Models\Sugar;
-use App\Models\Topping;
-use App\Models\WebSetting;
 use App\Models\DiscountCode;
 use App\Models\DiscountCodeUsage;
+use App\Models\Pesanan;
 use App\Models\Voucher;
-use App\Models\VoucherPromoRule;
+use App\Models\WebSetting;
+use App\Services\CartService;
 use App\Services\OsrmService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\Locked;
+use Livewire\Component;
 
 class CartPage extends Component
 {
-    public $cart = [];
-    public $showForm = false;
+    // Properti #[Locked] hanya boleh diubah oleh server, tidak bisa dimanipulasi dari browser
+    #[Locked]
+    public array $cart = [];
+
+    #[Locked]
+    public ?string $order_type = 'delivery';
+
+    #[Locked]
+    public ?int $applied_discount_id = null;
+
+    #[Locked]
+    public ?int $applied_voucher_id = null;
+
+    #[Locked]
+    public ?float $customer_lat = null;
+
+    #[Locked]
+    public ?float $customer_lng = null;
+
+    #[Locked]
+    public int $ongkir = 0;
+
+    #[Locked]
+    public float $ongkir_distance_km = 0;
+
+    #[Locked]
+    public string $distance_method = '';
+
+    #[Locked]
+    public array $removed_notices = [];
+
     public $nama_pemesan = '';
     public $alamat_pengantaran = '';
     public $waktu_pengantaran = '';
     public $catatan = '';
-    public $total = 0;
-    public $order_type = 'delivery';
-    public $web_settings;
     public $discount_code = '';
-    public $applied_discount = null;
-    public $discount_amount = 0;
     public $discount_error = '';
-    public ?int $applied_voucher_id = null;
-    public $voucher_amount = 0;
     public $voucher_error = '';
-    public $customer_lat = null;
-    public $customer_lng = null;
-    public $ongkir = 0;
-    public $ongkir_distance_km = 0;
-    public $haversine_distance_km = 0;
-    public $distance_method = '';
     public $location_error = '';
 
     public function mount()
     {
-        // Sinkronkan keranjang dari Local Storage ke Session saat komponen di-mount
-        $this->syncCartFromLocalStorage();
-        $this->updateTotal();
-        
-        // Load web settings
-        $this->web_settings = WebSetting::first();
-        
-        // Set order type based on web settings
-        if ($this->web_settings->order_mode === 'takeaway') {
-            $this->order_type = 'takeaway';
-        } elseif ($this->web_settings->order_mode === 'delivery') {
-            $this->order_type = 'delivery';
-        }
-        // 'both' → null, user picks on cart page
+        $this->cart = CartService::sanitize(session('cart', []));
+        $this->persistCart(false);
 
-        // Pre-fill customer name if logged in
+        $mode = $this->settings()->order_mode;
+        if (in_array($mode, ['takeaway', 'delivery'], true)) {
+            $this->order_type = $mode;
+        }
+
         if (Auth::guard('customer')->check() && empty($this->nama_pemesan)) {
             $this->nama_pemesan = Auth::guard('customer')->user()->nama;
         }
@@ -69,236 +74,256 @@ class CartPage extends Component
         $this->autoApplyBestVoucher();
     }
 
+    protected function settings(): WebSetting
+    {
+        return WebSetting::current();
+    }
+
+    /**
+     * Simpan keranjang ke session dan beri tahu komponen/Local Storage.
+     */
+    protected function persistCart(bool $notify = true): void
+    {
+        session()->put('cart', $this->cart);
+
+        if ($notify) {
+            $this->dispatch('cartUpdated');
+            $this->dispatch('updateLocalCart', cart: array_values($this->cart));
+        }
+    }
+
+    protected function resolvedCart(): array
+    {
+        $resolved = CartService::resolve($this->cart);
+
+        // Item yang sudah tidak tersedia dikeluarkan dari keranjang dan diberitahukan ke pembeli
+        if ($resolved['removed']) {
+            $this->removed_notices = array_values(array_unique(array_merge($this->removed_notices, $resolved['removed'])));
+            $this->cart = array_diff_key($this->cart, $resolved['removed']);
+            $this->persistCart();
+        }
+
+        return $resolved;
+    }
+
+    protected function appliedDiscount(): ?DiscountCode
+    {
+        return $this->applied_discount_id ? DiscountCode::find($this->applied_discount_id) : null;
+    }
+
+    /**
+     * Voucher hanya berlaku jika milik customer yang login dan masih valid.
+     */
+    protected function appliedVoucher(): ?Voucher
+    {
+        $customerId = Auth::guard('customer')->id();
+        if (! $this->applied_voucher_id || ! $customerId) {
+            return null;
+        }
+
+        $voucher = Voucher::where('id', $this->applied_voucher_id)->where('customer_id', $customerId)->first();
+
+        return $voucher && $voucher->isValid() ? $voucher : null;
+    }
+
+    protected function ongkirAmount(): int
+    {
+        return $this->order_type === 'delivery' ? $this->ongkir : 0;
+    }
+
     protected function autoApplyBestVoucher(): void
     {
         $customer = Auth::guard('customer')->user();
-        if (!$customer || $this->applied_voucher_id) return;
+        if (! $customer || $this->applied_voucher_id) {
+            return;
+        }
 
-        $cartTotal = collect($this->cart)->sum(fn($i) => $i['qty'] * $i['price']);
-        if ($cartTotal <= 0) return;
+        $subtotal = (int) CartService::resolve($this->cart)['items']->sum('subtotal');
+        if ($subtotal <= 0) {
+            return;
+        }
 
         $best = Voucher::where('customer_id', $customer->id)
             ->where('is_used', false)
-            ->where(fn($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()))
-            ->where(fn($q) => $q->where('min_purchase', 0)->orWhere('min_purchase', '<=', $cartTotal))
+            ->where(fn ($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()))
+            ->where('min_purchase', '<=', $subtotal)
             ->get()
-            ->map(fn($v) => ['voucher' => $v, 'saving' => $v->calculateDiscount($cartTotal)])
-            ->sortByDesc('saving')
+            ->sortByDesc(fn ($v) => $v->calculateDiscount($subtotal))
             ->first();
 
-        if ($best) {
-            $this->applied_voucher_id = $best['voucher']->id;
-            $this->updateTotal();
-        }
-    }
-    
-    protected function getAppliedVoucher(): ?Voucher
-    {
-        return $this->applied_voucher_id ? Voucher::find($this->applied_voucher_id) : null;
-    }
-
-    protected function syncCartFromLocalStorage()
-    {
-        // Sinkronkan dari Local Storage ke Session
-        $this->cart = session()->get('cart', []);
-    }
-    public function updateTotal()
-    {
-        $originalTotal = collect($this->cart)->sum(function ($item) {
-            return $item['qty'] * $item['price'];
-        });
-
-        $this->discount_amount = 0;
-        if ($this->applied_discount) {
-            $this->discount_amount = $this->applied_discount->calculateDiscount($originalTotal);
-        }
-
-        $this->voucher_amount = 0;
-        $appliedVoucher = $this->getAppliedVoucher();
-        if ($appliedVoucher) {
-            if ($originalTotal < $appliedVoucher->min_purchase) {
-                $this->applied_voucher_id = null;
-            } else {
-                $this->voucher_amount = $appliedVoucher->calculateDiscount($originalTotal);
-            }
-        }
-
-        $totalAfterDiscount = $originalTotal - $this->discount_amount - $this->voucher_amount;
-        $this->total = floor($totalAfterDiscount / 1000) * 1000;
+        $this->applied_voucher_id = $best?->id;
     }
 
     public function applyVoucher(int $voucherId): void
     {
         $this->voucher_error = '';
         $customer = Auth::guard('customer')->user();
-        if (!$customer) return;
+        if (! $customer) {
+            return;
+        }
 
-        $voucher = Voucher::where('id', $voucherId)
-            ->where('customer_id', $customer->id)
-            ->first();
-
-        if (!$voucher || !$voucher->isValid()) {
+        $voucher = Voucher::where('id', $voucherId)->where('customer_id', $customer->id)->first();
+        if (! $voucher || ! $voucher->isValid()) {
             $this->voucher_error = 'Voucher tidak valid.';
             return;
         }
 
-        $cartTotal = collect($this->cart)->sum(fn($i) => $i['qty'] * $i['price']);
-        if ($cartTotal < $voucher->min_purchase) {
+        $subtotal = (int) CartService::resolve($this->cart)['items']->sum('subtotal');
+        if ($subtotal < $voucher->min_purchase) {
             $this->voucher_error = 'Min. belanja Rp ' . number_format($voucher->min_purchase, 0, ',', '.') . ' untuk voucher ini.';
             return;
         }
 
         $this->applied_voucher_id = $voucher->id;
-        $this->updateTotal();
     }
 
     public function clearVoucher(): void
     {
         $this->applied_voucher_id = null;
-        $this->voucher_amount = 0;
         $this->voucher_error = '';
-        $this->updateTotal();
-    }
-    public function increaseQty($key)
-    {
-        $this->cart[$key]['qty']++;
-        session()->put('cart', $this->cart);
-        $this->updateTotal();
-        $this->dispatch('cartUpdated');
-        
-        // Update Local Storage
-        $this->dispatch('updateLocalCart', cart: $this->cart);
     }
 
-    public function decreaseQty($key)
+    public function increaseQty(string $key): void
     {
-        if ($this->cart[$key]['qty'] > 1) {
-            $this->cart[$key]['qty']--;
-            session()->put('cart', $this->cart);
-            $this->updateTotal();
-            $this->dispatch('cartUpdated');
-            
-            // Update Local Storage
-            $this->dispatch('updateLocalCart', cart: $this->cart);
+        if (! isset($this->cart[$key])) {
+            return;
         }
+
+        $this->cart[$key]['qty'] = min($this->cart[$key]['qty'] + 1, CartService::MAX_QTY);
+        $this->persistCart();
     }
 
-    public function removeItem($key)
+    public function decreaseQty(string $key): void
+    {
+        if (! isset($this->cart[$key]) || $this->cart[$key]['qty'] <= 1) {
+            return;
+        }
+
+        $this->cart[$key]['qty']--;
+        $this->persistCart();
+    }
+
+    public function removeItem(string $key): void
     {
         unset($this->cart[$key]);
-        $this->cart = array_values($this->cart); // Reset array keys
-        session()->put('cart', $this->cart);
-        $this->updateTotal();
-        $this->dispatch('cartUpdated');
-        
-        // Update Local Storage
-        $this->dispatch('updateLocalCart', cart: $this->cart);
+        $this->persistCart();
     }
 
-    public function clearCart()
+    public function clearCart(): void
     {
         $this->cart = [];
         session()->forget('cart');
-        $this->updateTotal();
         $this->dispatch('cartUpdated');
-        
-        // Clear Local Storage
         $this->dispatch('clearLocalCart');
-        
-        // Clear discount code when cart is cleared
         $this->clearDiscountCode();
+        $this->clearVoucher();
     }
-    
-    public function applyDiscountCode()
+
+    public function dismissRemovedNotices(): void
+    {
+        $this->removed_notices = [];
+    }
+
+    public function applyDiscountCode(): void
     {
         $this->discount_error = '';
-        
-        if (empty($this->discount_code)) {
+
+        if (empty(trim((string) $this->discount_code))) {
             $this->discount_error = 'Masukkan kode diskon terlebih dahulu.';
             return;
         }
 
         $discountCode = DiscountCode::where('code', strtoupper(trim($this->discount_code)))->first();
-
-        if (!$discountCode) {
+        if (! $discountCode) {
             $this->discount_error = 'Kode diskon tidak valid.';
             return;
         }
 
-        $cartTotal = collect($this->cart)->sum(fn($item) => $item['qty'] * $item['price']);
-
-        if (!$discountCode->canBeApplied($cartTotal)) {
-            if (!$discountCode->isActive()) {
-                $this->discount_error = 'Kode diskon sudah tidak aktif atau telah kadaluarsa.';
-            } elseif ($cartTotal < $discountCode->minimum_purchase) {
-                $this->discount_error = 'Minimum pembelian Rp ' . number_format($discountCode->minimum_purchase, 0, ',', '.') . ' untuk menggunakan kode ini.';
-            } else {
-                $this->discount_error = 'Kode diskon tidak dapat digunakan.';
-            }
+        $subtotal = (int) CartService::resolve($this->cart)['items']->sum('subtotal');
+        $error = $this->discountCodeError($discountCode, $subtotal);
+        if ($error) {
+            $this->discount_error = $error;
             return;
         }
-        
-        $this->applied_discount = $discountCode;
-        $this->updateTotal();
+
+        $this->applied_discount_id = $discountCode->id;
         $this->dispatch('discount-applied');
     }
-    
-    public function clearDiscountCode()
+
+    protected function discountCodeError(DiscountCode $discountCode, int $subtotal): ?string
+    {
+        if (! $discountCode->isActive()) {
+            return 'Kode diskon sudah tidak aktif atau telah kadaluarsa.';
+        }
+        if ($subtotal < $discountCode->minimum_purchase) {
+            return 'Minimum pembelian Rp ' . number_format($discountCode->minimum_purchase, 0, ',', '.') . ' untuk menggunakan kode ini.';
+        }
+        $customerId = Auth::guard('customer')->id();
+        if (! $discountCode->canBeUsedByCustomer($customerId)) {
+            return $customerId
+                ? 'Anda sudah mencapai batas pemakaian kode ini.'
+                : 'Kode ini khusus pelanggan terdaftar. Silakan masuk ke akun Anda terlebih dahulu.';
+        }
+
+        return null;
+    }
+
+    public function clearDiscountCode(): void
     {
         $this->discount_code = '';
-        $this->applied_discount = null;
-        $this->discount_amount = 0;
+        $this->applied_discount_id = null;
         $this->discount_error = '';
-        $this->updateTotal();
     }
-    
-    public function updatedDiscountCode()
+
+    public function updatedDiscountCode(): void
     {
-        // Clear discount error when user types
         $this->discount_error = '';
-        
-        // Auto-apply if discount was previously applied and user changes the code
-        if ($this->applied_discount && strtoupper($this->discount_code) !== $this->applied_discount->code) {
-            $this->applied_discount = null;
-            $this->discount_amount = 0;
-            $this->updateTotal();
+
+        $applied = $this->appliedDiscount();
+        if ($applied && strtoupper((string) $this->discount_code) !== $applied->code) {
+            $this->applied_discount_id = null;
         }
     }
+
     public function selectOrderType(string $type): void
     {
+        $mode = $this->settings()->order_mode;
+        if (! in_array($type, ['delivery', 'takeaway'], true) || ($mode !== 'both' && $mode !== $type)) {
+            return;
+        }
+
         $this->order_type = $type;
         $this->location_error = '';
         $this->resetValidation();
+        $this->resetLocation();
+    }
 
+    protected function resetLocation(): void
+    {
         $this->customer_lat = null;
         $this->customer_lng = null;
         $this->ongkir = 0;
         $this->ongkir_distance_km = 0;
-        $this->haversine_distance_km = 0;
         $this->distance_method = '';
-    }
-
-    public function checkout(): void
-    {
-        if (!$this->order_type) {
-            $this->addError('order_type', 'Pilih jenis pesanan terlebih dahulu.');
-            return;
-        }
-        if ($this->order_type === 'delivery' && empty(trim($this->alamat_pengantaran))) {
-            $this->addError('alamat_pengantaran', 'Isi alamat pengantaran terlebih dahulu.');
-            return;
-        }
-        $this->dispatch('show-checkout-modal');
-    }
-
-    public function showCheckoutForm(): void
-    {
-        $this->dispatch('show-checkout-modal');
     }
 
     public function setCustomerLocation(float $lat, float $lng): void
     {
         $this->location_error = '';
+        $this->resetErrorBag('lokasi');
+        $this->resetLocation();
+
+        if ($lat < -90 || $lat > 90 || $lng < -180 || $lng > 180) {
+            $this->location_error = 'Lokasi tidak valid.';
+            return;
+        }
+
+        $error = $this->radiusError($lat, $lng);
+        if ($error) {
+            $this->location_error = $error;
+            return;
+        }
+
         $this->customer_lat = $lat;
         $this->customer_lng = $lng;
         $this->calculateOngkir();
@@ -306,448 +331,245 @@ class CartPage extends Component
 
     public function setLocationFailed(string $message): void
     {
-        $this->location_error = $message;
-        $this->customer_lat = null;
-        $this->customer_lng = null;
+        $this->resetLocation();
+        $this->location_error = mb_substr($message, 0, 150);
     }
 
-    protected function haversineKm(float $lat1, float $lng1, float $lat2, float $lng2): float
+    /**
+     * Radius pengantaran dicek di server (garis lurus, dalam meter, sesuai pengaturan Web Settings).
+     */
+    protected function radiusError(float $lat, float $lng): ?string
     {
-        $R = 6371;
-        $dLat = deg2rad($lat2 - $lat1);
-        $dLng = deg2rad($lng2 - $lng1);
-        $a = sin($dLat / 2) ** 2 +
-             cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLng / 2) ** 2;
-        return round($R * 2 * atan2(sqrt($a), sqrt(1 - $a)), 2);
+        $settings = $this->settings();
+        $radius = (int) $settings->delivery_radius;
+        if ($radius <= 0 || $settings->latitude === null || $settings->longitude === null) {
+            return null;
+        }
+
+        $distanceKm = OsrmService::haversineKm((float) $settings->latitude, (float) $settings->longitude, $lat, $lng);
+        if ($distanceKm * 1000 <= $radius) {
+            return null;
+        }
+
+        return 'Lokasi Anda sekitar ' . number_format($distanceKm, 1, ',', '.') . ' km dari toko, di luar jangkauan pengantaran (maks. '
+            . number_format($radius / 1000, 1, ',', '.') . ' km). Silakan pilih Ambil Sendiri.';
     }
 
     protected function calculateOngkir(): void
     {
-        if (!$this->customer_lat) {
+        if ($this->customer_lat === null) {
             return;
         }
 
-        $settings = $this->web_settings ?: WebSetting::first();
-        $storeLat = (float) $settings->latitude;
-        $storeLng = (float) $settings->longitude;
-
-        // Always compute haversine (debug comparison + fallback)
-        $this->haversine_distance_km = $this->haversineKm(
-            $storeLat, $storeLng, $this->customer_lat, $this->customer_lng
-        );
-
-        // Try OSRM first for road distance; haversine fallback on failure
+        $settings = $this->settings();
         $osrm = new OsrmService();
-        $osrmDistance = $osrm->getDistanceKm($storeLat, $storeLng, $this->customer_lat, $this->customer_lng);
+        $result = $osrm->getDistance((float) $settings->latitude, (float) $settings->longitude, $this->customer_lat, $this->customer_lng);
 
-        if ($osrmDistance !== null) {
-            $this->ongkir_distance_km = $osrmDistance;
-            $this->distance_method = 'osrm';
-        } else {
-            $this->ongkir_distance_km = $this->haversine_distance_km;
-            $this->distance_method = 'haversine';
-        }
+        $this->ongkir_distance_km = $result['km'];
+        $this->distance_method = $result['method'];
 
-        // Ongkir fee only applies when enabled and order is delivery
-        if (!$settings->ongkir_enabled || $this->order_type !== 'delivery') {
-            $this->ongkir = 0;
+        $this->ongkir = $settings->ongkir_enabled && $this->order_type === 'delivery'
+            ? $osrm->calculateOngkir($this->ongkir_distance_km, (float) $settings->ongkir_per_km, (float) $settings->ongkir_free_km)
+            : 0;
+    }
+
+    /**
+     * Langkah 1: cek kelengkapan sebelum membuka modal konfirmasi.
+     */
+    public function checkout(): void
+    {
+        $this->resetValidation();
+
+        if (! $this->guardCheckoutPreconditions()) {
             return;
         }
 
-        $this->ongkir = $osrm->calculateOngkir(
-            $this->ongkir_distance_km,
-            (float) $settings->ongkir_per_km,
-            (float) $settings->ongkir_free_km
-        );
+        $this->dispatch('show-checkout-modal');
     }
+
+    protected function guardCheckoutPreconditions(): bool
+    {
+        if (! $this->settings()->isOpenNow()) {
+            $this->addError('checkout', 'Maaf, toko sedang tutup. Pesanan belum bisa dibuat.');
+            return false;
+        }
+        if (empty($this->cart)) {
+            $this->addError('checkout', 'Keranjang belanja kosong.');
+            return false;
+        }
+        if (! in_array($this->order_type, ['delivery', 'takeaway'], true)) {
+            $this->addError('order_type', 'Pilih jenis pesanan terlebih dahulu.');
+            return false;
+        }
+        if ($this->order_type === 'delivery') {
+            if (empty(trim((string) $this->alamat_pengantaran))) {
+                $this->addError('alamat_pengantaran', 'Isi alamat pengantaran terlebih dahulu.');
+                return false;
+            }
+            if ($this->customer_lat === null || $this->customer_lng === null) {
+                $this->addError('lokasi', 'Tentukan lokasi pengantaran dengan tombol "Gunakan Lokasi Saya" agar ongkir bisa dihitung.');
+                return false;
+            }
+            $radiusError = $this->radiusError($this->customer_lat, $this->customer_lng);
+            if ($radiusError) {
+                $this->addError('lokasi', $radiusError);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public function render()
     {
-        // Preload semua data sekaligus untuk menghindari N+1 queries
-        // Item minuman lama mungkin tidak punya field 'type', default ke 'minuman'
-        $cart = $this->cart;
-        $minumanIds = collect($cart)->filter(fn($i) => ($i['type'] ?? 'minuman') === 'minuman')->pluck('id')->unique()->filter()->values()->all();
-        $makananIds  = collect($cart)->filter(fn($i) => ($i['type'] ?? 'minuman') === 'makanan')->pluck('id')->unique()->filter()->values()->all();
-        $botolonIds  = collect($cart)->filter(fn($i) => ($i['type'] ?? 'minuman') === 'botolan')->pluck('id')->unique()->filter()->values()->all();
-        $ukuranIds   = collect($cart)->pluck('ukuran_id')->unique()->filter()->values()->all();
-        $sizeIds    = collect($cart)->pluck('size_id')->unique()->filter()->values()->all();
-        $sugarIds   = collect($cart)->pluck('sugar_id')->unique()->filter()->values()->all();
-        $toppingIds = collect($cart)->pluck('topping_id')->unique()->filter()->values()->all();
-
-        $minumans = $minumanIds ? Minuman::whereIn('id', $minumanIds)->get()->keyBy('id') : collect();
-        $makanans = $makananIds ? Makanan::whereIn('id', $makananIds)->get()->keyBy('id') : collect();
-        $botolans = $botolonIds ? BotolanProduk::whereIn('id', $botolonIds)->with('minuman')->get()->keyBy('id') : collect();
-        $ukurans  = $ukuranIds  ? BotolanUkuran::whereIn('id', $ukuranIds)->get()->keyBy('id') : collect();
-        $sizes    = $sizeIds    ? Size::whereIn('id', $sizeIds)->get()->keyBy('id')       : collect();
-        $sugars   = $sugarIds   ? Sugar::whereIn('id', $sugarIds)->get()->keyBy('id')     : collect();
-        $toppings = $toppingIds ? Topping::whereIn('id', $toppingIds)->get()->keyBy('id') : collect();
-
-        $detailedCart = collect($cart)->map(function ($item, $key) use ($minumans, $makanans, $botolans, $ukurans, $sizes, $sugars, $toppings) {
-            $type = $item['type'] ?? 'minuman';
-
-            if ($type === 'minuman') {
-                $model   = $minumans[$item['id']] ?? null;
-                $size    = isset($item['size_id'])    ? ($sizes[$item['size_id']]    ?? null) : null;
-                $sugar   = isset($item['sugar_id'])   ? ($sugars[$item['sugar_id']]  ?? null) : null;
-                $topping = isset($item['topping_id']) ? ($toppings[$item['topping_id']] ?? null) : null;
-                $name    = $model?->nama ?? 'Unknown Drink';
-                $ukuran  = null;
-            } elseif ($type === 'botolan') {
-                $model   = $botolans[$item['id']] ?? null;
-                $ukuran  = isset($item['ukuran_id']) ? ($ukurans[$item['ukuran_id']] ?? null) : null;
-                $name    = $model?->minuman?->nama ?? ($item['nama'] ?? 'Unknown Bottle');
-                $size    = null; $sugar = null; $topping = null;
-            } else {
-                $model   = $makanans[$item['id']] ?? null;
-                $topping = isset($item['topping_id']) ? ($toppings[$item['topping_id']] ?? null) : null;
-                $name    = $model?->nama ?? 'Unknown Food';
-                $size    = null; $sugar = null; $ukuran = null;
-            }
-
-            $regularPrice = null;
-            $discountInfo = null;
-
-            if ($model && $type !== 'botolan' && $model->activeDiscount()) {
-                $discount  = $model->activeDiscount();
-                $basePrice = $type === 'minuman'
-                    ? ($model->harga ?? $model->base_price ?? 0)
-                    : ($model->base_price ?? 0);
-                if ($type === 'minuman') {
-                    if ($size)    $basePrice += $size->price;
-                    if ($sugar)   $basePrice += $sugar->price;
-                }
-                if ($topping) $basePrice += $topping->default_price;
-                $regularPrice = $basePrice;
-                $discountInfo = [
-                    'name'          => $discount->name,
-                    'type'          => $discount->discount_type,
-                    'amount'        => $discount->discount_amount,
-                    'discount_text' => $discount->discount_type === 'percentage'
-                        ? (int)$discount->discount_amount . '%'
-                        : 'Rp' . number_format($discount->discount_amount, 0, ',', '.'),
-                ];
-            }
-
-            return [
-                'key'          => $key,
-                'qty'          => $item['qty'],
-                'price'        => $item['price'],
-                'subtotal'     => $item['qty'] * $item['price'],
-                'name'         => $name,
-                'model'        => $model,
-                'size'         => $type === 'minuman' ? ($size?->name ?? '-') : null,
-                'sugar'        => $type === 'minuman' ? ($sugar?->level ?? '-') : null,
-                'topping'      => $type !== 'botolan' ? ($topping?->nama ?? '-') : null,
-                'ukuran'       => $ukuran?->label ?? null,
-                'regular_price' => $regularPrice,
-                'discount_info' => $discountInfo,
-                'has_discount'  => $discountInfo !== null,
-                'type'          => $type,
-            ];
-        });
-    
-        $total = $detailedCart->sum('subtotal');
-        
-        // Apply discount if valid
-        $discountAmount = 0;
-        if ($this->applied_discount) {
-            $discountAmount = $this->applied_discount->calculateDiscount($total);
-        }
-
-        $appliedVoucher = $this->getAppliedVoucher();
-        $voucherAmount = 0;
-        if ($appliedVoucher) {
-            $voucherAmount = $appliedVoucher->calculateDiscount($total);
-        }
-
-        $totalAfterDiscount = $total - $discountAmount - $voucherAmount;
-
-        // Get web settings for order mode
-        $webSettings = $this->web_settings ?: WebSetting::first();
-
-        // Add ongkir to total for display
-        $ongkirAmount = ($this->order_type === 'delivery') ? (int) $this->ongkir : 0;
-        $totalWithOngkir = $totalAfterDiscount + $ongkirAmount;
-        $roundedTotal = floor($totalWithOngkir / 1000) * 1000;
-
-        // Customer vouchers for selector
+        $resolved = $this->resolvedCart();
+        $discount = $this->appliedDiscount();
+        $voucher = $this->appliedVoucher();
+        $summary = CartService::summarize($resolved['items'], $discount, $voucher, $this->ongkirAmount());
+        $settings = $this->settings();
         $customer = Auth::guard('customer')->user();
-        $customerVouchers = $customer
-            ? Voucher::where('customer_id', $customer->id)->where('is_used', false)
-                ->where(fn($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()))
-                ->get()
-            : collect();
 
         return view('livewire.cart-page', [
-            'cartItems' => $detailedCart,
-            'grandTotal' => $roundedTotal,
-            'originalTotal' => $total,
-            'totalAfterDiscount' => $totalAfterDiscount,
-            'discountAmount' => $discountAmount,
-            'voucherAmount' => $voucherAmount,
-            'applied_voucher' => $appliedVoucher,
-            'roundingAmount' => $roundedTotal - $totalWithOngkir,
-            'ongkirAmount' => $ongkirAmount,
-            'ongkirDistanceKm' => $this->ongkir_distance_km,
-            'haversineDistanceKm' => $this->haversine_distance_km,
-            'distanceMethod' => $this->distance_method,
-            'orderMode' => $webSettings->order_mode,
-            'web_settings' => $webSettings,
-            'customerVouchers' => $customerVouchers,
+            'cartItems' => $resolved['items'],
+            'summary' => $summary,
+            'applied_discount' => $discount,
+            'applied_voucher' => $summary['voucher'] > 0 ? $voucher : null,
+            'orderMode' => $settings->order_mode,
+            'web_settings' => $settings,
             'customer' => $customer,
-        ])->layout('layouts.public');
+            'customerVouchers' => $customer
+                ? Voucher::where('customer_id', $customer->id)->where('is_used', false)
+                    ->where(fn ($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()))
+                    ->get()
+                : collect(),
+        ])->layout('layouts.public')->title('Keranjang');
     }
+
+    /**
+     * Langkah 2: buat pesanan. Semua harga dihitung ulang dari database dan kode diskon/voucher
+     * dikunci di dalam transaksi agar tidak bisa dipakai melebihi batas.
+     */
     public function konfirmasiCheckout()
     {
-        if (empty($this->cart)) {
-            $this->addError('nama_pemesan', 'Keranjang belanja kosong.');
-            return;
+        $this->validate([
+            'nama_pemesan' => 'required|string|max:100',
+            'waktu_pengantaran' => ['required', 'string', 'max:20', 'regex:/^\d{2}\.\d{2} WIB$/'],
+            'alamat_pengantaran' => ($this->order_type === 'delivery' ? 'required' : 'nullable') . '|string|max:500',
+            'catatan' => 'nullable|string|max:500',
+        ], [
+            'nama_pemesan.required' => 'Nama pemesan wajib diisi.',
+            'nama_pemesan.max' => 'Nama pemesan maksimal 100 karakter.',
+            'waktu_pengantaran.required' => 'Pilih waktu terlebih dahulu.',
+            'waktu_pengantaran.regex' => 'Pilih waktu dari daftar yang tersedia.',
+            'alamat_pengantaran.required' => 'Isi alamat pengantaran terlebih dahulu.',
+            'alamat_pengantaran.max' => 'Alamat maksimal 500 karakter.',
+        ]);
+
+        if (! $this->guardCheckoutPreconditions()) {
+            return null;
         }
 
-        $validationRules = [
-            'nama_pemesan'    => 'required',
-            'waktu_pengantaran' => 'required',
-        ];
-
-        if ($this->order_type === 'delivery') {
-            $validationRules['alamat_pengantaran'] = 'required';
+        $resolved = CartService::resolve($this->cart);
+        if ($resolved['removed']) {
+            $this->addError('checkout', 'Ada item yang sudah tidak tersedia dan telah dikeluarkan dari keranjang. Silakan periksa kembali.');
+            $this->resolvedCart();
+            return null;
         }
-
-        $this->validate($validationRules);
-
-        // Preload semua data sekaligus untuk menghindari N+1 queries
-        // Item minuman lama mungkin tidak punya field 'type', default ke 'minuman'
-        $minumanIds = collect($this->cart)->filter(fn($i) => ($i['type'] ?? 'minuman') === 'minuman')->pluck('id')->unique()->filter()->values()->all();
-        $makananIds  = collect($this->cart)->filter(fn($i) => ($i['type'] ?? 'minuman') === 'makanan')->pluck('id')->unique()->filter()->values()->all();
-        $botolonIds  = collect($this->cart)->filter(fn($i) => ($i['type'] ?? 'minuman') === 'botolan')->pluck('id')->unique()->filter()->values()->all();
-        $ukuranIds   = collect($this->cart)->pluck('ukuran_id')->unique()->filter()->values()->all();
-        $sizeIds    = collect($this->cart)->pluck('size_id')->unique()->filter()->values()->all();
-        $sugarIds   = collect($this->cart)->pluck('sugar_id')->unique()->filter()->values()->all();
-        $toppingIds = collect($this->cart)->pluck('topping_id')->unique()->filter()->values()->all();
-
-        $minumans = $minumanIds ? Minuman::whereIn('id', $minumanIds)->get()->keyBy('id') : collect();
-        $makanans = $makananIds  ? Makanan::whereIn('id', $makananIds)->get()->keyBy('id')  : collect();
-        $botolans = $botolonIds  ? BotolanProduk::whereIn('id', $botolonIds)->with('minuman')->get()->keyBy('id')  : collect();
-        $ukurans  = $ukuranIds   ? BotolanUkuran::whereIn('id', $ukuranIds)->get()->keyBy('id') : collect();
-        $sizes    = $sizeIds    ? Size::whereIn('id', $sizeIds)->get()->keyBy('id')         : collect();
-        $sugars   = $sugarIds   ? Sugar::whereIn('id', $sugarIds)->get()->keyBy('id')       : collect();
-        $toppings = $toppingIds ? Topping::whereIn('id', $toppingIds)->get()->keyBy('id')   : collect();
-
-        $cartItems = collect($this->cart)->map(function ($item, $key) use ($minumans, $makanans, $botolans, $ukurans, $sizes, $sugars, $toppings) {
-            $type = $item['type'] ?? 'minuman';
-
-            if ($type === 'minuman') {
-                $model     = $minumans[$item['id']] ?? null;
-                $size      = isset($item['size_id'])    ? ($sizes[$item['size_id']]      ?? null) : null;
-                $sugar     = isset($item['sugar_id'])   ? ($sugars[$item['sugar_id']]    ?? null) : null;
-                $topping   = isset($item['topping_id']) ? ($toppings[$item['topping_id']] ?? null) : null;
-                $name      = $model?->nama ?? 'Unknown Drink';
-                $modelType = 'minuman';
-                $ukuran    = null;
-            } elseif ($type === 'botolan') {
-                $model     = $botolans[$item['id']] ?? null;
-                $ukuran    = isset($item['ukuran_id']) ? ($ukurans[$item['ukuran_id']] ?? null) : null;
-                $name      = $model?->minuman?->nama ?? ($item['nama'] ?? 'Unknown Bottle');
-                $modelType = 'botolan';
-                $size = null; $sugar = null; $topping = null;
-            } else {
-                $model     = $makanans[$item['id']] ?? null;
-                $topping   = isset($item['topping_id']) ? ($toppings[$item['topping_id']] ?? null) : null;
-                $name      = $model?->nama ?? 'Unknown Food';
-                $modelType = 'makanan';
-                $size = null; $sugar = null; $ukuran = null;
-            }
-
-            return [
-                'key'        => $key,
-                'model_id'   => $item['id'],
-                'ukuran_id'  => $item['ukuran_id'] ?? null,
-                'model_type' => $modelType,
-                'qty'        => $item['qty'],
-                'harga'      => $item['price'],
-                'subtotal'   => $item['qty'] * $item['price'],
-                'name'       => $name,
-                'size'       => $type === 'minuman' ? ($size?->name ?? null) : null,
-                'gula'       => $type === 'minuman' ? ($sugar?->level ?? null) : null,
-                'topping'    => $type !== 'botolan' ? ($topping?->nama ?? null) : null,
-                'ukuran'     => $ukuran?->label ?? null,
-                'catatan'    => $item['catatan'] ?? null,
-                'type'       => $type,
-            ];
-        });
-    
-        // Generate or get session ID
-        $sessionId = session()->getId();
-        
-        // Store session ID in cookie for persistence
-        \Illuminate\Support\Facades\Cookie::queue('user_session', $sessionId, 60 * 24 * 30); // 30 days
-        
-        // Calculate totals
-        $cartTotal = collect($this->cart)->sum(function ($item) {
-            return $item['qty'] * $item['price'];
-        });
-        
-        $discountAmount = 0;
-        $discountCodeId = null;
-        
-        if ($this->applied_discount) {
-            $discountAmount = $this->applied_discount->calculateDiscount($cartTotal);
-            $discountCodeId = $this->applied_discount->id;
-            
-            // Apply the discount code (increment usage)
-            $this->applied_discount->apply();
-        }
-        
-        // Voucher discount
-        $checkoutVoucher = $this->getAppliedVoucher();
-        $voucherAmount = 0;
-        $voucherId = null;
-        if ($checkoutVoucher) {
-            $voucherAmount = $checkoutVoucher->calculateDiscount($cartTotal - $discountAmount);
-            $voucherId = $checkoutVoucher->id;
-        }
-
-        $totalAfterDiscount = $cartTotal - $discountAmount - $voucherAmount;
-
-        // Add ongkir for delivery orders
-        $ongkirAmount = ($this->order_type === 'delivery') ? (int) $this->ongkir : 0;
-        $totalWithOngkir = $totalAfterDiscount + $ongkirAmount;
-        $finalTotal = floor($totalWithOngkir / 1000) * 1000;
 
         $customer = Auth::guard('customer')->user();
 
-        // Create the order
-        $pesanan = \App\Models\Pesanan::create([
-            'user_id' => auth()->id(),
-            'customer_id' => $customer?->id,
-            'session_id' => $sessionId,
-            'nama_pemesan' => $this->nama_pemesan,
-            'alamat_pengantaran' => $this->order_type === 'delivery' ? $this->alamat_pengantaran : 'Takeaway',
-            'waktu_pengantaran' => $this->waktu_pengantaran,
-            'catatan' => $this->catatan ?? null,
-            'total' => (int) $finalTotal,
-            'total_harga' => $finalTotal,
-            'ongkir' => $ongkirAmount,
-            'discount_code_id' => $discountCodeId,
-            'discount_amount' => $discountAmount,
-            'voucher_id' => $voucherId,
-            'voucher_amount' => $voucherAmount,
-            'status' => 'diproses',
-            'order_type' => $this->order_type,
-            'nomor_pesanan' => 'ORD-' . now()->format('Ymd') . '-' . strtoupper(uniqid())
-        ]);
-        
-        // Create discount usage record with order ID
-        if ($discountCodeId) {
-            DiscountCodeUsage::create([
-                'discount_code_id' => $discountCodeId,
-                'pesanan_id' => $pesanan->id,
-                'discount_amount' => $discountAmount,
-                'original_total' => $cartTotal,
-            ]);
+        try {
+            $pesanan = DB::transaction(function () use ($resolved, $customer) {
+                $discount = null;
+                if ($this->applied_discount_id) {
+                    $discount = DiscountCode::lockForUpdate()->find($this->applied_discount_id);
+                    $subtotal = (int) $resolved['items']->sum('subtotal');
+                    $error = $discount ? $this->discountCodeError($discount, $subtotal) : 'Kode diskon tidak valid.';
+                    if ($error) {
+                        $this->applied_discount_id = null;
+                        throw ValidationException::withMessages(['checkout' => $error . ' Kode diskon dilepas, silakan periksa total kembali.']);
+                    }
+                }
+
+                $voucher = null;
+                if ($this->applied_voucher_id) {
+                    $voucher = Voucher::lockForUpdate()->find($this->applied_voucher_id);
+                    if (! $voucher || ! $customer || (int) $voucher->customer_id !== (int) $customer->id || ! $voucher->isValid()) {
+                        $this->applied_voucher_id = null;
+                        throw ValidationException::withMessages(['checkout' => 'Voucher sudah tidak berlaku dan telah dilepas. Silakan periksa total kembali.']);
+                    }
+                }
+
+                $summary = CartService::summarize($resolved['items'], $discount, $voucher, $this->ongkirAmount());
+
+                $pesanan = Pesanan::create([
+                    'user_id' => Auth::guard('web')->id(),
+                    'customer_id' => $customer?->id,
+                    'session_id' => session()->getId(),
+                    'nama_pemesan' => trim($this->nama_pemesan),
+                    'alamat_pengantaran' => $this->order_type === 'delivery' ? trim($this->alamat_pengantaran) : 'Takeaway',
+                    'waktu_pengantaran' => $this->waktu_pengantaran,
+                    'catatan' => $this->catatan ?: null,
+                    'total' => $summary['total'],
+                    'total_harga' => $summary['total'],
+                    'ongkir' => $summary['ongkir'],
+                    'discount_code_id' => $summary['discount'] > 0 ? $discount->id : null,
+                    'discount_amount' => $summary['discount'],
+                    'voucher_id' => $summary['voucher'] > 0 ? $voucher->id : null,
+                    'voucher_amount' => $summary['voucher'],
+                    'status' => 'diproses',
+                    'order_type' => $this->order_type,
+                ]);
+
+                foreach ($resolved['items'] as $item) {
+                    $pesanan->details()->create([
+                        'minuman_id' => $item['type'] === 'minuman' ? $item['id'] : null,
+                        'nama_minuman' => $item['type'] === 'minuman' ? $item['name'] : null,
+                        'makanan_id' => $item['type'] === 'makanan' ? $item['id'] : null,
+                        'nama_makanan' => $item['type'] === 'makanan' ? $item['name'] : null,
+                        'botolan_produk_id' => $item['type'] === 'botolan' ? $item['id'] : null,
+                        'botolan_ukuran_id' => $item['type'] === 'botolan' ? $this->cart[$item['key']]['ukuran_id'] : null,
+                        'nama_botolan' => $item['type'] === 'botolan' ? $item['name'] . ' - ' . $item['ukuran'] : null,
+                        'size' => $item['type'] === 'botolan' ? $item['ukuran'] : $item['size'],
+                        'gula' => $item['sugar'],
+                        'topping' => $item['topping'],
+                        'catatan' => $item['catatan'],
+                        'harga' => $item['unit_price'],
+                        'qty' => $item['qty'],
+                        'subtotal' => $item['subtotal'],
+                    ]);
+                }
+
+                if ($summary['discount'] > 0) {
+                    $discount->increment('used_count');
+                    DiscountCodeUsage::create([
+                        'discount_code_id' => $discount->id,
+                        'pesanan_id' => $pesanan->id,
+                        'discount_amount' => $summary['discount'],
+                        'original_total' => $summary['subtotal'],
+                    ]);
+                }
+
+                if ($summary['voucher'] > 0) {
+                    $voucher->markAsUsed($pesanan->id);
+                }
+
+                return $pesanan;
+            });
+        } catch (ValidationException $e) {
+            $this->setErrorBag($e->validator->errors());
+            return null;
         }
 
-        // Mark voucher as used
-        if ($checkoutVoucher && $voucherId) {
-            $checkoutVoucher->markAsUsed($pesanan->id);
-        }
+        Pesanan::rememberForVisitor($pesanan);
 
-        // Create order details
-        foreach ($cartItems as $item) {
-            $detailData = [
-                'harga' => $item['harga'],
-                'qty' => $item['qty'],
-                'topping' => $item['topping'],
-                'catatan' => $item['catatan'],
-                'subtotal' => $item['subtotal'],
-            ];
-            
-            if ($item['type'] === 'minuman') {
-                $detailData['minuman_id'] = $item['model_id'];
-                $detailData['nama_minuman'] = $item['name'];
-                $detailData['makanan_id'] = null; $detailData['nama_makanan'] = null;
-                $detailData['botolan_produk_id'] = null; $detailData['botolan_ukuran_id'] = null; $detailData['nama_botolan'] = null;
-                $detailData['size'] = $item['size'] ?? null;
-                $detailData['gula'] = $item['gula'] ?? null;
-            } elseif ($item['type'] === 'botolan') {
-                $detailData['botolan_produk_id'] = $item['model_id'];
-                $detailData['botolan_ukuran_id'] = $item['ukuran_id'] ?? null;
-                $detailData['nama_botolan'] = $item['name'] . ($item['ukuran'] ? ' - ' . $item['ukuran'] : '');
-                $detailData['minuman_id'] = null; $detailData['nama_minuman'] = null;
-                $detailData['makanan_id'] = null; $detailData['nama_makanan'] = null;
-                $detailData['size'] = $item['ukuran'] ?? null;
-                $detailData['gula'] = null;
-            } else {
-                $detailData['makanan_id'] = $item['model_id'];
-                $detailData['nama_makanan'] = $item['name'];
-                $detailData['minuman_id'] = null; $detailData['nama_minuman'] = null;
-                $detailData['botolan_produk_id'] = null; $detailData['botolan_ukuran_id'] = null; $detailData['nama_botolan'] = null;
-                $detailData['size'] = null; $detailData['gula'] = null;
-            }
-            
-            $pesanan->details()->create($detailData);
-        }
-    
-        // Prepare WhatsApp message
-        $message = "Assalamualaikum, saya ingin pesan:\n\n";
-        foreach ($cartItems as $item) {
-            $message .= "- {$item['name']}";
-            
-            if ($item['type'] === 'minuman') {
-                $message .= $item['size'] ? " (Size: {$item['size']}" : "";
-                $message .= $item['gula'] ? ", Gula: {$item['gula']}" : "";
-                $message .= $item['size'] ? ")" : "";
-                $message .= $item['topping'] ? ", Topping: {$item['topping']}" : "";
-            } elseif ($item['type'] === 'botolan') {
-                $message .= $item['ukuran'] ? " ({$item['ukuran']})" : "";
-            } else {
-                $message .= $item['topping'] ? ", Topping: {$item['topping']}" : "";
-            }
-            
-            $message .= " x {$item['qty']} = Rp " . number_format($item['subtotal'], 0, ',', '.') . "\n";
-            if (!empty($item['catatan'])) {
-                $message .= "  Catatan: {$item['catatan']}\n";
-            }
-        }
-    
-        $message .= "\nSubtotal: Rp " . number_format($cartTotal, 0, ',', '.');
-
-        if ($discountAmount > 0) {
-            $message .= "\nDiskon ({$this->applied_discount->code}): -Rp " . number_format($discountAmount, 0, ',', '.');
-        }
-
-        if ($voucherAmount > 0 && $checkoutVoucher) {
-            $message .= "\nVoucher ({$checkoutVoucher->code}): -Rp " . number_format($voucherAmount, 0, ',', '.');
-        }
-
-        if ($ongkirAmount > 0) {
-            $message .= "\nOngkir (" . number_format($this->ongkir_distance_km, 1) . " km): +Rp " . number_format($ongkirAmount, 0, ',', '.');
-        }
-
-        $message .= "\nTotal: Rp " . number_format($finalTotal, 0, ',', '.');
-        $message .= "\n\nNama: {$this->nama_pemesan}";
-        $message .= "\nJenis Pesanan: " . ($this->order_type === 'delivery' ? 'Antar ke Alamat' : 'Ambil Sendiri');
-        if ($this->order_type === 'delivery') {
-            $message .= "\nAlamat: {$this->alamat_pengantaran}";
-        }
-        $waktuLabel = $this->order_type === 'delivery' ? 'Pengantaran' : 'Pengambilan';
-        $message .= "\nWaktu {$waktuLabel}: " . ($this->waktu_pengantaran ?: '-');
-        $message .= "\nNomor Pesanan: " . $pesanan->nomor_pesanan;
-
-        // Clear cart
+        $this->cart = [];
         session()->forget('cart');
         $this->dispatch('cartUpdated');
         $this->dispatch('clearLocalCart');
-
-        // Clear discount code
         $this->clearDiscountCode();
+        $this->clearVoucher();
 
-        $waRaw = WebSetting::first()->whatsapp_number ?? '';
-        $wa = preg_replace('/[^0-9]/', '', $waRaw);
-        if (empty($wa)) {
-            session()->flash('error', 'Nomor WhatsApp belum dikonfigurasi.');
-            return;
-        }
-
-        return redirect()->away('https://wa.me/' . $wa . '?text=' . rawurlencode($message));
+        return redirect()->route('pesanan.berhasil', $pesanan->nomor_pesanan);
     }
 }

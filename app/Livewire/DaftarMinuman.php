@@ -50,7 +50,7 @@ class DaftarMinuman extends Component
 
     public function render()
     {
-        $webSettings = \App\Models\WebSetting::first();
+        $webSettings = \App\Models\WebSetting::current();
         
         return view('livewire.daftar-minuman', [
             'theme' => $webSettings ? $webSettings->theme : 'green',

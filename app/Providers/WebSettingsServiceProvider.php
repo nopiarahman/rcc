@@ -26,10 +26,7 @@ class WebSettingsServiceProvider extends ServiceProvider
             static $settings = null;
             
             if (is_null($settings)) {
-                $settings = WebSetting::firstOrCreate([], [
-                    'site_name' => 'Raihaan Coffee Corner',
-                    'theme' => 'green',
-                ]);
+                $settings = WebSetting::current();
             }
             
             $view->with('webSettings', $settings);

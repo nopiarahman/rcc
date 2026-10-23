@@ -74,7 +74,7 @@ class MenuPage extends Component
 
     public function render()
     {
-        $webSettings = \App\Models\WebSetting::first();
+        $webSettings = \App\Models\WebSetting::current();
         $banners = Banner::where('status', true)->orderBy('order')->get();
 
         return view('livewire.menu-page', [

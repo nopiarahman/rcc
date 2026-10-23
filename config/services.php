@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    // Server OSRM untuk menghitung jarak jalan raya (ongkir). Server demo publik tidak untuk
+    // penggunaan produksi berat; ganti OSRM_URL ke server sendiri/berbayar bila tersedia.
+    'osrm' => [
+        'url' => env('OSRM_URL', 'https://router.project-osrm.org'),
+        'timeout' => env('OSRM_TIMEOUT', 4),
+    ],
+
 ];

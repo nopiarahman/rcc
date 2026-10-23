@@ -68,15 +68,29 @@
 </head>
 <body>
     <div class="card">
-        <div class="icon">✅</div>
-        <h1>Pesanan Selesai!</h1>
-        <div class="order-number">{{ $pesanan->nomor_pesanan }}</div>
-        <p>
-            Pesanan atas nama <strong>{{ $pesanan->nama_pemesan }}</strong>
-            telah ditandai selesai.
-        </p>
-        @if($pesanan->waktu_selesai)
-            <p class="already">Diselesaikan pada {{ $pesanan->waktu_selesai->format('d M Y, H:i') }} WIB</p>
+        @if(in_array($pesanan->status, ['selesai', 'dibatalkan']))
+            <div class="icon">{{ $pesanan->status === 'selesai' ? '✅' : '⛔' }}</div>
+            <h1>{{ $pesanan->status === 'selesai' ? 'Pesanan Selesai!' : 'Pesanan Dibatalkan' }}</h1>
+            <div class="order-number">{{ $pesanan->nomor_pesanan }}</div>
+            <p>
+                Pesanan atas nama <strong>{{ $pesanan->nama_pemesan }}</strong>
+                {{ $pesanan->status === 'selesai' ? 'telah ditandai selesai.' : 'sudah dibatalkan.' }}
+            </p>
+            @if($pesanan->waktu_selesai)
+                <p class="already">Diselesaikan pada {{ $pesanan->waktu_selesai->format('d M Y, H:i') }} WIB</p>
+            @endif
+        @else
+            {{-- Konfirmasi lewat tombol (POST) agar preview link WhatsApp tidak otomatis menyelesaikan pesanan --}}
+            <div class="icon">🧾</div>
+            <h1>Tandai Pesanan Selesai?</h1>
+            <div class="order-number">{{ $pesanan->nomor_pesanan }}</div>
+            <p>Pesanan atas nama <strong>{{ $pesanan->nama_pemesan }}</strong>.</p>
+            <form method="POST" action="{{ request()->fullUrl() }}" style="margin-top:1.25rem;">
+                @csrf
+                <button type="submit" style="background:#16a34a;color:#fff;border:0;border-radius:10px;padding:.75rem 1.5rem;font-weight:600;font-size:1rem;cursor:pointer;">
+                    Ya, tandai selesai
+                </button>
+            </form>
         @endif
     </div>
 </body>

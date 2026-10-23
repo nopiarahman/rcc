@@ -34,10 +34,7 @@ class MobileNavigation extends Component
 
     public function render()
     {
-        $settings = WebSetting::firstOrCreate([], [
-            'site_name' => 'Raihaan Coffee Corner',
-            'theme' => 'green',
-        ]);
+        $settings = WebSetting::current();
 
         $themeColors = $this->getThemeColors($settings->theme);
         $this->updateCartCount();

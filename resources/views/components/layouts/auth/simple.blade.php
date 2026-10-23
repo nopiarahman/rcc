@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 @php
-    $webSettings = \App\Models\WebSetting::first();
+    $webSettings = \App\Models\WebSetting::current();
 @endphp
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
     <head>

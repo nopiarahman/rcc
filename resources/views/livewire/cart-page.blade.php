@@ -6,7 +6,7 @@
         $buttonTextColor = '#ffffff';
         $cardBgColor = '#ffffff';
         $mutedTextColor = '#6b7280';
-        
+
         // Get theme colors from database if web settings are available
         if (isset($web_settings) && $web_settings->themeColor) {
             $themeColor = $web_settings->themeColor->button_bg_color;
@@ -15,52 +15,74 @@
             $cardBgColor = $web_settings->themeColor->card_bg_color;
             $mutedTextColor = $web_settings->themeColor->muted_text_color;
         }
+        $labelStyle = 'font-size:0.8rem; font-weight:600; text-transform:uppercase; letter-spacing:.04em;';
     @endphp
-    
+
     <style>
         /* Theme-specific text color */
         .text-theme {
             color: {{ $themeColor }} !important;
         }
-        
+
         /* Theme-specific button outline */
         .btn-outline-theme {
             color: {{ $themeColor }} !important;
             border-color: {{ $themeColor }} !important;
         }
-        
+
         .btn-outline-theme:hover {
             background-color: {{ $themeColor }} !important;
             color: {{ $buttonTextColor }} !important;
         }
-        
+
         /* Theme-specific filled button */
         .btn-theme {
             background-color: {{ $themeColor }} !important;
             border-color: {{ $themeColor }} !important;
             color: {{ $buttonTextColor }} !important;
         }
-        
+
         .btn-theme:hover {
             opacity: 0.9;
             background-color: {{ $themeColor }} !important;
             border-color: {{ $themeColor }} !important;
         }
-        
+
         /* Card styling */
         .card-theme {
             background-color: {{ $cardBgColor }} !important;
         }
-        
+
         /* Text colors */
         .text-muted-theme {
             color: {{ $mutedTextColor }} !important;
         }
-        
+
         .text-theme-primary {
             color: {{ $themeTextColor }} !important;
         }
-        
+
+        [x-cloak] { display: none !important; }
+
+        /* Target sentuh minimal 40px agar nyaman ditekan di HP */
+        .qty-btn {
+            min-width: 40px;
+            min-height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            background: #fff;
+            font-size: 1.1rem;
+            line-height: 1;
+        }
+        .qty-value {
+            min-width: 36px;
+            text-align: center;
+            font-weight: 600;
+        }
+
         @keyframes fadeSlideUp {
         0% {
             opacity: 0;
@@ -76,92 +98,112 @@
             }
     </style>
     {{-- Header (Tetap di Atas) --}}
-    <div class="header-button d-flex justify-content-between align-items-center pb-3">
-        <a wire:navigate href="{{ route('home') }}" class="btn btn-light rounded-circle shadow-sm">
+    <div class="header-button d-flex align-items-center gap-3 pb-3">
+        <a wire:navigate href="{{ route('home') }}" class="btn btn-light rounded-circle shadow-sm" aria-label="Kembali ke menu">
             <i class="fas fa-chevron-left"></i>
         </a>
-        <h5 class="fw-bold pt-3 pe-2" style="font-size: 1.1rem;">Keranjang</h5>
+        <h1 class="fw-bold mb-0" style="font-size: 1.1rem;">Keranjang</h1>
     </div>
 
+    @if($removed_notices)
+        <div class="alert alert-warning d-flex justify-content-between align-items-start gap-2" role="alert" style="font-size:.85rem;">
+            <div>
+                <strong>Beberapa item dikeluarkan dari keranjang:</strong>
+                <ul class="mb-0 ps-3">
+                    @foreach($removed_notices as $notice)
+                        <li>{{ $notice }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            <button type="button" class="btn-close" wire:click="dismissRemovedNotices" aria-label="Tutup"></button>
+        </div>
+    @endif
+
+    @if($cartItems->isEmpty())
+        {{-- Keranjang kosong: tidak menampilkan form checkout --}}
+        <div class="text-center py-5">
+            <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                 style="width:80px;height:80px;background:#f1f5f9;color:#94a3b8;font-size:2rem;">
+                <i class="fas fa-shopping-bag"></i>
+            </div>
+            <h2 class="fw-bold mb-1" style="font-size:1.1rem;">Keranjang masih kosong</h2>
+            <p class="text-muted mb-4" style="font-size:.9rem;">Yuk, pilih minuman atau makanan favoritmu dulu.</p>
+            <a href="{{ route('home') }}" wire:navigate class="btn btn-theme px-4" style="border-radius:12px;padding:.65rem 1.5rem;">
+                Lihat Menu
+            </a>
+        </div>
+    @else
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="mb-0 small" style="font-size: 0.85rem;">Jumlah Keranjang: {{ count($cart) }}</h5>
-        <button wire:click="clearCart" class="btn btn-link text-danger text-decoration-none btn-sm">Kosongkan Keranjang</button>
+        <span class="small" style="font-size: 0.85rem;">{{ $summary['qty'] }} item</span>
+        <button wire:click="clearCart"
+                wire:confirm="Kosongkan semua isi keranjang?"
+                class="btn btn-link text-danger text-decoration-none btn-sm">Kosongkan Keranjang</button>
     </div>
     {{-- Cart Items --}}
-    @forelse($cartItems as $item)
-            <div class="card mb-2">
-                <div class="card-body d-flex justify-content-between align-items-center">
+    @foreach($cartItems as $item)
+            <div class="card mb-2" wire:key="cart-{{ $item['key'] }}">
+                <div class="card-body d-flex justify-content-between align-items-center gap-2">
                     <div class="d-flex align-items-center">
-                        @php
-                            $imgUrl = match($item['type']) {
-                                'makanan' => $item['model']?->getFirstMediaUrl('gambar') ?: asset('default-food.jpg'),
-                                'botolan' => $item['model']?->getFirstMediaUrl('foto') ?: asset('default-drink.jpg'),
-                                default   => $item['model']?->getFirstMediaUrl('foto') ?: asset('default-drink.jpg'),
-                            };
-                        @endphp
-                        <img src="{{ $imgUrl }}"
-                             class="rounded me-3"
+                        <img src="{{ $item['image'] ?: asset('images/no-image.png') }}"
+                             class="rounded me-3 flex-shrink-0"
                              alt="{{ $item['name'] }}"
                              width="60" height="60"
-                             style="object-fit: cover; object-position: center;">
+                             style="object-fit: cover; object-position: center; background:#f1f5f9;">
                         <div class="text-muted" style="font-size: 9pt">
-                            <h6 class="mb-1 fw-bold text-theme" style="font-size: 0.9rem;">{{ $item['name'] }}</h6>
-                            <small>
-                                @if($item['type'] === 'minuman')
-                                    @if($item['size'])Size: {{ $item['size'] }} |@endif
-                                    @if($item['sugar'])Gula: {{ $item['sugar'] }} |@endif
-                                    @if($item['topping'] && $item['topping'] !== '-')Topping: {{ $item['topping'] }}@endif
-                                @elseif($item['type'] === 'botolan')
-                                    @if($item['ukuran']){{ $item['ukuran'] }}@endif
-                                @else
-                                    @if($item['topping'] && $item['topping'] !== '-')Topping: {{ $item['topping'] }}@endif
-                                @endif
-                            </small><br>
-                            @if($item['has_discount'])
-                                <div class="d-flex align-items-center gap-1">
-                                    <small class="text-decoration-line-through text-muted">Rp{{ number_format($item['regular_price'], 0, ',', '.') }}</small>
-                                    <small class="text-danger fw-bold">Rp{{ number_format($item['price'], 0, ',', '.') }}</small>
-                                    <small class="badge bg-danger text-white" style="font-size: 0.65rem;">{{ $item['discount_info']['discount_text'] }}</small>
-                                </div>
-                                <small class="text-muted">{{ $item['qty'] }}x = Rp{{ number_format($item['subtotal'], 0, ',', '.') }}</small>
-                            @else
-                                <small class="text-muted">Rp{{ number_format($item['price'], 0, ',', '.') }} x {{ $item['qty'] }}</small>
+                            <h2 class="mb-1 fw-bold text-theme" style="font-size: 0.9rem;">{{ $item['name'] }}</h2>
+                            @php $opsi = array_filter([
+                                $item['size'] ? 'Size: ' . $item['size'] : null,
+                                $item['sugar'] ? 'Gula: ' . $item['sugar'] : null,
+                                $item['topping'] ? 'Topping: ' . $item['topping'] : null,
+                                $item['ukuran'],
+                            ]); @endphp
+                            @if($opsi)
+                                <small class="d-block">{{ implode(' | ', $opsi) }}</small>
                             @endif
+                            @if($item['discount_info'])
+                                <div class="d-flex align-items-center gap-1 flex-wrap">
+                                    <small class="text-decoration-line-through text-muted">Rp{{ number_format($item['regular_price'], 0, ',', '.') }}</small>
+                                    <small class="text-danger fw-bold">Rp{{ number_format($item['unit_price'], 0, ',', '.') }}</small>
+                                    <small class="badge bg-danger text-white" style="font-size: 0.7rem;">{{ $item['discount_info']['discount_text'] }}</small>
+                                </div>
+                            @else
+                                <small class="text-muted">Rp{{ number_format($item['unit_price'], 0, ',', '.') }}</small>
+                            @endif
+                            <small class="d-block fw-semibold text-theme-primary">Subtotal Rp{{ number_format($item['subtotal'], 0, ',', '.') }}</small>
                         </div>
                     </div>
-                    <div class="text-end">
-                        <div class="btn-group btn-group-sm mb-2">
-                            <button wire:click="decreaseQty('{{ $item['key'] }}')" class="btn btn-link text-decoration-none text-theme">−</button>
-                            <button class="btn btn-light" disabled>{{ $item['qty'] }}</button>
-                            <button wire:click="increaseQty('{{ $item['key'] }}')" class="btn btn-link text-decoration-none text-theme">+</button>
+                    <div class="text-end flex-shrink-0">
+                        <div class="d-flex align-items-center justify-content-end gap-1 mb-2">
+                            <button wire:click="decreaseQty('{{ $item['key'] }}')" class="qty-btn text-theme" aria-label="Kurangi jumlah {{ $item['name'] }}" @disabled($item['qty'] <= 1)>−</button>
+                            <span class="qty-value" aria-live="polite">{{ $item['qty'] }}</span>
+                            <button wire:click="increaseQty('{{ $item['key'] }}')" class="qty-btn text-theme" aria-label="Tambah jumlah {{ $item['name'] }}">+</button>
                         </div>
-                        <br>
-                        <button wire:click="removeItem('{{ $item['key'] }}')" class="btn btn-sm btn-outline-danger">Hapus</button>
+                        <button wire:click="removeItem('{{ $item['key'] }}')" class="btn btn-sm btn-outline-danger" style="min-height:36px;">Hapus</button>
                     </div>
                 </div>
             </div>
-        @empty
-            <div class="alert alert-info">Keranjang kosong.</div>
-        @endforelse
-    
+    @endforeach
+
     {{-- Footer --}}
     <div class="footer bg-white p-3 shadow-lg mb-5">
+
+        @error('checkout')
+            <div class="alert alert-danger py-2" style="font-size:.85rem;">{{ $message }}</div>
+        @enderror
 
         {{-- Pilih Jenis Pesanan --}}
         @if($orderMode === 'both')
         <div class="mb-3">
-            <p class="text-muted mb-2" style="font-size:0.8rem; font-weight:600; text-transform:uppercase; letter-spacing:.04em;">Jenis Pesanan</p>
+            <p class="text-muted mb-2" style="{{ $labelStyle }}">Jenis Pesanan</p>
             <div class="d-flex gap-2">
                 <button wire:click="selectOrderType('delivery')"
                     class="btn flex-fill py-2 d-flex flex-column align-items-center gap-1 {{ $order_type === 'delivery' ? 'btn-theme' : 'btn-outline-theme' }}"
-                    style="font-size:0.82rem; border-radius:12px;">
-                    <i class="bi bi-truck" style="font-size:1.2rem;"></i>
+                    style="font-size:0.82rem; border-radius:12px; min-height:48px;">
                     <span class="fw-semibold">Antar ke Alamat</span>
                 </button>
                 <button wire:click="selectOrderType('takeaway')"
                     class="btn flex-fill py-2 d-flex flex-column align-items-center gap-1 {{ $order_type === 'takeaway' ? 'btn-theme' : 'btn-outline-theme' }}"
-                    style="font-size:0.82rem; border-radius:12px;">
-                    <i class="bi bi-bag" style="font-size:1.2rem;"></i>
+                    style="font-size:0.82rem; border-radius:12px; min-height:48px;">
                     <span class="fw-semibold">Ambil Sendiri</span>
                 </button>
             </div>
@@ -171,88 +213,74 @@
         </div>
         @endif
 
-        {{-- Delivery: Alamat + Info Ongkir --}}
+        {{-- Delivery: Alamat + Lokasi + Info Ongkir --}}
         @if($order_type === 'delivery')
-        @php
-            $locationSettings = json_encode([
-                'lat'    => (float) $web_settings->latitude,
-                'lng'    => (float) $web_settings->longitude,
-                'radius' => (int) $web_settings->delivery_radius,
-            ]);
-        @endphp
-        <div class="mb-3" x-data x-init="
-            if (!navigator.geolocation) {
-                $wire.call('setLocationFailed', 'Browser tidak mendukung fitur lokasi.');
-                return;
-            }
-            navigator.geolocation.getCurrentPosition(
-                function(pos) {
-                    var lat = pos.coords.latitude;
-                    var lng = pos.coords.longitude;
-                    var s = {{ $locationSettings }};
-                    var dist = haversineMeters(lat, lng, s.lat, s.lng);
-                    if (dist <= s.radius) {
-                        $wire.call('setCustomerLocation', lat, lng);
-                    } else {
-                        $wire.call('selectOrderType', 'takeaway');
-                        alert('Maaf, pengiriman hanya tersedia dalam radius ' + s.radius + ' meter dari toko.');
+        <div class="mb-3" x-data="{
+                locating: false,
+                locate() {
+                    if (!navigator.geolocation) {
+                        $wire.setLocationFailed('Browser Anda tidak mendukung fitur lokasi. Silakan pilih Ambil Sendiri.');
+                        return;
                     }
-                },
-                function(err) {
-                    var msg = 'Lokasi tidak dapat dideteksi.';
-                    if (err.code === 1) msg = 'Izin lokasi ditolak — aktifkan lokasi di browser.';
-                    else if (err.code === 3) msg = 'Deteksi lokasi timeout — coba lagi.';
-                    $wire.call('setLocationFailed', msg);
-                },
-                { timeout: 15000, maximumAge: 60000, enableHighAccuracy: false }
-            );
-        ">
-            <label class="text-muted mb-1 d-block" style="font-size:0.8rem; font-weight:600; text-transform:uppercase; letter-spacing:.04em;">Alamat Pengantaran</label>
-            <textarea wire:model.blur="alamat_pengantaran" rows="2"
-                class="form-control mb-2" style="font-size:0.85rem; border-radius:10px;"
-                placeholder="Tulis alamat lengkap..."></textarea>
+                    this.locating = true;
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => { $wire.setCustomerLocation(pos.coords.latitude, pos.coords.longitude).then(() => this.locating = false); },
+                        (err) => {
+                            this.locating = false;
+                            let msg = 'Lokasi tidak dapat dideteksi. Coba lagi.';
+                            if (err.code === 1) msg = 'Izin lokasi ditolak. Aktifkan izin lokasi untuk situs ini di pengaturan browser, lalu coba lagi.';
+                            else if (err.code === 3) msg = 'Deteksi lokasi terlalu lama. Pastikan GPS aktif, lalu coba lagi.';
+                            $wire.setLocationFailed(msg);
+                        },
+                        { timeout: 15000, maximumAge: 60000, enableHighAccuracy: true }
+                    );
+                }
+            }">
+            <label for="alamat_pengantaran" class="text-muted mb-1 d-block" style="{{ $labelStyle }}">Alamat Pengantaran</label>
+            <textarea id="alamat_pengantaran" wire:model.blur="alamat_pengantaran" rows="2" maxlength="500"
+                class="form-control mb-2" style="font-size:0.9rem; border-radius:10px;"
+                placeholder="Nama jalan, nomor rumah, patokan..."></textarea>
             @error('alamat_pengantaran')
-                <div class="text-danger small mb-1">{{ $message }}</div>
+                <div class="text-danger small mb-2">{{ $message }}</div>
             @enderror
 
-            {{-- Info Jarak & Ongkir --}}
-            @if($ongkir_distance_km > 0)
-                <div class="rounded-3 p-2" style="background:#f0fdf4; border:1px solid #bbf7d0;">
+            {{-- Lokasi dipakai untuk menghitung ongkir & memastikan alamat dalam jangkauan --}}
+            @if($customer_lat)
+                <div class="rounded-3 p-2" style="background:#f0fdf4; border:1px solid #bbf7d0; font-size:0.85rem; color:#166534;">
                     <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="d-flex align-items-center gap-1" style="font-size:0.82rem; color:#166534;">
-                            <i class="bi bi-geo-alt-fill"></i> Jarak ke toko
-                        </span>
-                        <span class="fw-semibold" style="font-size:0.82rem; color:#166534;">
-                            {{ number_format($ongkir_distance_km, 2) }} km
-                        </span>
+                        <span><i class="fas fa-map-marker-alt me-1"></i> Lokasi terdeteksi · {{ number_format($ongkir_distance_km, 1, ',', '.') }} km</span>
+                        <button type="button" @click="locate()" class="btn btn-sm btn-link p-0" style="color:#166534; font-size:.8rem;">Perbarui</button>
                     </div>
-                    @if(isset($web_settings) && $web_settings->ongkir_enabled)
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="d-flex align-items-center gap-1" style="font-size:0.82rem; color:#166534;">
-                            <i class="bi bi-truck"></i> Ongkos kirim
-                        </span>
-                        <span class="fw-bold" style="font-size:0.82rem; color:{{ $ongkir > 0 ? '#e65100' : '#166534' }};">
-                            {{ $ongkir > 0 ? 'Rp'.number_format($ongkir, 0, ',', '.') : 'Gratis' }}
-                        </span>
-                    </div>
+                    @if($web_settings->ongkir_enabled)
+                        <div class="d-flex justify-content-between">
+                            <span>Ongkos kirim</span>
+                            <span class="fw-bold" style="color:{{ $ongkir > 0 ? '#e65100' : '#166534' }};">
+                                {{ $ongkir > 0 ? 'Rp'.number_format($ongkir, 0, ',', '.') : 'Gratis' }}
+                            </span>
+                        </div>
                     @endif
                 </div>
-            @elseif($customer_lat)
-                <div class="rounded-3 p-2" style="background:#f0fdf4; border:1px solid #bbf7d0; font-size:0.82rem; color:#166534;">
-                    <i class="bi bi-check-circle-fill me-1"></i> Lokasi terdeteksi — dalam jangkauan pengiriman
-                </div>
-            @elseif($location_error)
-                <div class="rounded-3 p-2" style="background:#fff1f2; border:1px solid #fecdd3; font-size:0.82rem; color:#9f1239;">
-                    <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ $location_error }}
-                    <button wire:click="selectOrderType('delivery')" class="btn btn-sm btn-link p-0 ms-2" style="font-size:0.8rem; color:#9f1239; text-decoration:underline;">
-                        Coba lagi
-                    </button>
-                </div>
             @else
-                <div class="rounded-3 p-2 text-center" style="background:#fff7ed; border:1px solid #fed7aa; font-size:0.82rem; color:#9a3412;">
-                    <span class="spinner-border spinner-border-sm me-1" style="width:.75rem;height:.75rem;"></span>
-                    Mendeteksi lokasi...
-                </div>
+                <button type="button" @click="locate()" :disabled="locating"
+                        class="btn btn-outline-theme w-100 d-flex align-items-center justify-content-center gap-2"
+                        style="border-radius:10px; min-height:44px; font-size:.9rem;">
+                    <span x-show="!locating"><i class="fas fa-location-arrow"></i> Gunakan Lokasi Saya</span>
+                    <span x-show="locating" x-cloak><span class="spinner-border spinner-border-sm me-1"></span> Mendeteksi lokasi...</span>
+                </button>
+                <div class="form-text" style="font-size:.78rem;">Lokasi dibutuhkan untuk menghitung ongkir dan memastikan alamat dalam jangkauan pengantaran.</div>
+                @if($location_error)
+                    <div class="rounded-3 p-2 mt-2" role="alert" style="background:#fff1f2; border:1px solid #fecdd3; font-size:0.85rem; color:#9f1239;">
+                        <i class="fas fa-exclamation-triangle me-1"></i> {{ $location_error }}
+                        @if($orderMode === 'both')
+                            <button type="button" wire:click="selectOrderType('takeaway')" class="btn btn-sm btn-link p-0 d-block mt-1" style="font-size:0.85rem; color:#9f1239; text-decoration:underline;">
+                                Ganti ke Ambil Sendiri
+                            </button>
+                        @endif
+                    </div>
+                @endif
+                @error('lokasi')
+                    <div class="text-danger small mt-2">{{ $message }}</div>
+                @enderror
             @endif
         </div>
         @endif
@@ -260,7 +288,7 @@
         {{-- Voucher Pelanggan --}}
         @if(isset($customer) && $customer)
         <div class="mb-3">
-            <p class="text-muted mb-2" style="font-size:0.8rem; font-weight:600; text-transform:uppercase; letter-spacing:.04em;">
+            <p class="text-muted mb-2" style="{{ $labelStyle }}">
                 <i class="fas fa-ticket-alt me-1"></i>Voucher Saya
             </p>
             @if($applied_voucher)
@@ -269,15 +297,15 @@
                         <span class="fw-bold" style="font-size:0.85rem; color:#166534;">{{ $applied_voucher->code }}</span>
                         <span class="text-muted ms-1" style="font-size:0.8rem;">— {{ $applied_voucher->formatted_discount }}</span>
                     </div>
-                    <button wire:click="clearVoucher" class="btn btn-sm btn-link text-danger p-0 ms-2" style="font-size:0.8rem;">Hapus</button>
+                    <button wire:click="clearVoucher" class="btn btn-sm btn-link text-danger p-0 ms-2" style="font-size:0.85rem;">Hapus</button>
                 </div>
             @elseif($customerVouchers->isNotEmpty())
                 <div class="d-flex flex-column gap-1">
                     @foreach($customerVouchers as $v)
-                    @php $eligible = $originalTotal >= $v->min_purchase; @endphp
+                    @php $eligible = $summary['subtotal'] >= $v->min_purchase; @endphp
                     <button wire:click="applyVoucher({{ $v->id }})"
                             class="btn btn-sm text-start d-flex align-items-center justify-content-between w-100"
-                            style="border:1px {{ $eligible ? 'solid #bbf7d0;background:#f0fdf4' : 'dashed #dee2e6;background:#f9f9f9;opacity:.6' }};border-radius:8px;padding:8px 12px;"
+                            style="border:1px {{ $eligible ? 'solid #bbf7d0;background:#f0fdf4' : 'dashed #dee2e6;background:#f9f9f9;opacity:.6' }};border-radius:8px;padding:10px 12px;"
                             {{ $eligible ? '' : 'disabled' }}>
                         <span>
                             <span class="fw-bold" style="color:#166534;font-size:0.85rem;">{{ $v->formatted_discount }}</span>
@@ -303,22 +331,22 @@
 
         {{-- Kode Diskon --}}
         <div class="mb-3">
-            <p class="text-muted mb-2" style="font-size:0.8rem; font-weight:600; text-transform:uppercase; letter-spacing:.04em;">Kode Promo</p>
+            <label for="kode_promo" class="text-muted mb-2 d-block" style="{{ $labelStyle }}">Kode Promo</label>
             @if($applied_discount)
                 <div class="d-flex align-items-center justify-content-between p-2 rounded-3" style="background:#f0fdf4; border:1px solid #bbf7d0;">
                     <div>
                         <span class="fw-bold" style="font-size:0.85rem; color:#166534;">{{ $applied_discount->code }}</span>
                         <span class="text-muted ms-1" style="font-size:0.8rem;">— {{ $applied_discount->formatted_discount }}</span>
                     </div>
-                    <button wire:click="clearDiscountCode" class="btn btn-sm btn-link text-danger p-0 ms-2" style="font-size:0.8rem;">Hapus</button>
+                    <button wire:click="clearDiscountCode" class="btn btn-sm btn-link text-danger p-0 ms-2" style="font-size:0.85rem;">Hapus</button>
                 </div>
             @else
-                <div class="input-group input-group-sm">
-                    <input type="text" class="form-control" wire:model.live="discount_code"
-                        placeholder="Masukkan kode promo" wire:keydown.enter="applyDiscountCode"
-                        style="border-radius:10px 0 0 10px;">
+                <div class="input-group">
+                    <input id="kode_promo" type="text" class="form-control" wire:model.live.debounce.400ms="discount_code"
+                        placeholder="Contoh: HEMAT10" wire:keydown.enter="applyDiscountCode" autocomplete="off"
+                        style="border-radius:10px 0 0 10px; font-size:.9rem;">
                     <button wire:click="applyDiscountCode" class="btn btn-theme" type="button"
-                        style="border-radius:0 10px 10px 0; font-size:0.82rem;">Pakai</button>
+                        style="border-radius:0 10px 10px 0; font-size:0.85rem; min-width:64px;">Pakai</button>
                 </div>
                 @if($discount_error)
                     <div class="text-danger small mt-1">{{ $discount_error }}</div>
@@ -330,60 +358,61 @@
         <div class="py-2 border-top border-bottom mb-3">
             <div class="d-flex justify-content-between mb-1">
                 <span class="text-muted" style="font-size:0.85rem;">Subtotal</span>
-                <span style="font-size:0.85rem;">Rp{{ number_format($originalTotal, 0, ',', '.') }}</span>
+                <span style="font-size:0.85rem;">Rp{{ number_format($summary['subtotal'], 0, ',', '.') }}</span>
             </div>
-            @if($discountAmount > 0)
+            @if($summary['discount'] > 0)
             <div class="d-flex justify-content-between mb-1">
                 <span style="font-size:0.85rem; color:#166534;">Diskon ({{ $applied_discount->code }})</span>
-                <span style="font-size:0.85rem; color:#166534;">-Rp{{ number_format($discountAmount, 0, ',', '.') }}</span>
+                <span style="font-size:0.85rem; color:#166534;">-Rp{{ number_format($summary['discount'], 0, ',', '.') }}</span>
             </div>
             @endif
-            @if(isset($voucherAmount) && $voucherAmount > 0)
+            @if($summary['voucher'] > 0)
             <div class="d-flex justify-content-between mb-1">
                 <span style="font-size:0.85rem; color:#166534;"><i class="fas fa-ticket-alt me-1"></i>Voucher ({{ $applied_voucher->code }})</span>
-                <span style="font-size:0.85rem; color:#166534;">-Rp{{ number_format($voucherAmount, 0, ',', '.') }}</span>
+                <span style="font-size:0.85rem; color:#166534;">-Rp{{ number_format($summary['voucher'], 0, ',', '.') }}</span>
             </div>
             @endif
-            @if($order_type === 'delivery' && isset($web_settings) && $web_settings->ongkir_enabled)
+            @if($order_type === 'delivery' && $web_settings->ongkir_enabled)
             <div class="d-flex justify-content-between mb-1">
                 <span style="font-size:0.85rem;">
                     Ongkir
                     @if($ongkir_distance_km > 0)
-                        <span class="text-muted" style="font-size:0.78rem;">({{ number_format($ongkir_distance_km, 1) }} km)</span>
+                        <span class="text-muted" style="font-size:0.78rem;">({{ number_format($ongkir_distance_km, 1, ',', '.') }} km)</span>
                     @endif
                 </span>
-                <span style="font-size:0.85rem; color:{{ $ongkirAmount > 0 ? '#e65100' : '#166534' }};">
-                    @if($ongkir_distance_km > 0)
-                        {{ $ongkirAmount > 0 ? '+Rp'.number_format($ongkirAmount, 0, ',', '.') : 'Gratis' }}
+                <span style="font-size:0.85rem; color:{{ $summary['ongkir'] > 0 ? '#e65100' : '#166534' }};">
+                    @if($customer_lat)
+                        {{ $summary['ongkir'] > 0 ? '+Rp'.number_format($summary['ongkir'], 0, ',', '.') : 'Gratis' }}
                     @else
-                        <span class="text-muted">—</span>
+                        <span class="text-muted" style="font-size:.78rem;">Tentukan lokasi dulu</span>
                     @endif
                 </span>
             </div>
             @endif
-            @if($roundingAmount != 0)
+            @if($summary['rounding'] != 0)
             <div class="d-flex justify-content-between mb-1">
                 <span class="text-muted" style="font-size:0.78rem;">Pembulatan</span>
-                <span class="{{ $roundingAmount > 0 ? 'text-success' : 'text-danger' }}" style="font-size:0.78rem;">
-                    {{ $roundingAmount > 0 ? '+' : '' }}Rp{{ number_format(abs($roundingAmount), 0, ',', '.') }}
+                <span class="{{ $summary['rounding'] > 0 ? 'text-success' : 'text-danger' }}" style="font-size:0.78rem;">
+                    {{ $summary['rounding'] > 0 ? '+' : '-' }}Rp{{ number_format(abs($summary['rounding']), 0, ',', '.') }}
                 </span>
             </div>
             @endif
             <div class="d-flex justify-content-between fw-bold mt-1">
                 <span>Total</span>
-                <span style="color:{{ $themeColor }};">Rp{{ number_format($grandTotal, 0, ',', '.') }}</span>
+                <span style="color:{{ $themeColor }};">Rp{{ number_format($summary['total'], 0, ',', '.') }}</span>
             </div>
         </div>
 
-        <p class="text-muted text-center mb-2" style="font-size:0.75rem;">Pastikan pesanan benar. Jazakallahu khairan 🙏</p>
+        <p class="text-muted text-center mb-2" style="font-size:0.78rem;">Pastikan pesanan benar. Jazakallahu khairan 🙏</p>
 
-        <button wire:click="checkout" type="button" class="btn btn-theme w-100" style="border-radius:12px; padding:.65rem;">
+        <button wire:click="checkout" type="button" class="btn btn-theme w-100" style="border-radius:12px; padding:.7rem;">
             <span wire:loading.remove wire:target="checkout">Lanjut ke Konfirmasi →</span>
             <span wire:loading wire:target="checkout">
                 <span class="spinner-border spinner-border-sm me-1"></span> Memproses...
             </span>
         </button>
     </div>
+    @endif
 
     <!-- Modal Konfirmasi Pesanan -->
     <div wire:ignore.self class="modal fade" id="checkoutModal" tabindex="-1" aria-labelledby="checkoutModalLabel" aria-hidden="true">
@@ -394,14 +423,19 @@
                     <h5 class="modal-title fw-bold mb-0" id="checkoutModalLabel">Konfirmasi Pesanan</h5>
                     <small class="text-muted">
                         {{ $order_type === 'delivery' ? 'Antar ke alamat' : 'Ambil sendiri di toko' }}
+                        · Total Rp{{ number_format($summary['total'], 0, ',', '.') }}
                     </small>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
             </div>
             <div class="modal-body pt-2">
+                @error('checkout')
+                    <div class="alert alert-danger py-2" style="font-size:.85rem;">{{ $message }}</div>
+                @enderror
+
                 <div class="mb-3">
-                    <label class="form-label fw-semibold" style="font-size:0.85rem;">Nama Pemesan <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" wire:model.defer="nama_pemesan" placeholder="Nama Anda">
+                    <label for="nama_pemesan" class="form-label fw-semibold" style="font-size:0.85rem;">Nama Pemesan <span class="text-danger">*</span></label>
+                    <input id="nama_pemesan" type="text" class="form-control" wire:model="nama_pemesan" maxlength="100" placeholder="Nama Anda" autocomplete="name">
                     @error('nama_pemesan') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                 </div>
 
@@ -411,9 +445,9 @@
                     <div>{{ $alamat_pengantaran }}</div>
                     @if($ongkir_distance_km > 0)
                     <div class="mt-1 text-muted">
-                        <i class="bi bi-geo-alt-fill me-1"></i>{{ number_format($ongkir_distance_km, 1) }} km dari toko
-                        @if(isset($web_settings) && $web_settings->ongkir_enabled)
-                        — Ongkir: <strong style="color:{{ $ongkirAmount > 0 ? '#e65100' : '#166534' }}">{{ $ongkirAmount > 0 ? 'Rp'.number_format($ongkirAmount, 0, ',', '.') : 'Gratis' }}</strong>
+                        <i class="fas fa-map-marker-alt me-1"></i>{{ number_format($ongkir_distance_km, 1, ',', '.') }} km dari toko
+                        @if($web_settings->ongkir_enabled)
+                        — Ongkir: <strong style="color:{{ $summary['ongkir'] > 0 ? '#e65100' : '#166534' }}">{{ $summary['ongkir'] > 0 ? 'Rp'.number_format($summary['ongkir'], 0, ',', '.') : 'Gratis' }}</strong>
                         @endif
                     </div>
                     @endif
@@ -421,7 +455,7 @@
                 @endif
 
                 <div class="mb-2">
-                    <label class="form-label fw-semibold" style="font-size:0.85rem;">
+                    <label for="waktu_select" class="form-label fw-semibold" style="font-size:0.85rem;">
                         Waktu {{ $order_type === 'delivery' ? 'Pengantaran' : 'Pengambilan' }} <span class="text-danger">*</span>
                     </label>
                     <div wire:ignore>
@@ -430,10 +464,10 @@
                             <option value="">-- Pilih Waktu --</option>
                         </select>
                     </div>
-                    <input type="hidden" id="waktu_input_hidden" wire:model.defer="waktu_pengantaran">
+                    <input type="hidden" id="waktu_input_hidden" wire:model="waktu_pengantaran">
                     <div class="form-text text-muted" style="font-size:0.75rem;">
-                        Minimal {{ collect($cart)->sum('qty') > 5 ? '1 jam' : '30 menit' }} dari sekarang
-                        @if(collect($cart)->sum('qty') > 5)
+                        Minimal {{ $summary['qty'] > 5 ? '1 jam' : '30 menit' }} dari sekarang
+                        @if($summary['qty'] > 5)
                             <span class="text-warning">(pesanan banyak — butuh waktu lebih)</span>
                         @endif
                     </div>
@@ -443,7 +477,7 @@
             <div class="modal-footer border-0 pt-0">
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
                 <button wire:click="konfirmasiCheckout" class="btn btn-theme px-4">
-                    <span wire:loading.remove wire:target="konfirmasiCheckout">Kirim ke WhatsApp</span>
+                    <span wire:loading.remove wire:target="konfirmasiCheckout">Buat Pesanan</span>
                     <span wire:loading wire:target="konfirmasiCheckout">
                         <span class="spinner-border spinner-border-sm me-1"></span> Memproses...
                     </span>
@@ -452,8 +486,6 @@
         </div>
         </div>
     </div>
-  
-<x-mobile-nav/>
 
 <!-- Sertakan file JavaScript untuk Local Storage -->
 @push('scripts')
@@ -464,22 +496,15 @@
             const script = document.createElement('script');
             script.src = '{{ asset('js/cart-storage.js') }}';
             script.onload = function() {
-                // Inisialisasi keranjang dari Local Storage saat halaman dimuat
-                document.addEventListener('livewire:initialized', function() {
-                    const localCart = CartStorage.getCartFromLocal();
-                    if (localCart.length > 0) {
-                        // Sinkronkan ke session jika ada data di Local Storage
-                        CartStorage.syncCartToSession()
-                            .then(() => {
-                                // Refresh komponen Livewire setelah sinkronisasi
-                                @this.call('$refresh');
-                            });
-                    }
-                });
+                // Sesi habis tapi keranjang masih ada di Local Storage: pulihkan ke session lalu muat ulang
+                const sessionCartEmpty = @json(empty($cart));
+                if (sessionCartEmpty && CartStorage.getCartFromLocal().length > 0) {
+                    CartStorage.syncCartToSession().then(() => window.location.reload()).catch(() => {});
+                }
 
                 // Dengarkan event untuk memperbarui Local Storage
-                Livewire.on('updateLocalCart', function(cart) {
-                    CartStorage.saveCartToLocal(cart);
+                Livewire.on('updateLocalCart', function(payload) {
+                    CartStorage.saveCartToLocal(payload.cart ?? payload);
                 });
 
                 Livewire.on('clearLocalCart', function() {
@@ -493,17 +518,6 @@
 @endpush
 
 <script>
-    window.locationSettings = @json(\App\Models\WebSetting::first(['latitude', 'longitude', 'delivery_radius']));
-
-    function haversineMeters(lat1, lon1, lat2, lon2) {
-        const R = 6371e3;
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat/2)**2 +
-                  Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
-        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    }
-
     function generateTimeSlots() {
         const select = document.getElementById('waktu_select');
         if (!select) return;
@@ -511,7 +525,7 @@
         const closingTime = '{{ $web_settings->closing_time ? $web_settings->closing_time->format("H:i") : "22:00" }}';
         const [closeHour, closeMin] = closingTime.split(':').map(Number);
 
-        const totalQty = {{ collect($cart)->sum('qty') }};
+        const totalQty = {{ $summary['qty'] }};
         const isLargeOrder = totalQty > 5;
 
         const now = new Date();
@@ -528,6 +542,8 @@
 
         const end = new Date(now);
         end.setHours(closeHour - 1, closeMin, 0, 0);
+        // Jam tutup lewat tengah malam (mis. 02:00): batas akhir ada di hari berikutnya
+        if (end <= now && closeHour < 12) end.setDate(end.getDate() + 1);
 
         select.innerHTML = '<option value="">-- Pilih Waktu --</option>';
         const cur = new Date(firstSlot);

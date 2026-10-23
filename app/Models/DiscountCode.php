@@ -15,6 +15,7 @@ class DiscountCode extends Model
         'discount_amount',
         'minimum_purchase',
         'max_redeem',
+        'max_per_customer',
         'used_count',
         'start_date',
         'end_date',
@@ -27,6 +28,7 @@ class DiscountCode extends Model
         'is_active' => 'boolean',
         'discount_amount' => 'decimal:2',
         'minimum_purchase' => 'decimal:2',
+        'max_per_customer' => 'integer',
     ];
 
     /**
@@ -43,6 +45,22 @@ class DiscountCode extends Model
     public function orders(): HasMany
     {
         return $this->hasMany(Pesanan::class);
+    }
+
+    /**
+     * Batas pemakaian per pelanggan. Kode yang dibatasi hanya untuk pelanggan yang login,
+     * karena tamu tidak bisa dibedakan satu sama lain.
+     */
+    public function canBeUsedByCustomer(?int $customerId): bool
+    {
+        if (! $this->max_per_customer) {
+            return true;
+        }
+        if (! $customerId) {
+            return false;
+        }
+
+        return $this->orders()->where('customer_id', $customerId)->count() < $this->max_per_customer;
     }
 
     /**

@@ -1,5 +1,5 @@
 @php
-    $webSettings = \App\Models\WebSetting::first();
+    $webSettings = \App\Models\WebSetting::current();
     $currentTheme = $webSettings ? $webSettings->theme : 'green';
     
     $themeGradients = [

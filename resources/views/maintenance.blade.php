@@ -11,7 +11,7 @@
         <div class="max-w-md w-full bg-white p-8 rounded-lg shadow-md text-center">
             <div class="mb-6">
                 @php
-                    $settings = \App\Models\WebSetting::first();
+                    $settings = \App\Models\WebSetting::current();
                     $logoPath = $settings->logo_path ? asset('storage/' . $settings->logo_path) : asset('images/logo.png');
                 @endphp
                 <img src="{{ $logoPath }}" alt="Logo" class="h-20 mx-auto mb-4">

@@ -4,28 +4,30 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Makanan;
+use App\Services\CartService;
 
 class MakananDetail extends Component
 {
     public $makanan;
     public $selectedToppingId;
-    public $toppings = [];
     public $theme;
 
     public function mount($makanan)
     {
         $this->makanan = \App\Models\Makanan::with(['toppings', 'bahans'])->findOrFail($makanan);
-        $this->toppings = $this->makanan->toppings;
-        $this->selectedToppingId = $this->makanan->default_topping ?? ($this->toppings->first()->id ?? null);
-        $webSetting = \App\Models\WebSetting::first();
+        $toppings = $this->makanan->toppings;
+        $this->selectedToppingId = $toppings->contains('id', $this->makanan->default_topping)
+            ? $this->makanan->default_topping
+            : $toppings->first()?->id;
+        $webSetting = \App\Models\WebSetting::current();
         $this->theme = $webSetting ? $webSetting->theme : 'green';
     }
 
     public function getTotalPriceProperty()
     {
-        $topping = collect($this->toppings)->firstWhere('id', $this->selectedToppingId);
+        $topping = $this->makanan->toppings->firstWhere('id', $this->selectedToppingId);
         $totalPrice = $this->makanan->base_price
-            + ($topping['default_price'] ?? 0);
+            + ($topping?->default_price ?? 0);
         // Diskon jika ada
         if ($activeDiscount = $this->makanan->activeDiscount()) {
             return $activeDiscount->calculateDiscountedPrice($totalPrice);
@@ -35,28 +37,24 @@ class MakananDetail extends Component
 
     public function addToCart()
     {
-        if ($this->makanan->is_habis) {
+        if ($this->makanan->fresh()?->is_habis ?? true) {
             session()->flash('message', 'Maaf, makanan ini sedang habis!');
             return;
         }
-        
-        $key = 'makanan-' . $this->makanan->id . '-' . $this->selectedToppingId;
-        $cart = session()->get('cart', []);
-        
-        if (isset($cart[$key])) {
-            $cart[$key]['qty']++;
-        } else {
-            $cart[$key] = [
-                'id' => $this->makanan->id,
-                'type' => 'makanan', // Add type to identify as food
-                'name' => $this->makanan->nama,
-                'topping_id' => $this->selectedToppingId,
-                'price' => $this->totalPrice,
-                'qty' => 1,
-                'model' => $this->makanan, // Store the full model
-            ];
+
+        if ($this->selectedToppingId && ! $this->makanan->toppings->contains('id', $this->selectedToppingId)) {
+            session()->flash('message', 'Pilihan topping tidak tersedia untuk makanan ini.');
+            return;
         }
-        
+
+        // Keranjang hanya menyimpan ID & pilihan; harga selalu dihitung ulang di server
+        $cart = CartService::add(session()->get('cart', []), [
+            'type' => 'makanan',
+            'id' => $this->makanan->id,
+            'topping_id' => $this->selectedToppingId ?: null,
+            'qty' => 1,
+        ]);
+
         session()->put('cart', $cart);
         $this->dispatch('cartUpdated');
         session()->flash('message', 'Produk berhasil ditambahkan ke keranjang!');
@@ -64,10 +62,10 @@ class MakananDetail extends Component
 
     public function render()
     {
-        $webSettings = \App\Models\WebSetting::first();
+        $webSettings = \App\Models\WebSetting::current();
         return view('livewire.makanan-detail', [
-            'web_settings' => $webSettings
-        ])->layout('layouts.public');
+            'web_settings' => $webSettings,
+            'toppings' => $this->makanan->toppings,
+        ])->layout('layouts.public')->title($this->makanan->nama);
     }
 }
-

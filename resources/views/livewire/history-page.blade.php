@@ -90,23 +90,29 @@
         }
 </style>
     {{-- Header mirip cart-page --}}
-        <div class="header-button d-flex justify-content-between align-items-center pb-3">
-            <a wire:navigate href="{{ route('home') }}" class="btn btn-light rounded-circle shadow-sm">
+        <div class="header-button d-flex align-items-center gap-3 pb-3">
+            <a wire:navigate href="{{ route('home') }}" class="btn btn-light rounded-circle shadow-sm" aria-label="Kembali ke menu">
                 <i class="fas fa-chevron-left"></i>
             </a>
-            <h5 class="fw-bold pt-3 pe-2 mb-0 text-theme" style="font-size: 1.1rem;">Riwayat Pesanan</h5>
+            <h1 class="fw-bold mb-0 text-theme" style="font-size: 1.1rem;">Riwayat Pesanan</h1>
         </div>
-        <p class="small text-gray-400 mb-4" style="text-align: right;">Klik pesanan untuk melihat lebih detail</p>
 
         @if($orders->isEmpty())
             <div class="text-center py-5">
                 <div class="mb-3">
                     <i class="fas fa-history fa-3x text-muted"></i>
                 </div>
-                <h5 class="mb-2">Belum ada riwayat pesanan</h5>
-                <p class="text-gray-400 mb-4">Pesanan yang Anda buat akan muncul di sini</p>
+                <h2 class="mb-2" style="font-size:1.1rem;">Belum ada riwayat pesanan</h2>
+                <p class="text-muted mb-4">Pesanan yang Anda buat di perangkat ini akan muncul di sini.</p>
+                <a href="{{ route('home') }}" wire:navigate class="btn btn-theme px-4" style="border-radius:12px;">Mulai Pesan</a>
+                @unless(auth('customer')->check())
+                    <p class="text-muted mt-3 mb-0" style="font-size:.85rem;">
+                        Punya akun? <a href="{{ route('customer.login') }}" wire:navigate>Masuk</a> untuk melihat semua riwayat belanja Anda.
+                    </p>
+                @endunless
             </div>
         @else
+            <p class="small text-muted mb-3">Ketuk pesanan untuk melihat detailnya.</p>
             <div>
                 @foreach($orders as $order)
                     <div class="card mb-2 rounded-3 btn btn-light" style="text-align: left;" wire:click="viewOrder({{ $order->id }})">
@@ -180,7 +186,7 @@
                                         @foreach($selectedOrder->details as $item)
                                             <tr>
                                                 <td>
-                                                    {{ $item->nama_minuman }}
+                                                    {{ $item->nama_minuman ?: $item->nama_makanan ?: $item->nama_botolan }}
                                                     @if($item->size || $item->gula || $item->topping)
                                                         <div class="text-muted small">
                                                             {{ $item->size ?? '' }}
@@ -211,19 +217,10 @@
                 </div>
                 <div class="modal-footer d-flex justify-content-between">
                     <div>
-                        @if($selectedOrder)
-                            @if($selectedOrder->status === 'menunggu_konfirmasi')
-                                <button type="button" class="btn btn-outline-danger" 
-                                        wire:click="cancelOrder({{ $selectedOrder->id }})"
-                                        wire:loading.attr="disabled">
-                                    <span wire:loading.remove>Batalkan Pesanan</span>
-                                    <span wire:loading>Membatalkan...</span>
-                                </button>
-                            @elseif($selectedOrder->status !== 'dibatalkan' && $selectedOrder->status !== 'selesai')
-                                <div class="text-muted small">
-                                    <i class="fas fa-info-circle"></i> Untuk membatalkan pesanan, harap hubungi admin
-                                </div>
-                            @endif
+                        @if($selectedOrder && ! in_array($selectedOrder->status, ['dibatalkan', 'selesai']))
+                            <div class="text-muted small">
+                                <i class="fas fa-info-circle"></i> Untuk mengubah atau membatalkan pesanan, hubungi toko via WhatsApp.
+                            </div>
                         @endif
                     </div>
                     <button type="button" class="btn btn-outline-theme" data-bs-dismiss="modal">Tutup</button>

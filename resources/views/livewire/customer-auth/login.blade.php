@@ -4,7 +4,7 @@
             <div class="col-11 col-sm-10 col-md-6 col-lg-5 col-xl-4">
                 {{-- Logo / Header --}}
                 <div class="text-center mb-3 mb-sm-4">
-                    @php $ws = \App\Models\WebSetting::first(); @endphp
+                    @php $ws = \App\Models\WebSetting::current(); @endphp
                     @if($ws?->logo_path)
                         <img src="{{ asset('storage/' . $ws->logo_path) }}" alt="Logo" height="52" class="mb-2 mb-sm-3">
                     @else

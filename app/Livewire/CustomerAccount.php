@@ -79,7 +79,7 @@ class CustomerAccount extends Component
             'orders' => $orders,
             'activeVouchers' => $activeVouchers,
             'usedVouchers' => $usedVouchers,
-            'web_settings' => WebSetting::first(),
+            'web_settings' => WebSetting::current(),
         ])->layout('layouts.public', ['whiteBackground' => true]);
     }
 }

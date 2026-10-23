@@ -3,8 +3,10 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use App\Helpers\DrinkPriceHelper;
 use App\Models\Minuman;
 use App\Models\WebSetting;
+use App\Services\CartService;
 
 class MinumanDetail extends Component
 {
@@ -12,75 +14,59 @@ class MinumanDetail extends Component
     public $selectedSizeId;
     public $selectedSugarId;
     public $selectedToppingId;
-    public $cart = []; 
-    public $sizes = [];
-    public $sugars = [];
-    public $toppings = [];
 
     public $theme;
-    
+
     public function mount($id)
     {
         $this->minuman = Minuman::with(['sizes', 'sugars', 'toppings'])->findOrFail($id);
-    
-        $this->sizes = $this->minuman->sizes;
-        $this->sugars = $this->minuman->sugars;
-        $this->toppings = $this->minuman->toppings;
-    
-        $this->selectedSizeId = $this->minuman->default_size_id;
-        $this->selectedSugarId = $this->minuman->default_sugar_id;
-        $this->selectedToppingId = $this->minuman->default_topping_id;
-        
+
+        // Default hanya dipakai jika memang terpasang di minuman ini (sama seperti perhitungan harga)
+        $defaults = DrinkPriceHelper::resolveOptions($this->minuman);
+        $this->selectedSizeId = $defaults['size']?->id;
+        $this->selectedSugarId = $defaults['sugar']?->id;
+        $this->selectedToppingId = $defaults['topping']?->id;
+
         // Get theme from web settings
-        $webSetting = WebSetting::first();
+        $webSetting = WebSetting::current();
         $this->theme = $webSetting ? $webSetting->theme : 'green';
     }
     // Metode untuk menghitung total harga berdasarkan pilihan
     public function getTotalPriceProperty()
     {
-        $size = collect($this->sizes)->firstWhere('id', $this->selectedSizeId);
-        $sugar = collect($this->sugars)->firstWhere('id', $this->selectedSugarId);
-        $topping = collect($this->toppings)->firstWhere('id', $this->selectedToppingId);
-        
-        // Calculate total price with selected options
-        $totalPrice = $this->minuman->base_price
-            + ($size['price'] ?? 0)
-            + ($sugar['price'] ?? 0)
-            + ($topping['default_price'] ?? 0);
-        
-        // Apply discount if available
+        // Rumus yang sama dengan keranjang & checkout (DrinkPriceHelper)
+        $totalPrice = DrinkPriceHelper::calculate($this->minuman, $this->selectedSizeId ?: null, $this->selectedSugarId ?: null, $this->selectedToppingId ?: null);
+
         if ($activeDiscount = $this->minuman->activeDiscount()) {
             return $activeDiscount->calculateDiscountedPrice($totalPrice);
         }
-        
+
         return $totalPrice;
     }
 
     public function addToCart()
     {
         // Check if the drink is out of stock
-        if ($this->minuman->is_habis) {
-            session()->flash('message', 'Maaf, minuman ini sedang habis!'); 
+        if ($this->minuman->fresh()?->is_habis ?? true) {
+            session()->flash('message', 'Maaf, minuman ini sedang habis!');
             return;
         }
-        
-        $key = $this->minuman->id . '-' . $this->selectedSizeId . '-' . $this->selectedSugarId . '-' . $this->selectedToppingId;
 
-        $cart = session()->get('cart', []);
-
-        if (isset($cart[$key])) {
-            $cart[$key]['qty']++;
-        } else {
-            $cart[$key] = [
-                'id' => $this->minuman->id,
-                'type' => 'minuman',
-                'size_id' => $this->selectedSizeId,
-                'sugar_id' => $this->selectedSugarId,
-                'topping_id' => $this->selectedToppingId,
-                'price' => $this->totalPrice,
-                'qty' => 1,
-            ];
+        $options = DrinkPriceHelper::resolveOptions($this->minuman, $this->selectedSizeId ?: null, $this->selectedSugarId ?: null, $this->selectedToppingId ?: null);
+        if (! $options['valid']) {
+            session()->flash('message', 'Pilihan varian tidak tersedia untuk minuman ini.');
+            return;
         }
+
+        // Keranjang hanya menyimpan ID & pilihan; harga selalu dihitung ulang di server
+        $cart = CartService::add(session()->get('cart', []), [
+            'type' => 'minuman',
+            'id' => $this->minuman->id,
+            'size_id' => $options['size']?->id,
+            'sugar_id' => $options['sugar']?->id,
+            'topping_id' => $options['topping']?->id,
+            'qty' => 1,
+        ]);
 
         session()->put('cart', $cart);
         $this->dispatch('cartUpdated');
@@ -166,10 +152,13 @@ class MinumanDetail extends Component
     
     public function render()
     {
-        $webSettings = \App\Models\WebSetting::first();
+        $webSettings = \App\Models\WebSetting::current();
         
         return view('livewire.minuman-detail', [
-            'web_settings' => $webSettings
-        ])->layout('layouts.public');
+            'web_settings' => $webSettings,
+            'sizes' => $this->minuman->sizes,
+            'sugars' => $this->minuman->sugars,
+            'toppings' => $this->minuman->toppings,
+        ])->layout('layouts.public')->title($this->minuman->nama);
     }
 }
